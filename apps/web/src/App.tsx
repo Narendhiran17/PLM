@@ -477,9 +477,11 @@ export default function App() {
     },
   ]);
 
-  // Contextual Creation Modal State (+ New)
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [createModalTab, setCreateModalTab] = useState<'eco' | 'product' | 'document' | 'bom_line'>('eco');
+  // Separate Dedicated Creation Modal States
+  const [isEcoModalOpen, setIsEcoModalOpen] = useState(false);
+  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
+  const [isDocModalOpen, setIsDocModalOpen] = useState(false);
+  const [isBomModalOpen, setIsBomModalOpen] = useState(false);
 
   // New ECO Form State
   const [newEcoForm, setNewEcoForm] = useState({
@@ -716,23 +718,16 @@ export default function App() {
     setNewNoteText('');
   };
 
-  const handleOpenNewModal = (defaultTab?: 'eco' | 'product' | 'document' | 'bom_line', initialStage?: EcoCard['stage']) => {
-    if (defaultTab) {
-      setCreateModalTab(defaultTab);
-    } else if (currentMenu === 'products') {
-      setCreateModalTab('product');
+  const handleGlobalNewClick = () => {
+    if (currentMenu === 'products') {
+      setIsProductModalOpen(true);
     } else if (currentMenu === 'documents') {
-      setCreateModalTab('document');
+      setIsDocModalOpen(true);
     } else if (currentMenu === 'bom_tree') {
-      setCreateModalTab('bom_line');
+      setIsBomModalOpen(true);
     } else {
-      setCreateModalTab('eco');
+      setIsEcoModalOpen(true);
     }
-
-    if (initialStage) {
-      setNewEcoForm((prev) => ({ ...prev, stage: initialStage }));
-    }
-    setIsCreateModalOpen(true);
   };
 
   const handleCreateEcoSubmit = (e: React.FormEvent) => {
@@ -765,7 +760,7 @@ export default function App() {
     setEcos([newEco, ...ecos]);
     setSelectedEcoId(newEco.id);
     setViewMode('form');
-    setIsCreateModalOpen(false);
+    setIsEcoModalOpen(false);
     setChatterMessages((prev) => [
       {
         id: Date.now(),
@@ -804,7 +799,7 @@ export default function App() {
       uom: newProductForm.uom || 'Units',
     };
     setProductsList((prev) => [...prev, newProd]);
-    setIsCreateModalOpen(false);
+    setIsProductModalOpen(false);
     setNewProductForm({
       ref: '',
       name: '',
@@ -830,7 +825,7 @@ export default function App() {
       lockedBy: null as string | null,
     };
     setVaultDocs((prev) => [newDoc, ...prev]);
-    setIsCreateModalOpen(false);
+    setIsDocModalOpen(false);
     setNewDocForm({
       docNumber: '',
       title: '',
@@ -855,7 +850,7 @@ export default function App() {
       lifecycle: 'DRAFT',
     };
     setBomTreeLines((prev) => [...prev, newLine]);
-    setIsCreateModalOpen(false);
+    setIsBomModalOpen(false);
     setNewBomLineForm({
       name: '',
       partNumber: '',
@@ -1244,7 +1239,7 @@ export default function App() {
 
           {/* Action Buttons */}
           <button
-            onClick={() => handleOpenNewModal()}
+            onClick={handleGlobalNewClick}
             className="btn-odoo-primary"
             id="btn-global-new"
             title="Create new record"
@@ -1364,7 +1359,10 @@ export default function App() {
                     </div>
 
                     <button
-                      onClick={() => handleOpenNewModal('eco', stg.id)}
+                      onClick={() => {
+                        setNewEcoForm((prev) => ({ ...prev, stage: stg.id }));
+                        setIsEcoModalOpen(true);
+                      }}
                       style={{ background: 'transparent', color: 'var(--odoo-text-muted)', border: 'none', cursor: 'pointer' }}
                       title={`Add ECO to ${stg.label}`}
                     >
@@ -1474,7 +1472,7 @@ export default function App() {
                 </div>
               </div>
               <button
-                onClick={() => handleOpenNewModal('eco')}
+                onClick={() => setIsEcoModalOpen(true)}
                 className="btn-odoo-primary"
               >
                 <Plus size={14} /> New ECO
@@ -2119,7 +2117,7 @@ export default function App() {
                 OfficeHub Tech — Product Master
               </h2>
               <button
-                onClick={() => handleOpenNewModal('product')}
+                onClick={() => setIsProductModalOpen(true)}
                 className="btn-odoo-primary"
                 id="btn-create-product"
               >
@@ -2228,7 +2226,7 @@ export default function App() {
               <div>
                 <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '12px' }}>
                   <button
-                    onClick={() => handleOpenNewModal('bom_line')}
+                    onClick={() => setIsBomModalOpen(true)}
                     className="btn-odoo-primary"
                     id="btn-add-bom-line"
                   >
@@ -2659,7 +2657,7 @@ export default function App() {
                 </h2>
               </div>
               <button
-                onClick={() => handleOpenNewModal('document')}
+                onClick={() => setIsDocModalOpen(true)}
                 className="btn-odoo-primary"
                 id="btn-new-document"
               >
@@ -6312,16 +6310,17 @@ export default function App() {
         )}
       </div>
 
-      {/* 4. CONTEXTUAL CREATION MODAL (+ NEW) */}
-      {isCreateModalOpen && (
+      {/* 4. DEDICATED SEPARATE FORMS FOR EACH ENTITY */}
+
+      {/* MODAL 1: SEPARATE DEDICATED ECO FORM */}
+      {isEcoModalOpen && (
         <div
           className="odoo-modal-backdrop"
           onClick={(e) => {
-            if (e.target === e.currentTarget) setIsCreateModalOpen(false);
+            if (e.target === e.currentTarget) setIsEcoModalOpen(false);
           }}
         >
           <div className="odoo-modal-container" role="dialog" aria-modal="true">
-            {/* Modal Header */}
             <div className="odoo-modal-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <span
@@ -6341,18 +6340,15 @@ export default function App() {
                 </span>
                 <div>
                   <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: '#ffffff' }}>
-                    {createModalTab === 'eco' && 'Create Engineering Change Order (ECO)'}
-                    {createModalTab === 'product' && 'Create Master Product / Part'}
-                    {createModalTab === 'document' && 'Register Controlled Document'}
-                    {createModalTab === 'bom_line' && 'Add Component to Bill of Materials'}
+                    Create Engineering Change Order (ECO)
                   </h3>
                   <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
-                    OfficeHub Tech PLM System · Enterprise Change Architecture
+                    OfficeHub Tech PLM System · Lifecycle Change Order
                   </div>
                 </div>
               </div>
               <button
-                onClick={() => setIsCreateModalOpen(false)}
+                onClick={() => setIsEcoModalOpen(false)}
                 style={{ background: 'transparent', color: '#94a3b8', border: 'none', cursor: 'pointer', padding: '4px' }}
                 title="Close"
               >
@@ -6360,495 +6356,588 @@ export default function App() {
               </button>
             </div>
 
-            {/* Modal Entity Tabs Switcher */}
-            <div className="odoo-modal-tab-bar">
+            <form onSubmit={handleCreateEcoSubmit}>
+              <div className="odoo-modal-body">
+                <div className="odoo-form-group">
+                  <label className="odoo-form-label">
+                    ECO Summary / Title <span style={{ color: '#ef4444' }}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    className="odoo-form-input"
+                    placeholder="e.g. Redesign Harmonic Actuator Joint Bracket"
+                    value={newEcoForm.name}
+                    onChange={(e) => setNewEcoForm({ ...newEcoForm, name: e.target.value })}
+                    required
+                    autoFocus
+                  />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div className="odoo-form-group">
+                    <label className="odoo-form-label">Affected Product Reference</label>
+                    <select
+                      className="odoo-form-select"
+                      value={newEcoForm.productRef}
+                      onChange={(e) => {
+                        const ref = e.target.value;
+                        const found = productsList.find((p) => p.ref === ref);
+                        setNewEcoForm({
+                          ...newEcoForm,
+                          productRef: ref,
+                          productName: found ? found.name : newEcoForm.productName,
+                        });
+                      }}
+                    >
+                      {productsList.map((p) => (
+                        <option key={p.ref} value={p.ref}>
+                          [{p.ref}] {p.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="odoo-form-group">
+                    <label className="odoo-form-label">ECO Type</label>
+                    <select
+                      className="odoo-form-select"
+                      value={newEcoForm.ecoType}
+                      onChange={(e) => setNewEcoForm({ ...newEcoForm, ecoType: e.target.value })}
+                    >
+                      <option value="Design Improvement">Design Improvement</option>
+                      <option value="Component Replacement">Component Replacement</option>
+                      <option value="Cost & Weight">Cost & Weight</option>
+                      <option value="NPI">New Product Introduction (NPI)</option>
+                      <option value="Obsolescence">Component Obsolescence</option>
+                      <option value="Firmware Update">Firmware & Software Update</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div className="odoo-form-group">
+                    <label className="odoo-form-label">Initial Stage</label>
+                    <select
+                      className="odoo-form-select"
+                      value={newEcoForm.stage}
+                      onChange={(e) => setNewEcoForm({ ...newEcoForm, stage: e.target.value as EcoCard['stage'] })}
+                    >
+                      <option value="new">New</option>
+                      <option value="progress">In Progress</option>
+                      <option value="review">Engineering Review</option>
+                    </select>
+                  </div>
+
+                  <div className="odoo-form-group">
+                    <label className="odoo-form-label">Priority</label>
+                    <select
+                      className="odoo-form-select"
+                      value={newEcoForm.priority}
+                      onChange={(e) => setNewEcoForm({ ...newEcoForm, priority: Number(e.target.value) })}
+                    >
+                      <option value={1}>★ Low Priority</option>
+                      <option value={2}>★★ Medium Priority</option>
+                      <option value={3}>★★★ High Criticality</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div className="odoo-form-group">
+                    <label className="odoo-form-label">Responsible Engineer</label>
+                    <input
+                      type="text"
+                      className="odoo-form-input"
+                      value={newEcoForm.responsible}
+                      onChange={(e) => setNewEcoForm({ ...newEcoForm, responsible: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="odoo-form-group">
+                    <label className="odoo-form-label">Target Effective Date</label>
+                    <input
+                      type="date"
+                      className="odoo-form-input"
+                      value={newEcoForm.effectiveDate}
+                      onChange={(e) => setNewEcoForm({ ...newEcoForm, effectiveDate: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="odoo-form-group">
+                  <label className="odoo-form-label">Tags (comma-separated)</label>
+                  <input
+                    type="text"
+                    className="odoo-form-input"
+                    placeholder="e.g. Mechanical, High Torque, Revision B"
+                    value={newEcoForm.tags}
+                    onChange={(e) => setNewEcoForm({ ...newEcoForm, tags: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="odoo-modal-footer">
+                <button
+                  type="button"
+                  className="btn-odoo-secondary"
+                  onClick={() => setIsEcoModalOpen(false)}
+                >
+                  Discard
+                </button>
+                <button type="submit" className="btn-odoo-primary">
+                  <Plus size={15} />
+                  Create Change Order
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 2: SEPARATE DEDICATED PRODUCT / PART FORM */}
+      {isProductModalOpen && (
+        <div
+          className="odoo-modal-backdrop"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setIsProductModalOpen(false);
+          }}
+        >
+          <div className="odoo-modal-container" role="dialog" aria-modal="true">
+            <div className="odoo-modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span
+                  style={{
+                    background: 'var(--brand-orange)',
+                    color: '#1e293b',
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 800,
+                  }}
+                >
+                  <Box size={18} />
+                </span>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: '#ffffff' }}>
+                    Create Master Product / Part
+                  </h3>
+                  <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+                    OfficeHub Tech PLM System · Master Part Catalog
+                  </div>
+                </div>
+              </div>
               <button
-                type="button"
-                className={`odoo-modal-tab ${createModalTab === 'eco' ? 'active' : ''}`}
-                onClick={() => setCreateModalTab('eco')}
+                onClick={() => setIsProductModalOpen(false)}
+                style={{ background: 'transparent', color: '#94a3b8', border: 'none', cursor: 'pointer', padding: '4px' }}
+                title="Close"
               >
-                <Zap size={14} />
-                Engineering Change Order
-              </button>
-              <button
-                type="button"
-                className={`odoo-modal-tab ${createModalTab === 'product' ? 'active' : ''}`}
-                onClick={() => setCreateModalTab('product')}
-              >
-                <Box size={14} />
-                Product / Part
-              </button>
-              <button
-                type="button"
-                className={`odoo-modal-tab ${createModalTab === 'document' ? 'active' : ''}`}
-                onClick={() => setCreateModalTab('document')}
-              >
-                <FileText size={14} />
-                Document Vault
-              </button>
-              <button
-                type="button"
-                className={`odoo-modal-tab ${createModalTab === 'bom_line' ? 'active' : ''}`}
-                onClick={() => setCreateModalTab('bom_line')}
-              >
-                <Layers size={14} />
-                BOM Component
+                <X size={20} />
               </button>
             </div>
 
-            {/* FORM 1: ECO CREATION */}
-            {createModalTab === 'eco' && (
-              <form onSubmit={handleCreateEcoSubmit}>
-                <div className="odoo-modal-body">
+            <form onSubmit={handleCreateProductSubmit}>
+              <div className="odoo-modal-body">
+                <div style={{ display: 'grid', gridTemplateColumns: '160px 1fr', gap: '16px' }}>
+                  <div className="odoo-form-group">
+                    <label className="odoo-form-label">Part Number / Ref</label>
+                    <input
+                      type="text"
+                      className="odoo-form-input"
+                      placeholder="e.g. ROB-2000"
+                      value={newProductForm.ref}
+                      onChange={(e) => setNewProductForm({ ...newProductForm, ref: e.target.value })}
+                    />
+                  </div>
+
                   <div className="odoo-form-group">
                     <label className="odoo-form-label">
-                      ECO Summary / Title <span style={{ color: '#ef4444' }}>*</span>
+                      Product / Part Name <span style={{ color: '#ef4444' }}>*</span>
                     </label>
                     <input
                       type="text"
                       className="odoo-form-input"
-                      placeholder="e.g. Redesign Harmonic Actuator Joint Bracket"
-                      value={newEcoForm.name}
-                      onChange={(e) => setNewEcoForm({ ...newEcoForm, name: e.target.value })}
+                      placeholder="e.g. High-Torque Articulated Joint Module"
+                      value={newProductForm.name}
+                      onChange={(e) => setNewProductForm({ ...newProductForm, name: e.target.value })}
                       required
                       autoFocus
                     />
                   </div>
+                </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                    <div className="odoo-form-group">
-                      <label className="odoo-form-label">Affected Product Reference</label>
-                      <select
-                        className="odoo-form-select"
-                        value={newEcoForm.productRef}
-                        onChange={(e) => {
-                          const ref = e.target.value;
-                          const found = productsList.find((p) => p.ref === ref);
-                          setNewEcoForm({
-                            ...newEcoForm,
-                            productRef: ref,
-                            productName: found ? found.name : newEcoForm.productName,
-                          });
-                        }}
-                      >
-                        {productsList.map((p) => (
-                          <option key={p.ref} value={p.ref}>
-                            [{p.ref}] {p.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="odoo-form-group">
-                      <label className="odoo-form-label">ECO Type</label>
-                      <select
-                        className="odoo-form-select"
-                        value={newEcoForm.ecoType}
-                        onChange={(e) => setNewEcoForm({ ...newEcoForm, ecoType: e.target.value })}
-                      >
-                        <option value="Design Improvement">Design Improvement</option>
-                        <option value="Component Replacement">Component Replacement</option>
-                        <option value="Cost & Weight">Cost & Weight</option>
-                        <option value="NPI">New Product Introduction (NPI)</option>
-                        <option value="Obsolescence">Component Obsolescence</option>
-                        <option value="Firmware Update">Firmware & Software Update</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                    <div className="odoo-form-group">
-                      <label className="odoo-form-label">Initial Stage</label>
-                      <select
-                        className="odoo-form-select"
-                        value={newEcoForm.stage}
-                        onChange={(e) => setNewEcoForm({ ...newEcoForm, stage: e.target.value as EcoCard['stage'] })}
-                      >
-                        <option value="new">New</option>
-                        <option value="progress">In Progress</option>
-                        <option value="review">Engineering Review</option>
-                      </select>
-                    </div>
-
-                    <div className="odoo-form-group">
-                      <label className="odoo-form-label">Priority</label>
-                      <select
-                        className="odoo-form-select"
-                        value={newEcoForm.priority}
-                        onChange={(e) => setNewEcoForm({ ...newEcoForm, priority: Number(e.target.value) })}
-                      >
-                        <option value={1}>★ Low Priority</option>
-                        <option value={2}>★★ Medium Priority</option>
-                        <option value={3}>★★★ High Criticality</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                    <div className="odoo-form-group">
-                      <label className="odoo-form-label">Responsible Engineer</label>
-                      <input
-                        type="text"
-                        className="odoo-form-input"
-                        value={newEcoForm.responsible}
-                        onChange={(e) => setNewEcoForm({ ...newEcoForm, responsible: e.target.value })}
-                      />
-                    </div>
-
-                    <div className="odoo-form-group">
-                      <label className="odoo-form-label">Target Effective Date</label>
-                      <input
-                        type="date"
-                        className="odoo-form-input"
-                        value={newEcoForm.effectiveDate}
-                        onChange={(e) => setNewEcoForm({ ...newEcoForm, effectiveDate: e.target.value })}
-                      />
-                    </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div className="odoo-form-group">
+                    <label className="odoo-form-label">Product Type</label>
+                    <select
+                      className="odoo-form-select"
+                      value={newProductForm.type}
+                      onChange={(e) => setNewProductForm({ ...newProductForm, type: e.target.value })}
+                    >
+                      <option value="Assembly">Assembly</option>
+                      <option value="Manufactured">Manufactured Part</option>
+                      <option value="Purchased">Purchased Component</option>
+                      <option value="Software">Software / Firmware</option>
+                      <option value="Raw Material">Raw Material</option>
+                    </select>
                   </div>
 
                   <div className="odoo-form-group">
-                    <label className="odoo-form-label">Tags (comma-separated)</label>
+                    <label className="odoo-form-label">Initial Revision</label>
                     <input
                       type="text"
                       className="odoo-form-input"
-                      placeholder="e.g. Mechanical, High Torque, Revision B"
-                      value={newEcoForm.tags}
-                      onChange={(e) => setNewEcoForm({ ...newEcoForm, tags: e.target.value })}
+                      value={newProductForm.rev}
+                      onChange={(e) => setNewProductForm({ ...newProductForm, rev: e.target.value })}
                     />
                   </div>
                 </div>
 
-                <div className="odoo-modal-footer">
-                  <button
-                    type="button"
-                    className="btn-odoo-secondary"
-                    onClick={() => setIsCreateModalOpen(false)}
-                  >
-                    Discard
-                  </button>
-                  <button type="submit" className="btn-odoo-primary">
-                    <Plus size={15} />
-                    Create Change Order
-                  </button>
-                </div>
-              </form>
-            )}
-
-            {/* FORM 2: PRODUCT / PART CREATION */}
-            {createModalTab === 'product' && (
-              <form onSubmit={handleCreateProductSubmit}>
-                <div className="odoo-modal-body">
-                  <div style={{ display: 'grid', gridTemplateColumns: '160px 1fr', gap: '16px' }}>
-                    <div className="odoo-form-group">
-                      <label className="odoo-form-label">Part Number / Ref</label>
-                      <input
-                        type="text"
-                        className="odoo-form-input"
-                        placeholder="e.g. ROB-2000"
-                        value={newProductForm.ref}
-                        onChange={(e) => setNewProductForm({ ...newProductForm, ref: e.target.value })}
-                      />
-                    </div>
-
-                    <div className="odoo-form-group">
-                      <label className="odoo-form-label">
-                        Product / Part Name <span style={{ color: '#ef4444' }}>*</span>
-                      </label>
-                      <input
-                        type="text"
-                        className="odoo-form-input"
-                        placeholder="e.g. High-Torque Articulated Joint Module"
-                        value={newProductForm.name}
-                        onChange={(e) => setNewProductForm({ ...newProductForm, name: e.target.value })}
-                        required
-                        autoFocus
-                      />
-                    </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div className="odoo-form-group">
+                    <label className="odoo-form-label">Initial Status</label>
+                    <select
+                      className="odoo-form-select"
+                      value={newProductForm.status}
+                      onChange={(e) => setNewProductForm({ ...newProductForm, status: e.target.value })}
+                    >
+                      <option value="Draft">Draft</option>
+                      <option value="In Review">In Review</option>
+                      <option value="Released">Released</option>
+                    </select>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                    <div className="odoo-form-group">
-                      <label className="odoo-form-label">Product Type</label>
-                      <select
-                        className="odoo-form-select"
-                        value={newProductForm.type}
-                        onChange={(e) => setNewProductForm({ ...newProductForm, type: e.target.value })}
-                      >
-                        <option value="Assembly">Assembly</option>
-                        <option value="Manufactured">Manufactured Part</option>
-                        <option value="Purchased">Purchased Component</option>
-                        <option value="Software">Software / Firmware</option>
-                        <option value="Raw Material">Raw Material</option>
-                      </select>
-                    </div>
-
-                    <div className="odoo-form-group">
-                      <label className="odoo-form-label">Initial Revision</label>
-                      <input
-                        type="text"
-                        className="odoo-form-input"
-                        value={newProductForm.rev}
-                        onChange={(e) => setNewProductForm({ ...newProductForm, rev: e.target.value })}
-                      />
-                    </div>
-                  </div>
-
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                    <div className="odoo-form-group">
-                      <label className="odoo-form-label">Initial Status</label>
-                      <select
-                        className="odoo-form-select"
-                        value={newProductForm.status}
-                        onChange={(e) => setNewProductForm({ ...newProductForm, status: e.target.value })}
-                      >
-                        <option value="Draft">Draft</option>
-                        <option value="In Review">In Review</option>
-                        <option value="Released">Released</option>
-                      </select>
-                    </div>
-
-                    <div className="odoo-form-group">
-                      <label className="odoo-form-label">Unit of Measure</label>
-                      <select
-                        className="odoo-form-select"
-                        value={newProductForm.uom}
-                        onChange={(e) => setNewProductForm({ ...newProductForm, uom: e.target.value })}
-                      >
-                        <option value="Units">Units (EA)</option>
-                        <option value="Meters">Meters (M)</option>
-                        <option value="Kg">Kilograms (Kg)</option>
-                        <option value="Liters">Liters (L)</option>
-                      </select>
-                    </div>
+                  <div className="odoo-form-group">
+                    <label className="odoo-form-label">Unit of Measure</label>
+                    <select
+                      className="odoo-form-select"
+                      value={newProductForm.uom}
+                      onChange={(e) => setNewProductForm({ ...newProductForm, uom: e.target.value })}
+                    >
+                      <option value="Units">Units (EA)</option>
+                      <option value="Meters">Meters (M)</option>
+                      <option value="Kg">Kilograms (Kg)</option>
+                      <option value="Liters">Liters (L)</option>
+                    </select>
                   </div>
                 </div>
+              </div>
 
-                <div className="odoo-modal-footer">
-                  <button
-                    type="button"
-                    className="btn-odoo-secondary"
-                    onClick={() => setIsCreateModalOpen(false)}
-                  >
-                    Discard
-                  </button>
-                  <button type="submit" className="btn-odoo-primary">
-                    <Plus size={15} />
-                    Create Product
-                  </button>
-                </div>
-              </form>
-            )}
+              <div className="odoo-modal-footer">
+                <button
+                  type="button"
+                  className="btn-odoo-secondary"
+                  onClick={() => setIsProductModalOpen(false)}
+                >
+                  Discard
+                </button>
+                <button type="submit" className="btn-odoo-primary">
+                  <Plus size={15} />
+                  Create Product
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
-            {/* FORM 3: DOCUMENT VAULT REGISTRATION */}
-            {createModalTab === 'document' && (
-              <form onSubmit={handleCreateDocumentSubmit}>
-                <div className="odoo-modal-body">
-                  <div style={{ display: 'grid', gridTemplateColumns: '180px 1fr', gap: '16px' }}>
-                    <div className="odoo-form-group">
-                      <label className="odoo-form-label">Document Number</label>
-                      <input
-                        type="text"
-                        className="odoo-form-input"
-                        placeholder="e.g. DOC-SPEC-5001"
-                        value={newDocForm.docNumber}
-                        onChange={(e) => setNewDocForm({ ...newDocForm, docNumber: e.target.value })}
-                      />
-                    </div>
-
-                    <div className="odoo-form-group">
-                      <label className="odoo-form-label">
-                        Document Title <span style={{ color: '#ef4444' }}>*</span>
-                      </label>
-                      <input
-                        type="text"
-                        className="odoo-form-input"
-                        placeholder="e.g. Harmonic Joint Thermal FEA Analysis"
-                        value={newDocForm.title}
-                        onChange={(e) => setNewDocForm({ ...newDocForm, title: e.target.value })}
-                        required
-                        autoFocus
-                      />
-                    </div>
-                  </div>
-
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                    <div className="odoo-form-group">
-                      <label className="odoo-form-label">Document Category</label>
-                      <select
-                        className="odoo-form-select"
-                        value={newDocForm.category}
-                        onChange={(e) => setNewDocForm({ ...newDocForm, category: e.target.value })}
-                      >
-                        <option value="SPECIFICATION">SPECIFICATION (Master Spec)</option>
-                        <option value="CAD_3D_MODEL">CAD_3D_MODEL (STEP, SolidWorks)</option>
-                        <option value="DRAWING_2D">DRAWING_2D (Fabrication Drawing)</option>
-                        <option value="TEST_REPORT">TEST_REPORT (Validation / QA)</option>
-                        <option value="SCHEMATIC">SCHEMATIC (Electrical ECAD)</option>
-                        <option value="COMPLIANCE">COMPLIANCE (RoHS, REACH, FDA)</option>
-                      </select>
-                    </div>
-
-                    <div className="odoo-form-group">
-                      <label className="odoo-form-label">Revision</label>
-                      <input
-                        type="text"
-                        className="odoo-form-input"
-                        value={newDocForm.revision}
-                        onChange={(e) => setNewDocForm({ ...newDocForm, revision: e.target.value })}
-                      />
-                    </div>
-                  </div>
-
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 140px', gap: '16px' }}>
-                    <div className="odoo-form-group">
-                      <label className="odoo-form-label">File Artifact Name</label>
-                      <input
-                        type="text"
-                        className="odoo-form-input"
-                        placeholder="e.g. ROB-1000-THERMAL-FEA.pdf"
-                        value={newDocForm.file}
-                        onChange={(e) => setNewDocForm({ ...newDocForm, file: e.target.value })}
-                      />
-                    </div>
-
-                    <div className="odoo-form-group">
-                      <label className="odoo-form-label">File Size</label>
-                      <input
-                        type="text"
-                        className="odoo-form-input"
-                        value={newDocForm.size}
-                        onChange={(e) => setNewDocForm({ ...newDocForm, size: e.target.value })}
-                      />
-                    </div>
+      {/* MODAL 3: SEPARATE DEDICATED CONTROLLED DOCUMENT FORM */}
+      {isDocModalOpen && (
+        <div
+          className="odoo-modal-backdrop"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setIsDocModalOpen(false);
+          }}
+        >
+          <div className="odoo-modal-container" role="dialog" aria-modal="true">
+            <div className="odoo-modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span
+                  style={{
+                    background: 'var(--brand-orange)',
+                    color: '#1e293b',
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 800,
+                  }}
+                >
+                  <FileText size={18} />
+                </span>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: '#ffffff' }}>
+                    Register Controlled Document
+                  </h3>
+                  <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+                    OfficeHub Tech PLM System · Controlled Document Vault
                   </div>
                 </div>
+              </div>
+              <button
+                onClick={() => setIsDocModalOpen(false)}
+                style={{ background: 'transparent', color: '#94a3b8', border: 'none', cursor: 'pointer', padding: '4px' }}
+                title="Close"
+              >
+                <X size={20} />
+              </button>
+            </div>
 
-                <div className="odoo-modal-footer">
-                  <button
-                    type="button"
-                    className="btn-odoo-secondary"
-                    onClick={() => setIsCreateModalOpen(false)}
-                  >
-                    Discard
-                  </button>
-                  <button type="submit" className="btn-odoo-primary">
-                    <Plus size={15} />
-                    Register Document
-                  </button>
-                </div>
-              </form>
-            )}
-
-            {/* FORM 4: BOM COMPONENT */}
-            {createModalTab === 'bom_line' && (
-              <form onSubmit={handleCreateBomLineSubmit}>
-                <div className="odoo-modal-body">
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                    <div className="odoo-form-group">
-                      <label className="odoo-form-label">Hierarchy Level</label>
-                      <select
-                        className="odoo-form-select"
-                        value={newBomLineForm.level}
-                        onChange={(e) => setNewBomLineForm({ ...newBomLineForm, level: e.target.value })}
-                      >
-                        <option value="├── 1.3">├── Level 1.3 (Sub-Assembly)</option>
-                        <option value="├── 1.4">├── Level 1.4 (Sub-Assembly)</option>
-                        <option value="└── 2.2">└── Level 2.2 (Component)</option>
-                        <option value="└── 2.3">└── Level 2.3 (Component)</option>
-                      </select>
-                    </div>
-
-                    <div className="odoo-form-group">
-                      <label className="odoo-form-label">
-                        Component Part Number <span style={{ color: '#ef4444' }}>*</span>
-                      </label>
-                      <input
-                        type="text"
-                        className="odoo-form-input"
-                        placeholder="e.g. BRK-8002"
-                        value={newBomLineForm.partNumber}
-                        onChange={(e) => setNewBomLineForm({ ...newBomLineForm, partNumber: e.target.value })}
-                        required
-                        autoFocus
-                      />
-                    </div>
+            <form onSubmit={handleCreateDocumentSubmit}>
+              <div className="odoo-modal-body">
+                <div style={{ display: 'grid', gridTemplateColumns: '180px 1fr', gap: '16px' }}>
+                  <div className="odoo-form-group">
+                    <label className="odoo-form-label">Document Number</label>
+                    <input
+                      type="text"
+                      className="odoo-form-input"
+                      placeholder="e.g. DOC-SPEC-5001"
+                      value={newDocForm.docNumber}
+                      onChange={(e) => setNewDocForm({ ...newDocForm, docNumber: e.target.value })}
+                    />
                   </div>
 
                   <div className="odoo-form-group">
                     <label className="odoo-form-label">
-                      Component Name <span style={{ color: '#ef4444' }}>*</span>
+                      Document Title <span style={{ color: '#ef4444' }}>*</span>
                     </label>
                     <input
                       type="text"
                       className="odoo-form-input"
-                      placeholder="e.g. Titanium Reinforced Joint Flange"
-                      value={newBomLineForm.name}
-                      onChange={(e) => setNewBomLineForm({ ...newBomLineForm, name: e.target.value })}
+                      placeholder="e.g. Harmonic Joint Thermal FEA Analysis"
+                      value={newDocForm.title}
+                      onChange={(e) => setNewDocForm({ ...newDocForm, title: e.target.value })}
                       required
+                      autoFocus
                     />
                   </div>
+                </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
-                    <div className="odoo-form-group">
-                      <label className="odoo-form-label">Revision</label>
-                      <input
-                        type="text"
-                        className="odoo-form-input"
-                        value={newBomLineForm.rev}
-                        onChange={(e) => setNewBomLineForm({ ...newBomLineForm, rev: e.target.value })}
-                      />
-                    </div>
-
-                    <div className="odoo-form-group">
-                      <label className="odoo-form-label">Quantity</label>
-                      <input
-                        type="number"
-                        step="0.1"
-                        min="0.1"
-                        className="odoo-form-input"
-                        value={newBomLineForm.qty}
-                        onChange={(e) => setNewBomLineForm({ ...newBomLineForm, qty: Number(e.target.value) })}
-                      />
-                    </div>
-
-                    <div className="odoo-form-group">
-                      <label className="odoo-form-label">UOM</label>
-                      <input
-                        type="text"
-                        className="odoo-form-input"
-                        value={newBomLineForm.uom}
-                        onChange={(e) => setNewBomLineForm({ ...newBomLineForm, uom: e.target.value })}
-                      />
-                    </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div className="odoo-form-group">
+                    <label className="odoo-form-label">Document Category</label>
+                    <select
+                      className="odoo-form-select"
+                      value={newDocForm.category}
+                      onChange={(e) => setNewDocForm({ ...newDocForm, category: e.target.value })}
+                    >
+                      <option value="SPECIFICATION">SPECIFICATION (Master Spec)</option>
+                      <option value="CAD_3D_MODEL">CAD_3D_MODEL (STEP, SolidWorks)</option>
+                      <option value="DRAWING_2D">DRAWING_2D (Fabrication Drawing)</option>
+                      <option value="TEST_REPORT">TEST_REPORT (Validation / QA)</option>
+                      <option value="SCHEMATIC">SCHEMATIC (Electrical ECAD)</option>
+                      <option value="COMPLIANCE">COMPLIANCE (RoHS, REACH, FDA)</option>
+                    </select>
                   </div>
 
                   <div className="odoo-form-group">
-                    <label className="odoo-form-label">Reference Designators (Optional)</label>
+                    <label className="odoo-form-label">Revision</label>
                     <input
                       type="text"
                       className="odoo-form-input"
-                      placeholder="e.g. J1, J2, J3"
-                      value={newBomLineForm.refDes}
-                      onChange={(e) => setNewBomLineForm({ ...newBomLineForm, refDes: e.target.value })}
+                      value={newDocForm.revision}
+                      onChange={(e) => setNewDocForm({ ...newDocForm, revision: e.target.value })}
                     />
                   </div>
                 </div>
 
-                <div className="odoo-modal-footer">
-                  <button
-                    type="button"
-                    className="btn-odoo-secondary"
-                    onClick={() => setIsCreateModalOpen(false)}
-                  >
-                    Discard
-                  </button>
-                  <button type="submit" className="btn-odoo-primary">
-                    <Plus size={15} />
-                    Add to BOM
-                  </button>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 140px', gap: '16px' }}>
+                  <div className="odoo-form-group">
+                    <label className="odoo-form-label">File Artifact Name</label>
+                    <input
+                      type="text"
+                      className="odoo-form-input"
+                      placeholder="e.g. ROB-1000-THERMAL-FEA.pdf"
+                      value={newDocForm.file}
+                      onChange={(e) => setNewDocForm({ ...newDocForm, file: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="odoo-form-group">
+                    <label className="odoo-form-label">File Size</label>
+                    <input
+                      type="text"
+                      className="odoo-form-input"
+                      value={newDocForm.size}
+                      onChange={(e) => setNewDocForm({ ...newDocForm, size: e.target.value })}
+                    />
+                  </div>
                 </div>
-              </form>
-            )}
+              </div>
+
+              <div className="odoo-modal-footer">
+                <button
+                  type="button"
+                  className="btn-odoo-secondary"
+                  onClick={() => setIsDocModalOpen(false)}
+                >
+                  Discard
+                </button>
+                <button type="submit" className="btn-odoo-primary">
+                  <Plus size={15} />
+                  Register Document
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 4: SEPARATE DEDICATED BOM COMPONENT FORM */}
+      {isBomModalOpen && (
+        <div
+          className="odoo-modal-backdrop"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setIsBomModalOpen(false);
+          }}
+        >
+          <div className="odoo-modal-container" role="dialog" aria-modal="true">
+            <div className="odoo-modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span
+                  style={{
+                    background: 'var(--brand-orange)',
+                    color: '#1e293b',
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 800,
+                  }}
+                >
+                  <Layers size={18} />
+                </span>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: '#ffffff' }}>
+                    Add Component to Bill of Materials
+                  </h3>
+                  <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+                    OfficeHub Tech PLM System · Multi-Level BOM Workbench
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsBomModalOpen(false)}
+                style={{ background: 'transparent', color: '#94a3b8', border: 'none', cursor: 'pointer', padding: '4px' }}
+                title="Close"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateBomLineSubmit}>
+              <div className="odoo-modal-body">
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div className="odoo-form-group">
+                    <label className="odoo-form-label">Hierarchy Level</label>
+                    <select
+                      className="odoo-form-select"
+                      value={newBomLineForm.level}
+                      onChange={(e) => setNewBomLineForm({ ...newBomLineForm, level: e.target.value })}
+                    >
+                      <option value="├── 1.3">├── Level 1.3 (Sub-Assembly)</option>
+                      <option value="├── 1.4">├── Level 1.4 (Sub-Assembly)</option>
+                      <option value="└── 2.2">└── Level 2.2 (Component)</option>
+                      <option value="└── 2.3">└── Level 2.3 (Component)</option>
+                    </select>
+                  </div>
+
+                  <div className="odoo-form-group">
+                    <label className="odoo-form-label">
+                      Component Part Number <span style={{ color: '#ef4444' }}>*</span>
+                    </label>
+                    <input
+                      type="text"
+                      className="odoo-form-input"
+                      placeholder="e.g. BRK-8002"
+                      value={newBomLineForm.partNumber}
+                      onChange={(e) => setNewBomLineForm({ ...newBomLineForm, partNumber: e.target.value })}
+                      required
+                      autoFocus
+                    />
+                  </div>
+                </div>
+
+                <div className="odoo-form-group">
+                  <label className="odoo-form-label">
+                    Component Name <span style={{ color: '#ef4444' }}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    className="odoo-form-input"
+                    placeholder="e.g. Titanium Reinforced Joint Flange"
+                    value={newBomLineForm.name}
+                    onChange={(e) => setNewBomLineForm({ ...newBomLineForm, name: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
+                  <div className="odoo-form-group">
+                    <label className="odoo-form-label">Revision</label>
+                    <input
+                      type="text"
+                      className="odoo-form-input"
+                      value={newBomLineForm.rev}
+                      onChange={(e) => setNewBomLineForm({ ...newBomLineForm, rev: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="odoo-form-group">
+                    <label className="odoo-form-label">Quantity</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      min="0.1"
+                      className="odoo-form-input"
+                      value={newBomLineForm.qty}
+                      onChange={(e) => setNewBomLineForm({ ...newBomLineForm, qty: Number(e.target.value) })}
+                    />
+                  </div>
+
+                  <div className="odoo-form-group">
+                    <label className="odoo-form-label">UOM</label>
+                    <input
+                      type="text"
+                      className="odoo-form-input"
+                      value={newBomLineForm.uom}
+                      onChange={(e) => setNewBomLineForm({ ...newBomLineForm, uom: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="odoo-form-group">
+                  <label className="odoo-form-label">Reference Designators (Optional)</label>
+                  <input
+                    type="text"
+                    className="odoo-form-input"
+                    placeholder="e.g. J1, J2, J3"
+                    value={newBomLineForm.refDes}
+                    onChange={(e) => setNewBomLineForm({ ...newBomLineForm, refDes: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="odoo-modal-footer">
+                <button
+                  type="button"
+                  className="btn-odoo-secondary"
+                  onClick={() => setIsBomModalOpen(false)}
+                >
+                  Discard
+                </button>
+                <button type="submit" className="btn-odoo-primary">
+                  <Plus size={15} />
+                  Add to BOM
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
