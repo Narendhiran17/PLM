@@ -18,6 +18,20 @@ Every update must follow this structure:
 
 ## Change History
 
+### [CHG-20261015-02] — GitHub Remote Integration & Deployment Pipeline Setup
+* **Date**: 2026-10-15
+* **Author / Trigger**: User request to establish GitHub version control and continuous synchronization.
+* **Scope & Category**: Version Control, CI/CD, Deployment Workflow
+* **Summary of Decisions**:
+  1. **Remote Repository Connected**: Initialized local Git repository and connected to `https://github.com/Narendhiran17/PLM.git` on branch `main`.
+  2. **Monorepo `.gitignore` Added**: Configured comprehensive exclusion rules for Node/TypeScript (`node_modules/`, `dist/`), Zoho Catalyst logs/environment files, editor configs, and local helpers.
+  3. **Root `README.md` Added**: Created project overview linking architecture, changelog, and functionality checklist.
+  4. **Strict Continuous Push Rule**: Established operational mandate: Every codebase modification, new capability, or plan update must be committed with a clear semantic commit message and immediately pushed to remote GitHub `main`.
+* **Impact**: Repository is synchronized and publicly/team accessible at GitHub.
+* **Status**: Completed & Pushed.
+
+---
+
 ### [CHG-20261014-01] — Initial Baseline Plan Ingestion
 * **Date**: 2026-10-14
 * **Author / Trigger**: User initiative to build a Universal PLM platform competing with Odoo PLM on Zoho Catalyst.
