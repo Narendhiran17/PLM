@@ -1,0 +1,25 @@
+{
+  "name": "universal-plm",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Universal Product Lifecycle Management (PLM) Platform on Zoho Catalyst",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "dev:api": "npm --workspace=@universal-plm/api run dev",
+    "dev:web": "npm --workspace=@universal-plm/web run dev"
+  },
+  "keywords": [
+    "plm",
+    "bom",
+    "engineering",
+    "zoho-catalyst",
+    "appsail",
+    "slate"
+  ],
+  "author": "Universal PLM Team",
+  "license": "UNLICENSED"
+}

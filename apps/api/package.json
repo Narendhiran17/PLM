@@ -1,0 +1,24 @@
+{
+  "name": "@universal-plm/api",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Universal PLM API Gateway and Engine for Zoho Catalyst AppSail",
+  "main": "dist/server.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "dev": "tsx watch src/server.ts"
+  },
+  "dependencies": {
+    "@fastify/cors": "^10.0.1",
+    "@universal-plm/authorization": "*",
+    "@universal-plm/domain-core": "*",
+    "fastify": "^5.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.0"
+  }
+}

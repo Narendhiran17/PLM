@@ -1,0 +1,7 @@
+{
+  "stack": "node20",
+  "command": "npm start",
+  "env_variables": {
+    "NODE_ENV": "production"
+  }
+}
