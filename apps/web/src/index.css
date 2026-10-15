@@ -270,3 +270,124 @@ input, select, textarea {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--brand-orange);
 }
+
+/* Odoo Creation Modal */
+.odoo-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 16px;
+}
+
+.odoo-modal-container {
+  background: #ffffff;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 680px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  border: 1px solid #cbd5e1;
+  display: flex;
+  flex-direction: column;
+}
+
+.odoo-modal-header {
+  background: var(--brand-charcoal);
+  color: #ffffff;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top-left-radius: 7px;
+  border-top-right-radius: 7px;
+}
+
+.odoo-modal-tab-bar {
+  display: flex;
+  background: #f1f5f9;
+  border-bottom: 1px solid #cbd5e1;
+  padding: 6px 12px 0 12px;
+  gap: 6px;
+}
+
+.odoo-modal-tab {
+  padding: 8px 16px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  border-radius: 6px 6px 0 0;
+  border: 1px solid transparent;
+  border-bottom: none;
+  cursor: pointer;
+  background: transparent;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+
+.odoo-modal-tab:hover {
+  color: var(--brand-charcoal);
+  background: #e2e8f0;
+}
+
+.odoo-modal-tab.active {
+  background: #ffffff;
+  color: var(--brand-orange-hover);
+  border-color: #cbd5e1;
+  border-bottom: 1px solid #ffffff;
+  margin-bottom: -1px;
+}
+
+.odoo-modal-body {
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.odoo-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.odoo-form-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.odoo-form-input, .odoo-form-select, .odoo-form-textarea {
+  padding: 8px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  background: #ffffff;
+  color: #1e293b;
+  transition: border-color 0.15s ease;
+}
+
+.odoo-form-input:focus, .odoo-form-select:focus, .odoo-form-textarea:focus {
+  border-color: var(--brand-orange);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--brand-orange-glow);
+}
+
+.odoo-modal-footer {
+  padding: 14px 24px;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  border-bottom-left-radius: 7px;
+  border-bottom-right-radius: 7px;
+}
