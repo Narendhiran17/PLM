@@ -35,7 +35,7 @@ export async function buildServer() {
 // Start server listening on the AppSail assigned port
 async function start() {
   const server = await buildServer();
-  const port = Number(process.env.X_ZOHO_CATALYST_LISTEN_PORT || process.env.PORT || 3000);
+  const port = Number(process.env.X_ZOHO_CATALYST_LISTEN_PORT || process.env.PORT || 3001);
   const host = '0.0.0.0';
 
   try {
