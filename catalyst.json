@@ -5,6 +5,12 @@
       "name": "universal-plm-api"
     }
   ],
+  "slate": [
+    {
+      "name": "universal-plm-web",
+      "source": "apps/web"
+    }
+  ],
   "client": {
     "source": "apps/web/dist"
   }

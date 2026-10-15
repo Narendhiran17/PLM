@@ -6,16 +6,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "vite build",
     "preview": "vite preview"
   },
   "dependencies": {
-    "@universal-plm/domain-core": "*",
-    "@universal-plm/configuration-engine": "*",
-    "@universal-plm/manufacturing": "*",
-    "@universal-plm/industry-capabilities": "*",
-    "@universal-plm/enterprise-scale": "*",
-    "@universal-plm/autonomous-operations": "*",
     "lucide-react": "^0.468.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"

@@ -14,7 +14,16 @@
     "strict": true,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "baseUrl": ".",
+    "paths": {
+      "@universal-plm/industry-capabilities": ["./src/shared/industry-capabilities/index.ts"],
+      "@universal-plm/enterprise-scale": ["./src/shared/enterprise-scale/index.ts"],
+      "@universal-plm/autonomous-operations": ["./src/shared/autonomous-operations/index.ts"],
+      "@universal-plm/domain-core": ["./src/shared/domain-core/index.ts"],
+      "@universal-plm/configuration-engine": ["./src/shared/configuration-engine/index.ts"],
+      "@universal-plm/manufacturing": ["./src/shared/manufacturing/index.ts"]
+    }
   },
   "include": ["src"]
 }
