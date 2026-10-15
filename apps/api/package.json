@@ -19,6 +19,7 @@
     "@universal-plm/configuration-engine": "*",
     "@universal-plm/manufacturing": "*",
     "@universal-plm/industry-capabilities": "*",
+    "@universal-plm/enterprise-scale": "*",
     "fastify": "^5.1.0"
   },
   "devDependencies": {

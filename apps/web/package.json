@@ -14,6 +14,7 @@
     "@universal-plm/configuration-engine": "*",
     "@universal-plm/manufacturing": "*",
     "@universal-plm/industry-capabilities": "*",
+    "@universal-plm/enterprise-scale": "*",
     "lucide-react": "^0.468.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
