@@ -32,7 +32,13 @@ import {
   Workflow,
   FileSpreadsheet,
   Settings2,
-  Code
+  Code,
+  Factory,
+  Wrench,
+  Truck,
+  DollarSign,
+  Timer,
+  RefreshCw
 } from 'lucide-react';
 
 interface EcoCard {
@@ -54,7 +60,12 @@ interface EcoCard {
 
 export default function App() {
   // Navigation State
-  const [currentMenu, setCurrentMenu] = useState<'ecos' | 'products' | 'bom_tree' | 'documents' | 'capabilities'>('ecos');
+  const [currentMenu, setCurrentMenu] = useState<'ecos' | 'products' | 'bom_tree' | 'documents' | 'capabilities' | 'manufacturing'>('ecos');
+  const [mfgTab, setMfgTab] = useState<'mbom' | 'routings' | 'sourcing' | 'cost_rollup' | 'lead_time' | 'erp_sync'>('mbom');
+  const [selectedPlant, setSelectedPlant] = useState<'PLANT-DETROIT' | 'PLANT-CHENNAI'>('PLANT-DETROIT');
+  const [mfgBatchSize, setMfgBatchSize] = useState<number>(50);
+  const [erpSyncStatus, setErpSyncStatus] = useState<{ synced: boolean; system: string; eventId: string; time: string } | null>(null);
+  const [reconcileAlert, setReconcileAlert] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'kanban' | 'form' | 'list'>('kanban');
   const [selectedEcoId, setSelectedEcoId] = useState<string>('eco-001');
   const [formNotebookTab, setFormNotebookTab] = useState<'bom_changes' | 'approvals' | 'documents' | 'concurrency' | 'notes'>('bom_changes');
@@ -653,6 +664,22 @@ export default function App() {
 
             <button
               onClick={() => {
+                setCurrentMenu('manufacturing');
+                setViewMode('form');
+              }}
+              style={{
+                background: currentMenu === 'manufacturing' ? 'var(--brand-orange)' : 'transparent',
+                color: currentMenu === 'manufacturing' ? '#1E293B' : '#ffffff',
+                padding: '6px 14px',
+                borderRadius: '4px',
+                fontWeight: currentMenu === 'manufacturing' ? 700 : 500,
+              }}
+            >
+              Manufacturing (MBOM)
+            </button>
+
+            <button
+              onClick={() => {
                 setCurrentMenu('capabilities');
                 setViewMode('kanban');
               }}
@@ -745,12 +772,26 @@ export default function App() {
               {currentMenu === 'products' && 'Master Parts & Product Catalog'}
               {currentMenu === 'bom_tree' && 'Bill of Materials & Subsystems'}
               {currentMenu === 'documents' && 'Controlled Document Vault & CAD Artifacts'}
+              {currentMenu === 'manufacturing' && 'Manufacturing Operations & Supply Chain (MBOM)'}
               {currentMenu === 'capabilities' && 'Configuration Studio & Automation'}
             </span>
             {currentMenu === 'ecos' && viewMode === 'form' && (
               <>
                 <span style={{ color: 'var(--odoo-text-muted)' }}>/</span>
                 <span style={{ color: 'var(--brand-orange-hover)', fontWeight: 700 }}>{activeEco.ecoNumber}</span>
+              </>
+            )}
+            {currentMenu === 'manufacturing' && (
+              <>
+                <span style={{ color: 'var(--odoo-text-muted)' }}>/</span>
+                <span style={{ color: 'var(--brand-orange-hover)', fontWeight: 700 }}>
+                  {mfgTab === 'mbom' && 'EBOM-to-MBOM Transformation & Reconciliation (C01, C07)'}
+                  {mfgTab === 'routings' && 'Manufacturing Routings & Operations (C02, C03, C11)'}
+                  {mfgTab === 'sourcing' && 'Approved Manufacturers (AML) & Vendors (AVL) (C05, C06)'}
+                  {mfgTab === 'cost_rollup' && 'Multi-Level Cost Rollup & Budget Variance (C09)'}
+                  {mfgTab === 'lead_time' && 'Cumulative Lead Time & Critical Path Bottlenecks (C10)'}
+                  {mfgTab === 'erp_sync' && 'ERP/MRP Synchronization Outbox (C12)'}
+                </span>
               </>
             )}
             {currentMenu === 'capabilities' && (
@@ -2892,6 +2933,726 @@ export default function App() {
                         </td>
                       </tr>
                     ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* VIEW 7: MANUFACTURING & CROSS-DOMAIN SUPPLY CHAIN (PHASE 4) */}
+        {currentMenu === 'manufacturing' && (
+          <div className="odoo-sheet" style={{ padding: '24px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+              <div>
+                <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--brand-charcoal)', margin: 0 }}>
+                  Manufacturing Operations &amp; Supply Chain (MBOM)
+                </h2>
+                <p style={{ color: 'var(--odoo-text-muted)', fontSize: '0.875rem', marginTop: '4px', marginBottom: 0 }}>
+                  EBOM-to-MBOM restructuring, routings, work centers, AML/AVL sourcing, cost rollups, lead times, and ERP synchronization.
+                </p>
+              </div>
+
+              {/* Plant Multi-Facility Selector (C07) */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: '#475569' }}>Manufacturing Plant:</span>
+                <select
+                  value={selectedPlant}
+                  onChange={(e) => setSelectedPlant(e.target.value as any)}
+                  style={{
+                    padding: '6px 12px',
+                    borderRadius: '4px',
+                    border: '1px solid #cbd5e1',
+                    fontSize: '0.8125rem',
+                    fontWeight: 600,
+                    background: '#ffffff',
+                    color: 'var(--brand-charcoal)',
+                  }}
+                >
+                  <option value="PLANT-DETROIT">Plant Detroit (Robotics Cell #1)</option>
+                  <option value="PLANT-CHENNAI">Plant Chennai (Electronics Assembly #2)</option>
+                </select>
+                <span style={{ fontSize: '0.75rem', background: '#ecfdf5', color: '#065f46', border: '1px solid #a7f3d0', padding: '4px 10px', borderRadius: '4px', fontWeight: 700 }}>
+                  Phase 4: Active
+                </span>
+              </div>
+            </div>
+
+            {/* Manufacturing Navigation Tabs */}
+            <div
+              style={{
+                display: 'flex',
+                gap: '8px',
+                borderBottom: '2px solid #e2e8f0',
+                paddingBottom: '8px',
+                marginBottom: '20px',
+                overflowX: 'auto',
+              }}
+            >
+              {[
+                { id: 'mbom', label: 'EBOM-to-MBOM Transformation (C01, C07)', icon: Factory },
+                { id: 'routings', label: 'Routings & Work Centers (C02, C03)', icon: Wrench },
+                { id: 'sourcing', label: 'AML / AVL Sourcing (C05, C06)', icon: Truck },
+                { id: 'cost_rollup', label: 'Multi-Level Cost Rollup (C09)', icon: DollarSign },
+                { id: 'lead_time', label: 'Lead Time & Critical Path (C10)', icon: Timer },
+                { id: 'erp_sync', label: 'ERP / MRP Sync Outbox (C12)', icon: RefreshCw },
+              ].map((tab) => {
+                const IconComponent = tab.icon;
+                const isActive = mfgTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setMfgTab(tab.id as any)}
+                    style={{
+                      background: isActive ? 'var(--brand-charcoal)' : 'transparent',
+                      color: isActive ? 'var(--brand-orange)' : '#475569',
+                      border: 'none',
+                      borderRadius: '4px',
+                      padding: '8px 14px',
+                      fontSize: '0.8125rem',
+                      fontWeight: isActive ? 700 : 500,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    <IconComponent size={14} />
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* SUBTAB 1: EBOM-TO-MBOM TRANSFORMATION (C01, C07) */}
+            {mfgTab === 'mbom' && (
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+                  <div>
+                    <h3 style={{ fontSize: '0.9375rem', fontWeight: 700, margin: 0 }}>
+                      Plant-Specific Manufacturing BOM (MBOM) — ROB-1000
+                    </h3>
+                    <p style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '2px', marginBottom: 0 }}>
+                      Transformed from Engineering BOM with operation sequence mapping and injected plant consumables.
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      setReconcileAlert('EBOM vs MBOM Reconciliation Audit: 3 / 3 Engineering parts consumed (100% matched), 2 Plant Consumables verified, 0 Unconsumed components.');
+                    }}
+                    className="btn-odoo-primary"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                  >
+                    <CheckCircle2 size={14} /> Reconcile EBOM vs MBOM
+                  </button>
+                </div>
+
+                {reconcileAlert && (
+                  <div style={{ background: '#ecfdf5', border: '1px solid #a7f3d0', color: '#065f46', padding: '10px 14px', borderRadius: '4px', marginBottom: '16px', fontSize: '0.8125rem', fontWeight: 600 }}>
+                    ✓ {reconcileAlert}
+                  </div>
+                )}
+
+                <table className="odoo-table">
+                  <thead>
+                    <tr>
+                      <th>Find #</th>
+                      <th>Operation Seq</th>
+                      <th>Component Part Number</th>
+                      <th>Description</th>
+                      <th>Quantity</th>
+                      <th>UOM</th>
+                      <th>Source Type</th>
+                      <th>Reconciliation Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td style={{ fontFamily: 'var(--font-mono)' }}>10</td>
+                      <td>
+                        <span style={{ background: '#e0e7ff', color: '#3730a3', padding: '2px 8px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 700 }}>
+                          OP 10: Machining
+                        </span>
+                      </td>
+                      <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--brand-orange-hover)' }}>
+                        ROB-1010
+                      </td>
+                      <td style={{ fontWeight: 600 }}>Precision Harmonic Servo Actuator</td>
+                      <td>6.0</td>
+                      <td>EA</td>
+                      <td><span style={{ background: '#f1f5f9', color: '#334155', padding: '2px 6px', borderRadius: '3px', fontSize: '0.75rem' }}>EBOM Item</span></td>
+                      <td><span style={{ background: '#dcfce7', color: '#15803d', padding: '2px 6px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 700 }}>MATCHED (100%)</span></td>
+                    </tr>
+                    <tr>
+                      <td style={{ fontFamily: 'var(--font-mono)' }}>20</td>
+                      <td>
+                        <span style={{ background: '#e0e7ff', color: '#3730a3', padding: '2px 8px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 700 }}>
+                          OP 20: Assembly
+                        </span>
+                      </td>
+                      <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--brand-orange-hover)' }}>
+                        PCB-4001
+                      </td>
+                      <td style={{ fontWeight: 600 }}>Multi-Axis Motor Controller PCB</td>
+                      <td>2.0</td>
+                      <td>EA</td>
+                      <td><span style={{ background: '#f1f5f9', color: '#334155', padding: '2px 6px', borderRadius: '3px', fontSize: '0.75rem' }}>EBOM Item</span></td>
+                      <td><span style={{ background: '#dcfce7', color: '#15803d', padding: '2px 6px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 700 }}>MATCHED (100%)</span></td>
+                    </tr>
+                    <tr>
+                      <td style={{ fontFamily: 'var(--font-mono)' }}>30</td>
+                      <td>
+                        <span style={{ background: '#e0e7ff', color: '#3730a3', padding: '2px 8px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 700 }}>
+                          OP 20: Assembly
+                        </span>
+                      </td>
+                      <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--brand-orange-hover)' }}>
+                        STR-7001
+                      </td>
+                      <td style={{ fontWeight: 600 }}>Carbon Fiber Articulation Link Arm</td>
+                      <td>3.0</td>
+                      <td>EA</td>
+                      <td><span style={{ background: '#f1f5f9', color: '#334155', padding: '2px 6px', borderRadius: '3px', fontSize: '0.75rem' }}>EBOM Item</span></td>
+                      <td><span style={{ background: '#dcfce7', color: '#15803d', padding: '2px 6px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 700 }}>MATCHED (100%)</span></td>
+                    </tr>
+                    <tr style={{ background: '#fffbeb' }}>
+                      <td style={{ fontFamily: 'var(--font-mono)' }}>900</td>
+                      <td>
+                        <span style={{ background: '#fef3c7', color: '#92400e', padding: '2px 8px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 700 }}>
+                          OP 20: Assembly
+                        </span>
+                      </td>
+                      <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: '#b45309' }}>
+                        CNS-GREASE-400
+                      </td>
+                      <td style={{ fontWeight: 600, color: '#92400e' }}>Synthetic High-Temp Gear Lubricant</td>
+                      <td>0.5</td>
+                      <td>KG</td>
+                      <td><span style={{ background: '#fde68a', color: '#92400e', padding: '2px 6px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 700 }}>PLANT CONSUMABLE</span></td>
+                      <td><span style={{ background: '#fef3c7', color: '#92400e', padding: '2px 6px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 700 }}>MFG ONLY</span></td>
+                    </tr>
+                    <tr style={{ background: '#fffbeb' }}>
+                      <td style={{ fontFamily: 'var(--font-mono)' }}>910</td>
+                      <td>
+                        <span style={{ background: '#fef3c7', color: '#92400e', padding: '2px 8px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 700 }}>
+                          OP 30: Inspection &amp; Pack
+                        </span>
+                      </td>
+                      <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: '#b45309' }}>
+                        CNS-PACKAGING-BOX
+                      </td>
+                      <td style={{ fontWeight: 600, color: '#92400e' }}>Reinforced Industrial Shipping Crate</td>
+                      <td>1.0</td>
+                      <td>EA</td>
+                      <td><span style={{ background: '#fde68a', color: '#92400e', padding: '2px 6px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 700 }}>PLANT PACKAGING</span></td>
+                      <td><span style={{ background: '#fef3c7', color: '#92400e', padding: '2px 6px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 700 }}>MFG ONLY</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* SUBTAB 2: ROUTINGS & WORK CENTERS (C02, C03, C11) */}
+            {mfgTab === 'routings' && (
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+                  <div>
+                    <h3 style={{ fontSize: '0.9375rem', fontWeight: 700, margin: 0 }}>
+                      Manufacturing Routing: RTG-ROB-1000 (Active Rev 1.0)
+                    </h3>
+                    <p style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '2px', marginBottom: 0 }}>
+                      Sequential work center operations, setup times, cycle times, and labor allocations.
+                    </p>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#475569' }}>Simulate Batch Size:</span>
+                    <input
+                      type="number"
+                      value={mfgBatchSize}
+                      onChange={(e) => setMfgBatchSize(Number(e.target.value))}
+                      style={{ width: '80px', padding: '4px 8px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.8125rem' }}
+                    />
+                  </div>
+                </div>
+
+                <table className="odoo-table" style={{ marginBottom: '24px' }}>
+                  <thead>
+                    <tr>
+                      <th>Op #</th>
+                      <th>Operation Name</th>
+                      <th>Work Center</th>
+                      <th>Hourly Rate</th>
+                      <th>Setup Time</th>
+                      <th>Cycle Time</th>
+                      <th>Labor Headcount</th>
+                      <th>Digital Work Instructions (C11)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 700 }}>OP 10</td>
+                      <td style={{ fontWeight: 600 }}>Cast Aluminum Joint Machining</td>
+                      <td>
+                        <span style={{ background: '#f1f5f9', color: '#334155', padding: '2px 8px', borderRadius: '3px', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 700 }}>
+                          WC-CNC-01
+                        </span>
+                      </td>
+                      <td>$125.00 / hr</td>
+                      <td>45 min</td>
+                      <td>25 min / unit</td>
+                      <td>1 Operator</td>
+                      <td>
+                        <span style={{ color: 'var(--brand-orange-hover)', fontWeight: 600, fontSize: '0.75rem', cursor: 'pointer' }}>
+                          📄 OP-10-CNC-MILL.pdf
+                        </span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 700 }}>OP 20</td>
+                      <td style={{ fontWeight: 600 }}>Harmonic Drive &amp; Motor Wiring Assembly</td>
+                      <td>
+                        <span style={{ background: '#f1f5f9', color: '#334155', padding: '2px 8px', borderRadius: '3px', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 700 }}>
+                          WC-ASSY-01
+                        </span>
+                      </td>
+                      <td>$75.00 / hr</td>
+                      <td>30 min</td>
+                      <td>40 min / unit</td>
+                      <td>2 Operators</td>
+                      <td>
+                        <span style={{ color: 'var(--brand-orange-hover)', fontWeight: 600, fontSize: '0.75rem', cursor: 'pointer' }}>
+                          📄 OP-20-HARMONIC-TORQUE.pdf
+                        </span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 700 }}>OP 30</td>
+                      <td style={{ fontWeight: 600 }}>Final CMM Calibration &amp; Dynamic Load Run</td>
+                      <td>
+                        <span style={{ background: '#f1f5f9', color: '#334155', padding: '2px 8px', borderRadius: '3px', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 700 }}>
+                          WC-INSP-01
+                        </span>
+                      </td>
+                      <td>$90.00 / hr</td>
+                      <td>15 min</td>
+                      <td>20 min / unit</td>
+                      <td>1 Operator</td>
+                      <td>
+                        <span style={{ background: '#fee2e2', color: '#991b1b', padding: '2px 6px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 700 }}>
+                          QUALITY INSPECTION GATE
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+
+                {/* Labor & Machining Calculation Card */}
+                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '16px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+                    <div>
+                      <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>TOTAL SETUP TIME</div>
+                      <div style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--brand-charcoal)', marginTop: '4px' }}>
+                        90 Minutes
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Amortized over {mfgBatchSize} units</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>CYCLE TIME PER UNIT</div>
+                      <div style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--brand-charcoal)', marginTop: '4px' }}>
+                        85 Minutes
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: '#64748b' }}>1.42 Run Hours</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>SETUP COST PER UNIT</div>
+                      <div style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--brand-charcoal)', marginTop: '4px' }}>
+                        ${((165.0) / Math.max(1, mfgBatchSize)).toFixed(2)}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>TOTAL ROUTING LABOR COST</div>
+                      <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#059669', marginTop: '4px' }}>
+                        ${(109.2 + 165.0 / Math.max(1, mfgBatchSize)).toFixed(2)} / unit
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* SUBTAB 3: AML / AVL SOURCING (C04, C05, C06) */}
+            {mfgTab === 'sourcing' && (
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+                  <div>
+                    <h3 style={{ fontSize: '0.9375rem', fontWeight: 700, margin: 0 }}>
+                      Approved Manufacturer (AML) &amp; Approved Vendor (AVL) Matrix
+                    </h3>
+                    <p style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '2px', marginBottom: 0 }}>
+                      Qualified component manufacturer part numbers (MPNs), authorized distributors, and contract pricing.
+                    </p>
+                  </div>
+                </div>
+
+                <table className="odoo-table">
+                  <thead>
+                    <tr>
+                      <th>Internal Part #</th>
+                      <th>Qualified Manufacturer (AML)</th>
+                      <th>Manufacturer Part Number (MPN)</th>
+                      <th>AML Preference</th>
+                      <th>Authorized Supplier (AVL)</th>
+                      <th>Contract Unit Price</th>
+                      <th>Lead Time</th>
+                      <th>MOQ</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--brand-orange-hover)' }}>ROB-1010</td>
+                      <td style={{ fontWeight: 600 }}>Harmonic Drive LLC</td>
+                      <td style={{ fontFamily: 'var(--font-mono)' }}>CSG-20-100-2UH</td>
+                      <td><span style={{ background: '#dcfce7', color: '#15803d', padding: '2px 6px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 700 }}>PREFERRED</span></td>
+                      <td>Harmonic Direct Sales</td>
+                      <td style={{ fontWeight: 700 }}>$850.00</td>
+                      <td>45 Days</td>
+                      <td>1 EA</td>
+                    </tr>
+                    <tr>
+                      <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--brand-orange-hover)' }}>PCB-4001</td>
+                      <td style={{ fontWeight: 600 }}>Sanmina Corporation</td>
+                      <td style={{ fontFamily: 'var(--font-mono)' }}>PCB-4001-ASSY</td>
+                      <td><span style={{ background: '#dcfce7', color: '#15803d', padding: '2px 6px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 700 }}>PREFERRED</span></td>
+                      <td>Sanmina EMS Facility</td>
+                      <td style={{ fontWeight: 700 }}>$180.00</td>
+                      <td>21 Days</td>
+                      <td>5 EA</td>
+                    </tr>
+                    <tr>
+                      <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--brand-orange-hover)' }}>STR-7001</td>
+                      <td style={{ fontWeight: 600 }}>Toray Composite Materials</td>
+                      <td style={{ fontFamily: 'var(--font-mono)' }}>CF-ARM-LINK-70</td>
+                      <td><span style={{ background: '#dcfce7', color: '#15803d', padding: '2px 6px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 700 }}>PREFERRED</span></td>
+                      <td>Toray Industrial Direct</td>
+                      <td style={{ fontWeight: 700 }}>$220.00</td>
+                      <td>30 Days</td>
+                      <td>10 EA</td>
+                    </tr>
+                    <tr>
+                      <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--brand-orange-hover)' }}>ELC-0052</td>
+                      <td style={{ fontWeight: 600 }}>Texas Instruments</td>
+                      <td style={{ fontFamily: 'var(--font-mono)' }}>OPA2197IDR</td>
+                      <td><span style={{ background: '#dcfce7', color: '#15803d', padding: '2px 6px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 700 }}>PREFERRED</span></td>
+                      <td>Arrow Electronics (Distributor)</td>
+                      <td style={{ fontWeight: 700 }}>$2.15</td>
+                      <td>14 Days</td>
+                      <td>100 EA</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* SUBTAB 4: MULTI-LEVEL COST ROLLUP (C09) */}
+            {mfgTab === 'cost_rollup' && (
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                  <div>
+                    <h3 style={{ fontSize: '0.9375rem', fontWeight: 700, margin: 0 }}>
+                      Multi-Level Cost Rollup &amp; Engineering Target Variance
+                    </h3>
+                    <p style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '2px', marginBottom: 0 }}>
+                      Direct material costs from AVL + plant consumables + routing labor compared against engineering budget.
+                    </p>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '14px', marginBottom: '24px' }}>
+                  <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '14px' }}>
+                    <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>MATERIAL PROCUREMENT</div>
+                    <div style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--brand-charcoal)', marginTop: '4px' }}>
+                      $6,120.00
+                    </div>
+                  </div>
+                  <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '14px' }}>
+                    <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>CONSUMABLES &amp; PACKAGING</div>
+                    <div style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--brand-charcoal)', marginTop: '4px' }}>
+                      $35.00
+                    </div>
+                  </div>
+                  <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '14px' }}>
+                    <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>ROUTING LABOR &amp; CNC</div>
+                    <div style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--brand-charcoal)', marginTop: '4px' }}>
+                      $112.50
+                    </div>
+                  </div>
+                  <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '6px', padding: '14px' }}>
+                    <div style={{ fontSize: '0.75rem', color: '#1e40af', fontWeight: 700 }}>ROLLED-UP UNIT COST</div>
+                    <div style={{ fontSize: '1.35rem', fontWeight: 800, color: '#1e40af', marginTop: '4px' }}>
+                      $6,267.50
+                    </div>
+                  </div>
+                  <div style={{ background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '6px', padding: '14px' }}>
+                    <div style={{ fontSize: '0.75rem', color: '#065f46', fontWeight: 700 }}>TARGET VARIANCE</div>
+                    <div style={{ fontSize: '1.35rem', fontWeight: 800, color: '#059669', marginTop: '4px' }}>
+                      -$232.50 (-3.58%)
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: '#059669', fontWeight: 600 }}>✓ Under Budget Target</div>
+                  </div>
+                </div>
+
+                <table className="odoo-table">
+                  <thead>
+                    <tr>
+                      <th>Cost Element</th>
+                      <th>Component / Work Center</th>
+                      <th>Qty Consumed</th>
+                      <th>Unit Rate</th>
+                      <th>Extended Cost</th>
+                      <th>% of Total Unit Cost</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><strong>Component Direct</strong></td>
+                      <td>ROB-1010 Precision Harmonic Servo Actuator</td>
+                      <td>6.0 EA</td>
+                      <td>$850.00</td>
+                      <td style={{ fontWeight: 700 }}>$5,100.00</td>
+                      <td>81.37%</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Component Direct</strong></td>
+                      <td>STR-7001 Carbon Fiber Articulation Link Arm</td>
+                      <td>3.0 EA</td>
+                      <td>$220.00</td>
+                      <td style={{ fontWeight: 700 }}>$660.00</td>
+                      <td>10.53%</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Component Direct</strong></td>
+                      <td>PCB-4001 Multi-Axis Motor Controller PCB</td>
+                      <td>2.0 EA</td>
+                      <td>$180.00</td>
+                      <td style={{ fontWeight: 700 }}>$360.00</td>
+                      <td>5.74%</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Labor / Machine</strong></td>
+                      <td>WC-ASSY-01 Harmonic &amp; Wiring Assembly</td>
+                      <td>0.67 hrs</td>
+                      <td>$75.00/hr</td>
+                      <td style={{ fontWeight: 700 }}>$50.00</td>
+                      <td>0.80%</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Labor / Machine</strong></td>
+                      <td>WC-CNC-01 Joint Precision Machining</td>
+                      <td>0.42 hrs</td>
+                      <td>$125.00/hr</td>
+                      <td style={{ fontWeight: 700 }}>$52.50</td>
+                      <td>0.84%</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Consumable</strong></td>
+                      <td>CNS-GREASE-400 High Temp Gear Lubricant</td>
+                      <td>0.5 KG</td>
+                      <td>$70.00/kg</td>
+                      <td style={{ fontWeight: 700 }}>$35.00</td>
+                      <td>0.56%</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* SUBTAB 5: CUMULATIVE LEAD TIME & CRITICAL PATH (C10) */}
+            {mfgTab === 'lead_time' && (
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                  <div>
+                    <h3 style={{ fontSize: '0.9375rem', fontWeight: 700, margin: 0 }}>
+                      Cumulative Manufacturing &amp; Procurement Lead Time Analysis
+                    </h3>
+                    <p style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '2px', marginBottom: 0 }}>
+                      Calculates critical path bottleneck parts across supply chain distributors and plant assembly throughput.
+                    </p>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '24px' }}>
+                  <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '6px', padding: '16px' }}>
+                    <div style={{ fontSize: '0.75rem', color: '#991b1b', fontWeight: 700 }}>LONGEST PROCUREMENT LEAD TIME</div>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#dc2626', marginTop: '4px' }}>
+                      45 Days
+                    </div>
+                    <div style={{ fontSize: '0.8125rem', color: '#991b1b', marginTop: '4px' }}>
+                      Bottleneck: <strong>ROB-1010 Harmonic Actuator</strong> (Harmonic Direct)
+                    </div>
+                  </div>
+
+                  <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '16px' }}>
+                    <div style={{ fontSize: '0.75rem', color: '#475569', fontWeight: 700 }}>PLANT MANUFACTURING RUN TIME</div>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--brand-charcoal)', marginTop: '4px' }}>
+                      2 Days
+                    </div>
+                    <div style={{ fontSize: '0.8125rem', color: '#64748b', marginTop: '4px' }}>
+                      CNC Machining, Robotic Assembly &amp; CMM Inspection
+                    </div>
+                  </div>
+
+                  <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '6px', padding: '16px' }}>
+                    <div style={{ fontSize: '0.75rem', color: '#166534', fontWeight: 700 }}>TOTAL CUMULATIVE LEAD TIME</div>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#166534', marginTop: '4px' }}>
+                      47 Days
+                    </div>
+                    <div style={{ fontSize: '0.8125rem', color: '#166534', marginTop: '4px' }}>
+                      Delivery Commitment Guarantee Date: <strong>Nov 30, 2026</strong>
+                    </div>
+                  </div>
+                </div>
+
+                <table className="odoo-table">
+                  <thead>
+                    <tr>
+                      <th>Critical Rank</th>
+                      <th>Component Part #</th>
+                      <th>Part Description</th>
+                      <th>Selected MPN</th>
+                      <th>Authorized Supplier</th>
+                      <th>Lead Time</th>
+                      <th>Impact Rating</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr style={{ background: '#fff1f2' }}>
+                      <td><strong>1 (Critical Bottleneck)</strong></td>
+                      <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: '#e11d48' }}>ROB-1010</td>
+                      <td>Precision Harmonic Servo Actuator</td>
+                      <td style={{ fontFamily: 'var(--font-mono)' }}>CSG-20-100-2UH</td>
+                      <td>Harmonic Direct Sales</td>
+                      <td style={{ fontWeight: 800, color: '#e11d48' }}>45 Days</td>
+                      <td><span style={{ background: '#fee2e2', color: '#991b1b', padding: '2px 8px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 700 }}>CRITICAL PATH</span></td>
+                    </tr>
+                    <tr>
+                      <td><strong>2</strong></td>
+                      <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 700 }}>STR-7001</td>
+                      <td>Carbon Fiber Articulation Link Arm</td>
+                      <td style={{ fontFamily: 'var(--font-mono)' }}>CF-ARM-LINK-70</td>
+                      <td>Toray Industrial Direct</td>
+                      <td style={{ fontWeight: 700 }}>30 Days</td>
+                      <td><span style={{ background: '#fef3c7', color: '#92400e', padding: '2px 8px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 700 }}>MODERATE</span></td>
+                    </tr>
+                    <tr>
+                      <td><strong>3</strong></td>
+                      <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 700 }}>PCB-4001</td>
+                      <td>Multi-Axis Motor Controller PCB</td>
+                      <td style={{ fontFamily: 'var(--font-mono)' }}>PCB-4001-ASSY</td>
+                      <td>Sanmina EMS Facility</td>
+                      <td style={{ fontWeight: 700 }}>21 Days</td>
+                      <td><span style={{ background: '#f1f5f9', color: '#475569', padding: '2px 8px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 600 }}>STANDARD</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* SUBTAB 6: ERP / MRP SYNCHRONIZATION OUTBOX (C12) */}
+            {mfgTab === 'erp_sync' && (
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                  <div>
+                    <h3 style={{ fontSize: '0.9375rem', fontWeight: 700, margin: 0 }}>
+                      Transactional ERP / MRP Synchronization Outbox (C12)
+                    </h3>
+                    <p style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '2px', marginBottom: 0 }}>
+                      Automatic transactional release synchronization of MBOMs, items, and routings to SAP, NetSuite, and Odoo ERP.
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      const hashPart = Math.random().toString(16).substring(2, 10);
+                      setErpSyncStatus({
+                        synced: true,
+                        system: 'SAP S/4HANA (Production Plant 1001)',
+                        eventId: `OUTBOX-${Date.now()}-${hashPart}`,
+                        time: new Date().toLocaleTimeString(),
+                      });
+                    }}
+                    className="btn-odoo-primary"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                  >
+                    <RefreshCw size={14} /> Synchronize Released MBOM to SAP S/4HANA
+                  </button>
+                </div>
+
+                {erpSyncStatus && (
+                  <div style={{ background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '6px', padding: '16px', marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <CheckCircle2 size={18} color="#059669" />
+                        <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#065f46' }}>
+                          Outbox Event Dispatched &amp; Acknowledged: {erpSyncStatus.eventId}
+                        </span>
+                      </div>
+                      <span style={{ fontSize: '0.75rem', background: '#d1fae5', color: '#065f46', padding: '2px 8px', borderRadius: '3px', fontWeight: 700 }}>
+                        HTTP 200 ACKNOWLEDGED
+                      </span>
+                    </div>
+                    <div style={{ marginTop: '8px', fontSize: '0.8125rem', color: '#047857' }}>
+                      Target ERP: <strong>{erpSyncStatus.system}</strong> · Released MBOM: <strong>ROB-1000 Rev 1.0</strong> · Timestamp: <strong>{erpSyncStatus.time}</strong>
+                    </div>
+                  </div>
+                )}
+
+                <table className="odoo-table">
+                  <thead>
+                    <tr>
+                      <th>Outbox ID</th>
+                      <th>Target ERP / MRP</th>
+                      <th>Entity Synchronized</th>
+                      <th>Event Action</th>
+                      <th>Idempotency SHA-256 Key</th>
+                      <th>Delivery Telemetry</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--brand-orange-hover)' }}>
+                        OUTBOX-1739599500-a4f09c12
+                      </td>
+                      <td><strong>SAP S/4HANA</strong> (Plant 1001)</td>
+                      <td>MBOM: ROB-1000 Rev 1.0 (5 Lines)</td>
+                      <td><span style={{ background: '#e0f2fe', color: '#0369a1', padding: '2px 6px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 700 }}>RELEASE_BOM</span></td>
+                      <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: '#64748b' }}>
+                        a4f09c128ef0019234b9cf1104e76a0298bb3d
+                      </td>
+                      <td>
+                        <span style={{ background: '#dcfce7', color: '#15803d', padding: '2px 8px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 700 }}>
+                          ✓ ACKNOWLEDGED (0 Retries)
+                        </span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--brand-orange-hover)' }}>
+                        OUTBOX-1739599100-b8c12a77
+                      </td>
+                      <td><strong>Oracle NetSuite ERP</strong></td>
+                      <td>ROUTING: RTG-ROB-1000 (3 Ops)</td>
+                      <td><span style={{ background: '#e0f2fe', color: '#0369a1', padding: '2px 6px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 700 }}>RELEASE_ROUTING</span></td>
+                      <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: '#64748b' }}>
+                        b8c12a779140fa78129e0839420abbf1388ec9
+                      </td>
+                      <td>
+                        <span style={{ background: '#dcfce7', color: '#15803d', padding: '2px 8px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 700 }}>
+                          ✓ ACKNOWLEDGED (0 Retries)
+                        </span>
+                      </td>
+                    </tr>
                   </tbody>
                 </table>
               </div>
