@@ -1,33 +1,32 @@
 :root {
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  /* Odoo PLM Signature Design System */
+  --odoo-purple: #714B67;
+  --odoo-purple-dark: #583950;
+  --odoo-purple-light: #875A7B;
+  --odoo-teal: #00A09D;
+  --odoo-teal-dark: #008784;
 
-  /* Color Palette */
-  --bg-primary: #0a0e17;
-  --bg-secondary: #0f172a;
-  --bg-tertiary: #1e293b;
-  --bg-card: rgba(15, 23, 42, 0.75);
-  --bg-hover: rgba(30, 41, 59, 0.6);
+  --odoo-bg-gray: #F1F3F5;
+  --odoo-card-bg: #FFFFFF;
+  --odoo-border: #DDE2E6;
+  --odoo-border-light: #EBF0F3;
+  --odoo-header-bg: #F8F9FA;
 
-  --border-color: rgba(148, 163, 184, 0.12);
-  --border-active: rgba(56, 189, 248, 0.4);
+  --odoo-text-main: #212529;
+  --odoo-text-muted: #6C757D;
+  --odoo-text-light: #adb5bd;
 
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
+  --odoo-success: #28a745;
+  --odoo-warning: #ffc107;
+  --odoo-danger: #dc3545;
+  --odoo-info: #17a2b8;
 
-  --accent-cyan: #06b6d4;
-  --accent-sky: #38bdf8;
-  --accent-blue: #3b82f6;
-  --accent-indigo: #6366f1;
-  --accent-emerald: #10b981;
-  --accent-amber: #f59e0b;
-  --accent-rose: #f43f5e;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
-  --shadow-glow: 0 0 20px rgba(56, 189, 248, 0.15);
+  --odoo-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --odoo-shadow-md: 0 3px 6px rgba(0, 0, 0, 0.08);
+  --odoo-shadow-sheet: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
 }
 
 * {
@@ -38,13 +37,10 @@
 
 body {
   font-family: var(--font-sans);
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
+  background-color: var(--odoo-bg-gray);
+  color: var(--odoo-text-main);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
-  background-image: 
-    radial-gradient(circle at 15% 15%, rgba(14, 165, 233, 0.08) 0%, transparent 40%),
-    radial-gradient(circle at 85% 85%, rgba(99, 102, 241, 0.08) 0%, transparent 40%);
 }
 
 button {
@@ -52,6 +48,7 @@ button {
   cursor: pointer;
   border: none;
   outline: none;
+  transition: all 0.15s ease-in-out;
 }
 
 input, select, textarea {
@@ -59,44 +56,208 @@ input, select, textarea {
   outline: none;
 }
 
-/* Glassmorphism Classes */
-.glass-panel {
-  background: var(--bg-card);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
+/* Odoo Classic Primary & Secondary Buttons */
+.btn-odoo-primary {
+  background-color: var(--odoo-purple);
+  color: #ffffff;
+  font-weight: 500;
+  border-radius: 4px;
+  padding: 6px 14px;
+  font-size: 0.875rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
 }
 
-.glass-panel-hover {
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+.btn-odoo-primary:hover {
+  background-color: var(--odoo-purple-dark);
 }
 
-.glass-panel-hover:hover {
-  border-color: var(--border-active);
-  box-shadow: var(--shadow-glow);
+.btn-odoo-secondary {
+  background-color: #ffffff;
+  color: #495057;
+  border: 1px solid var(--odoo-border);
+  font-weight: 500;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 0.875rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-odoo-secondary:hover {
+  background-color: #f8f9fa;
+  border-color: #ced4da;
+}
+
+.btn-odoo-teal {
+  background-color: var(--odoo-teal);
+  color: #ffffff;
+  font-weight: 500;
+  border-radius: 4px;
+  padding: 6px 14px;
+  font-size: 0.875rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-odoo-teal:hover {
+  background-color: var(--odoo-teal-dark);
+}
+
+/* Odoo Form "Sheet" Container */
+.odoo-sheet {
+  background: var(--odoo-card-bg);
+  border: 1px solid var(--odoo-border);
+  border-radius: 3px;
+  box-shadow: var(--odoo-shadow-sheet);
+  max-width: 1240px;
+  margin: 0 auto;
+}
+
+/* Odoo Pipeline Stage Arrow Chevron */
+.odoo-statusbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--odoo-border);
+  padding: 8px 16px;
+  background-color: #fafbfc;
+}
+
+.odoo-stage-pipeline {
+  display: flex;
+  align-items: center;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.odoo-stage-step {
+  padding: 6px 14px;
+  font-size: 0.8125rem;
+  color: var(--odoo-text-muted);
+  border-right: 1px solid #ced4da;
+  background: #ffffff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.odoo-stage-step:last-child {
+  border-right: none;
+}
+
+.odoo-stage-step.active {
+  background: var(--odoo-purple);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+/* Odoo Smart Buttons (Stat Boxes) */
+.odoo-stat-button {
+  background: #ffffff;
+  border: 1px solid var(--odoo-border);
+  border-radius: 4px;
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 120px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.odoo-stat-button:hover {
+  background: #f8f9fa;
+  border-color: #adb5bd;
+}
+
+.odoo-stat-num {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--odoo-purple);
+  line-height: 1.1;
+}
+
+.odoo-stat-label {
+  font-size: 0.75rem;
+  color: var(--odoo-text-muted);
+  text-transform: uppercase;
+}
+
+/* Kanban Cards in Odoo */
+.odoo-kanban-column {
+  background: #ebedf0;
+  border-radius: 6px;
+  min-width: 290px;
+  width: 290px;
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  border: 1px solid #dfe3e8;
+}
+
+.odoo-kanban-card {
+  background: #ffffff;
+  border-radius: 4px;
+  border: 1px solid #d8dde3;
+  padding: 12px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.odoo-kanban-card:hover {
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.12);
   transform: translateY(-1px);
 }
 
-/* Code & Monospace Badges */
-.mono-badge {
-  font-family: var(--font-mono);
-  font-size: 0.8125rem;
-  letter-spacing: -0.02em;
+/* Custom Table Styling */
+.odoo-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
 }
 
-/* Custom Scrollbar */
+.odoo-table th {
+  background: #f8f9fa;
+  color: #495057;
+  font-weight: 600;
+  text-align: left;
+  padding: 10px 14px;
+  border-bottom: 2px solid var(--odoo-border);
+  font-size: 0.8125rem;
+}
+
+.odoo-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid #edf0f2;
+  color: var(--odoo-text-main);
+  vertical-align: middle;
+}
+
+.odoo-table tr:hover td {
+  background-color: #f8f9fa;
+}
+
+/* Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--bg-primary);
+  background: #f1f3f5;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--bg-tertiary);
+  background: #ced4da;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted);
+  background: #adb5bd;
 }
