@@ -3,4 +3,8 @@ export * from './types/revision.js';
 export * from './types/bom.js';
 export * from './types/change.js';
 export * from './types/tenant.js';
+export * from './types/variant.js';
+export * from './types/effectivity.js';
 export * from './utils/cycle-detector.js';
+export * from './utils/bom-comparator.js';
+export * from './utils/where-used-engine.js';

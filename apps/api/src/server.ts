@@ -5,6 +5,7 @@ import { healthRoutes } from './routes/health.js';
 import { partRoutes } from './routes/parts.js';
 import { bomRoutes } from './routes/boms.js';
 import { changeRoutes } from './routes/changes.js';
+import { variantRoutes } from './routes/variants.js';
 
 export async function buildServer() {
   const server = Fastify({
@@ -28,6 +29,7 @@ export async function buildServer() {
   await server.register(partRoutes, { prefix: '/api/v1/parts' });
   await server.register(bomRoutes, { prefix: '/api/v1/boms' });
   await server.register(changeRoutes, { prefix: '/api/v1/changes' });
+  await server.register(variantRoutes, { prefix: '/api/v1/variants' });
 
   return server;
 }

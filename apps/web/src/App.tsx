@@ -14,7 +14,11 @@ import {
   Paperclip,
   Activity,
   TrendingUp,
-  Check
+  Check,
+  GitCompare,
+  Network,
+  Sliders,
+  Calendar
 } from 'lucide-react';
 
 interface EcoCard {
@@ -40,6 +44,12 @@ export default function App() {
   const [viewMode, setViewMode] = useState<'kanban' | 'form' | 'list'>('kanban');
   const [selectedEcoId, setSelectedEcoId] = useState<string>('eco-001');
   const [formNotebookTab, setFormNotebookTab] = useState<'bom_changes' | 'approvals' | 'notes'>('bom_changes');
+  const [bomSubTab, setBomSubTab] = useState<'tree' | 'compare' | 'where_used' | 'variants' | 'effectivity'>('tree');
+  const [selectedWhereUsedPart, setSelectedWhereUsedPart] = useState<string>('ELC-0052');
+  const [effectivityDate, setEffectivityDate] = useState<string>('2026-10-15');
+  const [effectivitySerial, setEffectivitySerial] = useState<string>('SN-1500');
+  const [selectedPayload, setSelectedPayload] = useState<string>('10KG');
+  const [selectedIpRating, setSelectedIpRating] = useState<string>('IP54');
 
   // Search & Filter
   const [searchFilter, setSearchFilter] = useState('');
@@ -1152,67 +1162,479 @@ export default function App() {
           </div>
         )}
 
-        {/* VIEW 4: BOM TREE */}
+        {/* VIEW 4: BOM & ENGINEERING WORKBENCH */}
         {currentMenu === 'bom_tree' && (
           <div className="odoo-sheet" style={{ padding: '24px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
               <div>
-                <span style={{ fontSize: '0.8125rem', color: 'var(--brand-orange-hover)', fontWeight: 700 }}>BOM-ROB-1000-01</span>
-                <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--brand-charcoal)', marginTop: '2px' }}>
-                  Bill of Materials — Autonomous Articulated Robotic Arm
+                <span style={{ fontSize: '0.8125rem', color: 'var(--brand-orange-hover)', fontWeight: 700 }}>
+                  BOM-ROB-1000 · Autonomous Articulated Robotic Arm
+                </span>
+                <h2 style={{ fontSize: '1.375rem', fontWeight: 700, color: 'var(--brand-charcoal)', marginTop: '2px' }}>
+                  Engineering Bill of Materials & Lineage Workbench
                 </h2>
               </div>
-              <span style={{ background: '#d1fae5', color: '#065f46', padding: '4px 10px', borderRadius: '4px', fontSize: '0.8125rem', fontWeight: 700 }}>
-                Normal BOM · Rev A
-              </span>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <span style={{ background: '#ecfdf5', color: '#065f46', border: '1px solid #a7f3d0', padding: '4px 10px', borderRadius: '4px', fontSize: '0.8125rem', fontWeight: 700 }}>
+                  ✓ Cycle-Safe Verified (DFS)
+                </span>
+                <span style={{ background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a', padding: '4px 10px', borderRadius: '4px', fontSize: '0.8125rem', fontWeight: 700 }}>
+                  Phase 1 Engineering Core
+                </span>
+              </div>
             </div>
 
-            <table className="odoo-table">
-              <thead>
-                <tr>
-                  <th>Level</th>
-                  <th>Component</th>
-                  <th>Reference</th>
-                  <th>Quantity</th>
-                  <th>Unit of Measure</th>
-                  <th>Reference Designators</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td><strong>0</strong></td>
-                  <td style={{ fontWeight: 700 }}>Autonomous Articulated Robotic Arm</td>
-                  <td style={{ fontFamily: 'var(--font-mono)' }}>ROB-1000</td>
-                  <td>1.0</td>
-                  <td>Units</td>
-                  <td>-</td>
-                </tr>
-                <tr>
-                  <td style={{ paddingLeft: '28px' }}>├── 1.1</td>
-                  <td style={{ fontWeight: 600 }}>Precision Harmonic Servo Actuator</td>
-                  <td style={{ fontFamily: 'var(--font-mono)' }}>ROB-1010</td>
-                  <td style={{ fontWeight: 600 }}>6.0</td>
-                  <td>Units</td>
-                  <td>Joints 1–6</td>
-                </tr>
-                <tr>
-                  <td style={{ paddingLeft: '28px' }}>├── 1.2</td>
-                  <td style={{ fontWeight: 600 }}>Multi-Axis Motor Controller PCB</td>
-                  <td style={{ fontFamily: 'var(--font-mono)' }}>PCB-4001</td>
-                  <td style={{ fontWeight: 600 }}>1.0</td>
-                  <td>Units</td>
-                  <td>Main Bay</td>
-                </tr>
-                <tr>
-                  <td style={{ paddingLeft: '56px' }}>└── 2.1</td>
-                  <td>CAN-Bus Transceiver IC</td>
-                  <td style={{ fontFamily: 'var(--font-mono)' }}>ELC-0052</td>
-                  <td>2.0</td>
-                  <td>Units</td>
-                  <td style={{ color: 'var(--brand-orange-hover)', fontWeight: 700 }}>U1, U2</td>
-                </tr>
-              </tbody>
-            </table>
+            {/* Subtab Navigation */}
+            <div style={{ display: 'flex', gap: '4px', borderBottom: '2px solid #e2e8f0', marginBottom: '20px' }}>
+              {[
+                { id: 'tree', label: 'Multi-Level Tree', icon: Layers },
+                { id: 'compare', label: 'BOM Redline Diff (A13)', icon: GitCompare },
+                { id: 'where_used', label: 'Deep Where-Used (A06)', icon: Network },
+                { id: 'variants', label: 'Product Variants (A02)', icon: Sliders },
+                { id: 'effectivity', label: 'Effectivity Rules (A12)', icon: Calendar },
+              ].map((tab) => {
+                const Icon = tab.icon;
+                const isActive = bomSubTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setBomSubTab(tab.id as any)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      padding: '8px 16px',
+                      background: isActive ? 'var(--brand-charcoal)' : 'transparent',
+                      color: isActive ? 'var(--brand-orange)' : '#64748b',
+                      fontWeight: isActive ? 700 : 500,
+                      borderRadius: '4px 4px 0 0',
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontSize: '0.875rem',
+                      transition: 'all 0.15s ease',
+                    }}
+                  >
+                    <Icon size={16} />
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* SUBTAB 1: MULTI-LEVEL BOM TREE */}
+            {bomSubTab === 'tree' && (
+              <div>
+                <table className="odoo-table">
+                  <thead>
+                    <tr>
+                      <th style={{ width: '80px' }}>Level</th>
+                      <th>Component Name</th>
+                      <th>Part Number</th>
+                      <th>Revision</th>
+                      <th>Quantity</th>
+                      <th>UOM</th>
+                      <th>Reference Designators</th>
+                      <th>Lifecycle</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><strong>0</strong></td>
+                      <td style={{ fontWeight: 700, color: 'var(--brand-charcoal)' }}>Autonomous Articulated Robotic Arm</td>
+                      <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>ROB-1000</td>
+                      <td>Rev A</td>
+                      <td>1.0</td>
+                      <td>EA</td>
+                      <td>—</td>
+                      <td><span style={{ background: '#d1fae5', color: '#065f46', padding: '2px 6px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 600 }}>RELEASED</span></td>
+                    </tr>
+                    <tr>
+                      <td style={{ paddingLeft: '24px' }}>├── 1.1</td>
+                      <td style={{ fontWeight: 600 }}>Precision Harmonic Servo Actuator</td>
+                      <td style={{ fontFamily: 'var(--font-mono)' }}>ROB-1010</td>
+                      <td>Rev B</td>
+                      <td style={{ fontWeight: 600 }}>6.0</td>
+                      <td>EA</td>
+                      <td>Joints 1–6</td>
+                      <td><span style={{ background: '#d1fae5', color: '#065f46', padding: '2px 6px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 600 }}>RELEASED</span></td>
+                    </tr>
+                    <tr>
+                      <td style={{ paddingLeft: '24px' }}>├── 1.2</td>
+                      <td style={{ fontWeight: 600 }}>Multi-Axis Motor Controller PCB</td>
+                      <td style={{ fontFamily: 'var(--font-mono)' }}>PCB-4001</td>
+                      <td>Rev A</td>
+                      <td style={{ fontWeight: 600 }}>1.0</td>
+                      <td>EA</td>
+                      <td>Main Bay</td>
+                      <td><span style={{ background: '#d1fae5', color: '#065f46', padding: '2px 6px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 600 }}>RELEASED</span></td>
+                    </tr>
+                    <tr>
+                      <td style={{ paddingLeft: '48px' }}>└── 2.1</td>
+                      <td>CAN-Bus Transceiver IC (AEC-Q100)</td>
+                      <td style={{ fontFamily: 'var(--font-mono)' }}>ELC-0052</td>
+                      <td>Rev A</td>
+                      <td>2.0</td>
+                      <td>EA</td>
+                      <td><span style={{ color: 'var(--brand-orange-hover)', fontWeight: 700 }}>U1, U2</span></td>
+                      <td><span style={{ background: '#d1fae5', color: '#065f46', padding: '2px 6px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 600 }}>RELEASED</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* SUBTAB 2: BOM REDLINE DIFF (A13) */}
+            {bomSubTab === 'compare' && (
+              <div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '16px' }}>
+                  <div style={{ background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '6px', padding: '12px' }}>
+                    <div style={{ fontSize: '0.75rem', color: '#065f46', fontWeight: 600 }}>ADDED COMPONENTS</div>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#065f46' }}>+1</div>
+                    <div style={{ fontSize: '0.75rem', color: '#047857' }}>ROB-1010 Servo Actuator</div>
+                  </div>
+                  <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '6px', padding: '12px' }}>
+                    <div style={{ fontSize: '0.75rem', color: '#991b1b', fontWeight: 600 }}>REMOVED COMPONENTS</div>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#991b1b' }}>-1</div>
+                    <div style={{ fontSize: '0.75rem', color: '#b91c1c' }}>ACT-0021 Stepper Motor</div>
+                  </div>
+                  <div style={{ background: '#fefce8', border: '1px solid #fef08a', borderRadius: '6px', padding: '12px' }}>
+                    <div style={{ fontSize: '0.75rem', color: '#854d0e', fontWeight: 600 }}>MODIFIED COMPONENTS</div>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#854d0e' }}>~1</div>
+                    <div style={{ fontSize: '0.75rem', color: '#a16207' }}>MNT-0902 M6 Bolts (Qty 12➔16)</div>
+                  </div>
+                  <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '12px' }}>
+                    <div style={{ fontSize: '0.75rem', color: '#475569', fontWeight: 600 }}>UNCHANGED COMPONENTS</div>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#475569' }}>1</div>
+                    <div style={{ fontSize: '0.75rem', color: '#64748b' }}>PCB-4001 Motor Controller</div>
+                  </div>
+                </div>
+
+                <table className="odoo-table">
+                  <thead>
+                    <tr>
+                      <th>Status</th>
+                      <th>Part Number</th>
+                      <th>Description</th>
+                      <th>Old Qty</th>
+                      <th>New Qty</th>
+                      <th>Delta</th>
+                      <th>Find No</th>
+                      <th>Engineering Notes</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr style={{ background: '#f0fdf4' }}>
+                      <td>
+                        <span style={{ background: '#16a34a', color: '#ffffff', padding: '2px 8px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 700 }}>
+                          ADDED
+                        </span>
+                      </td>
+                      <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 700 }}>ROB-1010</td>
+                      <td>Precision Harmonic Servo Actuator</td>
+                      <td>0.0</td>
+                      <td style={{ fontWeight: 700, color: '#16a34a' }}>6.0</td>
+                      <td style={{ fontWeight: 700, color: '#16a34a' }}>+6.0</td>
+                      <td>10</td>
+                      <td>Upgrades joint torque from 25Nm to 65Nm</td>
+                    </tr>
+                    <tr style={{ background: '#fef2f2' }}>
+                      <td>
+                        <span style={{ background: '#dc2626', color: '#ffffff', padding: '2px 8px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 700 }}>
+                          REMOVED
+                        </span>
+                      </td>
+                      <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 700 }}>ACT-0021</td>
+                      <td>Legacy NEMA-23 Stepper Motor</td>
+                      <td style={{ textDecoration: 'line-through' }}>6.0</td>
+                      <td>0.0</td>
+                      <td style={{ fontWeight: 700, color: '#dc2626' }}>-6.0</td>
+                      <td>10</td>
+                      <td>Obsolescence replacement in ECO-2026-0042</td>
+                    </tr>
+                    <tr style={{ background: '#fefce8' }}>
+                      <td>
+                        <span style={{ background: '#ca8a04', color: '#ffffff', padding: '2px 8px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 700 }}>
+                          MODIFIED
+                        </span>
+                      </td>
+                      <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 700 }}>MNT-0902</td>
+                      <td>Grade 10.9 M6 Hex Flange Bolts</td>
+                      <td>12.0</td>
+                      <td style={{ fontWeight: 700, color: '#ca8a04' }}>16.0</td>
+                      <td style={{ fontWeight: 700, color: '#ca8a04' }}>+4.0</td>
+                      <td>30</td>
+                      <td>4 additional mounting bolts for heavier flange</td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <span style={{ background: '#e2e8f0', color: '#475569', padding: '2px 8px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 600 }}>
+                          UNCHANGED
+                        </span>
+                      </td>
+                      <td style={{ fontFamily: 'var(--font-mono)' }}>PCB-4001</td>
+                      <td>Multi-Axis Motor Controller PCB</td>
+                      <td>1.0</td>
+                      <td>1.0</td>
+                      <td>0.0</td>
+                      <td>20</td>
+                      <td>Pin-compatible harness interface verified</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* SUBTAB 3: DEEP WHERE-USED (A06) */}
+            {bomSubTab === 'where_used' && (
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                  <label style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--brand-charcoal)' }}>
+                    Select Child Component to Trace Impact:
+                  </label>
+                  <select
+                    value={selectedWhereUsedPart}
+                    onChange={(e) => setSelectedWhereUsedPart(e.target.value)}
+                    style={{
+                      padding: '6px 12px',
+                      borderRadius: '4px',
+                      border: '1px solid #cbd5e1',
+                      fontSize: '0.875rem',
+                      fontWeight: 600,
+                      background: '#ffffff',
+                    }}
+                  >
+                    <option value="ELC-0052">ELC-0052 — CAN-Bus Transceiver IC</option>
+                    <option value="PCB-4001">PCB-4001 — Multi-Axis Motor Controller PCB</option>
+                    <option value="ROB-1010">ROB-1010 — Precision Harmonic Servo Actuator</option>
+                  </select>
+                </div>
+
+                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '16px', marginBottom: '16px' }}>
+                  <div style={{ fontSize: '0.8125rem', color: '#64748b', fontWeight: 600, marginBottom: '6px' }}>
+                    BOTTOM-UP EXPLOSION HIERARCHY
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9375rem', fontWeight: 600 }}>
+                    <span style={{ background: '#e0f2fe', color: '#0369a1', padding: '4px 10px', borderRadius: '4px', fontFamily: 'var(--font-mono)' }}>
+                      {selectedWhereUsedPart}
+                    </span>
+                    <span style={{ color: '#94a3b8' }}>➔</span>
+                    {selectedWhereUsedPart === 'ELC-0052' && (
+                      <>
+                        <span style={{ background: '#fef3c7', color: '#92400e', padding: '4px 10px', borderRadius: '4px', fontFamily: 'var(--font-mono)' }}>
+                          PCB-4001 (Level 1 Parent)
+                        </span>
+                        <span style={{ color: '#94a3b8' }}>➔</span>
+                      </>
+                    )}
+                    <span style={{ background: '#ecfdf5', color: '#065f46', padding: '4px 10px', borderRadius: '4px', fontFamily: 'var(--font-mono)' }}>
+                      ROB-1000 (Top-Level Assembly)
+                    </span>
+                  </div>
+                </div>
+
+                <table className="odoo-table">
+                  <thead>
+                    <tr>
+                      <th>Impact Level</th>
+                      <th>Parent Assembly</th>
+                      <th>Part Number</th>
+                      <th>Parent Revision</th>
+                      <th>Qty Consumed</th>
+                      <th>BOM Type</th>
+                      <th>Assembly State</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedWhereUsedPart === 'ELC-0052' && (
+                      <tr>
+                        <td><strong>Level 1</strong> (Direct)</td>
+                        <td style={{ fontWeight: 600 }}>Multi-Axis Motor Controller PCB</td>
+                        <td style={{ fontFamily: 'var(--font-mono)' }}>PCB-4001</td>
+                        <td>Rev A</td>
+                        <td>2.0 EA</td>
+                        <td>EBOM</td>
+                        <td><span style={{ background: '#d1fae5', color: '#065f46', padding: '2px 6px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 600 }}>RELEASED</span></td>
+                      </tr>
+                    )}
+                    <tr>
+                      <td><strong>{selectedWhereUsedPart === 'ELC-0052' ? 'Level 2' : 'Level 1'}</strong> (Top)</td>
+                      <td style={{ fontWeight: 600 }}>Autonomous Articulated Robotic Arm</td>
+                      <td style={{ fontFamily: 'var(--font-mono)' }}>ROB-1000</td>
+                      <td>Rev A</td>
+                      <td>{selectedWhereUsedPart === 'ROB-1010' ? '6.0 EA' : '1.0 EA'}</td>
+                      <td>EBOM</td>
+                      <td><span style={{ background: '#d1fae5', color: '#065f46', padding: '2px 6px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 600 }}>RELEASED</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* SUBTAB 4: PRODUCT VARIANTS (A02) */}
+            {bomSubTab === 'variants' && (
+              <div>
+                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '16px', marginBottom: '20px' }}>
+                  <div style={{ fontSize: '0.8125rem', color: '#64748b', fontWeight: 600, marginBottom: '6px' }}>
+                    FAMILY: ROB-FAMILY · Articulated Industrial Robot Series
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                    <div>
+                      <label style={{ fontSize: '0.8125rem', fontWeight: 700, color: 'var(--brand-charcoal)', display: 'block', marginBottom: '6px' }}>
+                        Payload Capacity Option:
+                      </label>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        {[
+                          { code: '10KG', label: '10 kg High Speed' },
+                          { code: '20KG', label: '20 kg Standard' },
+                          { code: '50KG', label: '50 kg Heavy Duty' },
+                        ].map((opt) => (
+                          <button
+                            key={opt.code}
+                            onClick={() => setSelectedPayload(opt.code)}
+                            style={{
+                              padding: '6px 12px',
+                              borderRadius: '4px',
+                              border: selectedPayload === opt.code ? '2px solid var(--brand-orange)' : '1px solid #cbd5e1',
+                              background: selectedPayload === opt.code ? '#fffbeb' : '#ffffff',
+                              color: selectedPayload === opt.code ? '#92400e' : '#334155',
+                              fontWeight: selectedPayload === opt.code ? 700 : 500,
+                              cursor: 'pointer',
+                              fontSize: '0.8125rem',
+                            }}
+                          >
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label style={{ fontSize: '0.8125rem', fontWeight: 700, color: 'var(--brand-charcoal)', display: 'block', marginBottom: '6px' }}>
+                        Environmental Protection Option:
+                      </label>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        {[
+                          { code: 'IP54', label: 'IP54 Workshop Standard' },
+                          { code: 'IP67', label: 'IP67 Cleanroom / Washdown' },
+                        ].map((opt) => (
+                          <button
+                            key={opt.code}
+                            onClick={() => setSelectedIpRating(opt.code)}
+                            style={{
+                              padding: '6px 12px',
+                              borderRadius: '4px',
+                              border: selectedIpRating === opt.code ? '2px solid var(--brand-orange)' : '1px solid #cbd5e1',
+                              background: selectedIpRating === opt.code ? '#fffbeb' : '#ffffff',
+                              color: selectedIpRating === opt.code ? '#92400e' : '#334155',
+                              fontWeight: selectedIpRating === opt.code ? 700 : 500,
+                              cursor: 'pointer',
+                              fontSize: '0.8125rem',
+                            }}
+                          >
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '6px', padding: '16px' }}>
+                  <div style={{ fontSize: '0.8125rem', color: '#166534', fontWeight: 600 }}>RESOLVED CONFIGURED VARIANT SKU</div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '4px' }}>
+                    <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#166534', fontFamily: 'var(--font-mono)' }}>
+                      ROB-1000-{selectedPayload}-{selectedIpRating}
+                    </div>
+                    <span style={{ background: '#dcfce7', color: '#15803d', padding: '4px 10px', borderRadius: '4px', fontWeight: 700, fontSize: '0.8125rem' }}>
+                      Configured BOM Active
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* SUBTAB 5: EFFECTIVITY RULES (A12) */}
+            {bomSubTab === 'effectivity' && (
+              <div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
+                  <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '16px' }}>
+                    <label style={{ fontSize: '0.8125rem', fontWeight: 700, color: 'var(--brand-charcoal)', display: 'block', marginBottom: '8px' }}>
+                      Simulate Production Build Date:
+                    </label>
+                    <input
+                      type="date"
+                      value={effectivityDate}
+                      onChange={(e) => setEffectivityDate(e.target.value)}
+                      style={{
+                        padding: '6px 12px',
+                        border: '1px solid #cbd5e1',
+                        borderRadius: '4px',
+                        fontSize: '0.875rem',
+                        width: '100%',
+                      }}
+                    />
+                    <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '6px' }}>
+                      Date effectivity filters out lines not valid during this assembly run.
+                    </div>
+                  </div>
+
+                  <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '16px' }}>
+                    <label style={{ fontSize: '0.8125rem', fontWeight: 700, color: 'var(--brand-charcoal)', display: 'block', marginBottom: '8px' }}>
+                      Simulate Production Unit Serial Number:
+                    </label>
+                    <input
+                      type="text"
+                      value={effectivitySerial}
+                      onChange={(e) => setEffectivitySerial(e.target.value)}
+                      placeholder="e.g. SN-1500"
+                      style={{
+                        padding: '6px 12px',
+                        border: '1px solid #cbd5e1',
+                        borderRadius: '4px',
+                        fontSize: '0.875rem',
+                        width: '100%',
+                      }}
+                    />
+                    <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '6px' }}>
+                      Serial effectivity applies cut-in changes from SN-1000 through SN-2000.
+                    </div>
+                  </div>
+                </div>
+
+                <table className="odoo-table">
+                  <thead>
+                    <tr>
+                      <th>Component</th>
+                      <th>Effectivity Type</th>
+                      <th>Rule Window</th>
+                      <th>Status at Production Run</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td style={{ fontWeight: 600 }}>Precision Harmonic Servo (ROB-1010)</td>
+                      <td>DATE EFFECTIVITY</td>
+                      <td>Valid From 2026-01-01 to 2026-12-31</td>
+                      <td>
+                        <span style={{ background: '#d1fae5', color: '#065f46', padding: '2px 8px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 700 }}>
+                          ✓ ACTIVE (Included in Build)
+                        </span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style={{ fontWeight: 600 }}>CAN-Bus AEC-Q100 IC (ELC-0052)</td>
+                      <td>SERIAL EFFECTIVITY</td>
+                      <td>Valid Units SN-1000 to SN-2000</td>
+                      <td>
+                        <span style={{ background: effectivitySerial >= 'SN-1000' && effectivitySerial <= 'SN-2000' ? '#d1fae5' : '#fee2e2', color: effectivitySerial >= 'SN-1000' && effectivitySerial <= 'SN-2000' ? '#065f46' : '#991b1b', padding: '2px 8px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 700 }}>
+                          {effectivitySerial >= 'SN-1000' && effectivitySerial <= 'SN-2000' ? '✓ ACTIVE (Included in Build)' : '✕ INACTIVE (Cut-in Not Reached)'}
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
 

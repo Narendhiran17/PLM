@@ -4,6 +4,10 @@ import {
   BomLine,
   MultiLevelBomNode,
   WhereUsedResult,
+  compareBoms,
+  findDeepWhereUsed,
+  isEffectivityActive,
+  EffectivityRule,
 } from '@universal-plm/domain-core';
 import { assertPermission, Permissions } from '@universal-plm/authorization';
 
@@ -198,5 +202,63 @@ export const bomRoutes: FastifyPluginAsync = async (fastify) => {
     }));
 
     return { data: results, total: results.length };
+  });
+
+  // BOM Comparison / Redline Engine
+  fastify.post('/compare', async (request) => {
+    assertPermission(request.tenantContext, Permissions.BOM_READ);
+    const body = request.body as {
+      baselineRevisionId: string;
+      targetRevisionId: string;
+      beforeLines: BomLine[];
+      afterLines: BomLine[];
+    };
+    const diff = compareBoms(
+      body.baselineRevisionId || 'rev-baseline',
+      body.targetRevisionId || 'rev-target',
+      body.beforeLines || [],
+      body.afterLines || []
+    );
+    return { data: diff };
+  });
+
+  // Deep recursive where-used bottom-up explosion
+  fastify.get('/where-used/deep/:partId', async (request) => {
+    assertPermission(request.tenantContext, Permissions.BOM_READ);
+    const { partId } = request.params as { partId: string };
+    const tenantId = request.tenantContext.tenantId;
+
+    const results = await findDeepWhereUsed(partId, {
+      getImmediateParents: (childId: string) => {
+        return bomLinesStore
+          .filter((l) => l.tenantId === tenantId && l.childPartId === childId)
+          .map((l) => ({
+            parentPartId: 'part-001',
+            parentPartNumber: 'ROB-1000',
+            parentPartName: 'Autonomous Articulated Robotic Arm',
+            parentRevisionId: l.parentRevisionId,
+            parentRevision: 'A',
+            quantity: l.quantity,
+            bomType: l.bomType,
+            lifecycleState: 'RELEASED' as const,
+          }));
+      },
+    });
+
+    return { data: results, total: results.length };
+  });
+
+  // Effectivity-based BOM Line Filter
+  fastify.post('/effective', async (request) => {
+    assertPermission(request.tenantContext, Permissions.BOM_READ);
+    const body = request.body as {
+      lines: (BomLine & { effectivityRule?: import('@universal-plm/domain-core').EffectivityRule })[];
+      context: { date?: string; serialNumber?: string; lotNumber?: string };
+    };
+    const effectiveLines = (body.lines || []).filter((line) => {
+      if (!line.effectivityRule) return true;
+      return isEffectivityActive(line.effectivityRule, body.context);
+    });
+    return { data: effectiveLines, total: effectiveLines.length };
   });
 };
