@@ -36,6 +36,7 @@ out/
 
 # Zoho Catalyst
 .catalyst/
+.catalystrc
 catalyst-debug.log
 
 # IDE and Editor files

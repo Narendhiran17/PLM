@@ -1,0 +1,11 @@
+{
+  "appsail": [
+    {
+      "source": "apps/api",
+      "name": "universal-plm-api"
+    }
+  ],
+  "client": {
+    "source": "apps/web/dist"
+  }
+}
