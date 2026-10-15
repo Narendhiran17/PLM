@@ -9,6 +9,7 @@ import { variantRoutes } from './routes/variants.js';
 import { documentRoutes } from './routes/documents.js';
 import { configurationRoutes } from './routes/configurations.js';
 import { manufacturingRoutes } from './routes/manufacturing.js';
+import { industryCapabilityRoutes } from './routes/industry-capabilities.js';
 
 export async function buildServer() {
   const server = Fastify({
@@ -36,6 +37,7 @@ export async function buildServer() {
   await server.register(documentRoutes, { prefix: '/api/v1/documents' });
   await server.register(configurationRoutes, { prefix: '/api/v1/configurations' });
   await server.register(manufacturingRoutes, { prefix: '/api/v1/manufacturing' });
+  await server.register(industryCapabilityRoutes, { prefix: '/api/v1/industry-capabilities' });
 
   return server;
 }

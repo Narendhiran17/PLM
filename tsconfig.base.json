@@ -20,7 +20,8 @@
       "@universal-plm/change-management": ["./packages/change-management/dist/index.d.ts"],
       "@universal-plm/document-control": ["./packages/document-control/dist/index.d.ts"],
       "@universal-plm/configuration-engine": ["./packages/configuration-engine/dist/index.d.ts"],
-      "@universal-plm/manufacturing": ["./packages/manufacturing/dist/index.d.ts"]
+      "@universal-plm/manufacturing": ["./packages/manufacturing/dist/index.d.ts"],
+      "@universal-plm/industry-capabilities": ["./packages/industry-capabilities/dist/index.d.ts"]
     }
   }
 }

@@ -18,6 +18,7 @@
     "@universal-plm/document-control": "*",
     "@universal-plm/configuration-engine": "*",
     "@universal-plm/manufacturing": "*",
+    "@universal-plm/industry-capabilities": "*",
     "fastify": "^5.1.0"
   },
   "devDependencies": {

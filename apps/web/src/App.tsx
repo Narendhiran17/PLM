@@ -38,8 +38,24 @@ import {
   Truck,
   DollarSign,
   Timer,
-  RefreshCw
+  RefreshCw,
+  Cpu,
+  FlaskConical,
+  Stethoscope,
+  SlidersHorizontal,
+  Award,
+  Sparkles,
+  PackageCheck
 } from 'lucide-react';
+import {
+  expandReferenceDesignators,
+  validatePcbDesignators,
+  scaleFormulationBatch,
+  validateDhfReadiness,
+  resolveConfiguredBom,
+  AIAG_PPAP_18_ELEMENTS,
+  evaluatePpapStatus
+} from '@universal-plm/industry-capabilities';
 
 interface EcoCard {
   id: string;
@@ -60,12 +76,44 @@ interface EcoCard {
 
 export default function App() {
   // Navigation State
-  const [currentMenu, setCurrentMenu] = useState<'ecos' | 'products' | 'bom_tree' | 'documents' | 'capabilities' | 'manufacturing'>('ecos');
+  const [currentMenu, setCurrentMenu] = useState<'ecos' | 'products' | 'bom_tree' | 'documents' | 'capabilities' | 'manufacturing' | 'industry_packs'>('ecos');
   const [mfgTab, setMfgTab] = useState<'mbom' | 'routings' | 'sourcing' | 'cost_rollup' | 'lead_time' | 'erp_sync'>('mbom');
   const [selectedPlant, setSelectedPlant] = useState<'PLANT-DETROIT' | 'PLANT-CHENNAI'>('PLANT-DETROIT');
   const [mfgBatchSize, setMfgBatchSize] = useState<number>(50);
   const [erpSyncStatus, setErpSyncStatus] = useState<{ synced: boolean; system: string; eventId: string; time: string } | null>(null);
   const [reconcileAlert, setReconcileAlert] = useState<string | null>(null);
+
+  // Phase 5: Industry Capability Framework State
+  const [packSubTab, setPackSubTab] = useState<'store' | 'automotive' | 'electronics' | 'process' | 'medical' | 'configured'>('store');
+  const [tenantSubscriptions, setTenantSubscriptions] = useState([
+    { id: 'discrete-automotive', name: 'Discrete & Automotive Pack (IND-01)', version: '1.2.0', enabled: true, standard: 'AIAG PPAP Level 1-5 / IATF 16949' },
+    { id: 'electronics-pcb', name: 'Electronics & PCB Engineering Pack (IND-02)', version: '2.1.0', enabled: true, standard: 'IPC-7351B / RoHS 3 / REACH' },
+    { id: 'process-chemical', name: 'Process, Chemical & Formulations (IND-03)', version: '1.5.0', enabled: true, standard: 'OSHA HazCom GHS / 21 CFR Part 211' },
+    { id: 'medical-device', name: 'Regulated Medical Device Pack (IND-04)', version: '3.0.0', enabled: true, standard: 'FDA 21 CFR Part 820 / ISO 13485' },
+    { id: 'configured-products', name: 'Configured Products & ETO Modular BOM (IND-05)', version: '1.4.0', enabled: true, standard: 'Configure-To-Order / ISO 9001' },
+  ]);
+
+  // Automotive PPAP state
+  const [ppapLevel, setPpapLevel] = useState<number>(3);
+  const [ppapImds, setPpapImds] = useState<string>('IMDS-MDS-984421');
+  const [ppapPswSigned, setPpapPswSigned] = useState<boolean>(true);
+  const [ppapElements, setPpapElements] = useState<Array<{ num: number; name: string; status: 'completed' | 'in_progress' | 'not_started' }>>(
+    AIAG_PPAP_18_ELEMENTS.map((name: string, i: number) => ({ num: i + 1, name, status: i < 16 ? 'completed' : (i === 16 ? 'in_progress' : 'completed') }))
+  );
+
+  // Electronics PCB ref designators state
+  const [pcbRawDesignators, setPcbRawDesignators] = useState<string>('C1-C6, C10, R1-R4, U1-U2');
+  const [pcbLineQty, setPcbLineQty] = useState<number>(13);
+  const [pcbValidationResult, setPcbValidationResult] = useState<{ valid: boolean; count: number; expanded: string[]; message?: string } | null>(null);
+
+  // Process / Chemical state
+  const [targetBatchKg, setTargetBatchKg] = useState<number>(1000);
+  const [apiPotency, setApiPotency] = useState<number>(95);
+
+  // Configured Products state
+  const [selectedPower, setSelectedPower] = useState<string>('PWR-480V');
+  const [selectedMotor, setSelectedMotor] = useState<string>('MTR-15HP');
+  const [selectedEnclosure, setSelectedEnclosure] = useState<string>('ENC-SS316');
   const [viewMode, setViewMode] = useState<'kanban' | 'form' | 'list'>('kanban');
   const [selectedEcoId, setSelectedEcoId] = useState<string>('eco-001');
   const [formNotebookTab, setFormNotebookTab] = useState<'bom_changes' | 'approvals' | 'documents' | 'concurrency' | 'notes'>('bom_changes');
@@ -693,6 +741,22 @@ export default function App() {
             >
               Configuration
             </button>
+
+            <button
+              onClick={() => {
+                setCurrentMenu('industry_packs');
+                setViewMode('form');
+              }}
+              style={{
+                background: currentMenu === 'industry_packs' ? 'var(--brand-orange)' : 'transparent',
+                color: currentMenu === 'industry_packs' ? '#1E293B' : '#ffffff',
+                padding: '6px 14px',
+                borderRadius: '4px',
+                fontWeight: currentMenu === 'industry_packs' ? 700 : 500,
+              }}
+            >
+              Industry Packs
+            </button>
           </div>
         </div>
 
@@ -774,11 +838,25 @@ export default function App() {
               {currentMenu === 'documents' && 'Controlled Document Vault & CAD Artifacts'}
               {currentMenu === 'manufacturing' && 'Manufacturing Operations & Supply Chain (MBOM)'}
               {currentMenu === 'capabilities' && 'Configuration Studio & Automation'}
+              {currentMenu === 'industry_packs' && 'Industry Capability Framework & Specialized Packs'}
             </span>
             {currentMenu === 'ecos' && viewMode === 'form' && (
               <>
                 <span style={{ color: 'var(--odoo-text-muted)' }}>/</span>
                 <span style={{ color: 'var(--brand-orange-hover)', fontWeight: 700 }}>{activeEco.ecoNumber}</span>
+              </>
+            )}
+            {currentMenu === 'industry_packs' && (
+              <>
+                <span style={{ color: 'var(--odoo-text-muted)' }}>/</span>
+                <span style={{ color: 'var(--brand-orange-hover)', fontWeight: 700 }}>
+                  {packSubTab === 'store' && 'Capability App Store & Tenant Subscriptions'}
+                  {packSubTab === 'automotive' && 'Discrete & Automotive (PPAP & Traceability - IND-01)'}
+                  {packSubTab === 'electronics' && 'Electronics & PCB Engineering (Ref Des - IND-02)'}
+                  {packSubTab === 'process' && 'Process, Chemical & Formulations (IND-03)'}
+                  {packSubTab === 'medical' && 'Regulated Medical Devices (DHF/DMR - IND-04)'}
+                  {packSubTab === 'configured' && 'Configured Products & Modular BOM (IND-05)'}
+                </span>
               </>
             )}
             {currentMenu === 'manufacturing' && (
@@ -3659,7 +3737,817 @@ export default function App() {
             )}
           </div>
         )}
+
+        {/* 8. INDUSTRY CAPABILITY FRAMEWORK (PHASE 5) */}
+        {currentMenu === 'industry_packs' && (
+          <div className="odoo-sheet">
+            {/* Sheet Header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--odoo-border)', paddingBottom: '16px', marginBottom: '20px' }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                  <span style={{ background: '#fef3c7', color: '#92400e', fontSize: '0.75rem', fontWeight: 700, padding: '2px 8px', borderRadius: '4px' }}>
+                    PHASE 5 CAPABILITY PACKS
+                  </span>
+                  <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                    Tenant Scope: <strong>tenant_default</strong>
+                  </span>
+                </div>
+                <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700, color: 'var(--brand-charcoal)' }}>
+                  Industry Capability Framework
+                </h1>
+                <p style={{ margin: '4px 0 0', fontSize: '0.875rem', color: '#64748b' }}>
+                  Modular domain plugins: Discrete &amp; Automotive, Electronics &amp; PCB, Process &amp; Chemicals, Medical Devices, and Configured Products.
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <span style={{ background: '#ecfdf5', color: '#065f46', border: '1px solid #a7f3d0', fontSize: '0.8125rem', fontWeight: 700, padding: '6px 14px', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Sparkles size={14} /> 5 Packs Active
+                </span>
+              </div>
+            </div>
+
+            {/* Notebook Tabs */}
+            <div className="odoo-notebook-tabs" style={{ marginBottom: '20px' }}>
+              <button
+                className={`odoo-tab ${packSubTab === 'store' ? 'active' : ''}`}
+                onClick={() => setPackSubTab('store')}
+              >
+                Capability Store &amp; Subscriptions
+              </button>
+              <button
+                className={`odoo-tab ${packSubTab === 'automotive' ? 'active' : ''}`}
+                onClick={() => setPackSubTab('automotive')}
+              >
+                Discrete &amp; Automotive (IND-01)
+              </button>
+              <button
+                className={`odoo-tab ${packSubTab === 'electronics' ? 'active' : ''}`}
+                onClick={() => setPackSubTab('electronics')}
+              >
+                Electronics &amp; PCB (IND-02)
+              </button>
+              <button
+                className={`odoo-tab ${packSubTab === 'process' ? 'active' : ''}`}
+                onClick={() => setPackSubTab('process')}
+              >
+                Process &amp; Chemical (IND-03)
+              </button>
+              <button
+                className={`odoo-tab ${packSubTab === 'medical' ? 'active' : ''}`}
+                onClick={() => setPackSubTab('medical')}
+              >
+                Regulated Medical (IND-04)
+              </button>
+              <button
+                className={`odoo-tab ${packSubTab === 'configured' ? 'active' : ''}`}
+                onClick={() => setPackSubTab('configured')}
+              >
+                Configured Products (IND-05)
+              </button>
+            </div>
+
+            {/* TAB 1: CAPABILITY STORE */}
+            {packSubTab === 'store' && (
+              <div>
+                <div style={{ marginBottom: '16px', fontSize: '0.875rem', color: '#475569' }}>
+                  Manage modular industry capability extensions. Each package injects domain-specific schemas, validation logic, and compliance controls without modifying core platform schemas.
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '16px' }}>
+                  {tenantSubscriptions.map((pack) => (
+                    <div
+                      key={pack.id}
+                      style={{
+                        background: '#ffffff',
+                        border: '1px solid var(--odoo-border)',
+                        borderRadius: '6px',
+                        padding: '16px',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'space-between'
+                      }}
+                    >
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                          <span style={{ fontSize: '0.75rem', fontWeight: 700, background: '#f1f5f9', color: '#334155', padding: '2px 8px', borderRadius: '4px' }}>
+                            v{pack.version}
+                          </span>
+                          <span style={{
+                            fontSize: '0.75rem',
+                            fontWeight: 700,
+                            padding: '2px 8px',
+                            borderRadius: '4px',
+                            background: pack.enabled ? '#dcfce7' : '#fee2e2',
+                            color: pack.enabled ? '#15803d' : '#991b1b'
+                          }}>
+                            {pack.enabled ? '● ACTIVE' : '○ DISABLED'}
+                          </span>
+                        </div>
+                        <h3 style={{ margin: '0 0 6px', fontSize: '1rem', fontWeight: 700, color: 'var(--brand-charcoal)' }}>
+                          {pack.name}
+                        </h3>
+                        <div style={{ fontSize: '0.8125rem', color: '#64748b', marginBottom: '12px' }}>
+                          Standard: <strong>{pack.standard}</strong>
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', gap: '8px', borderTop: '1px solid #f1f5f9', paddingTop: '12px' }}>
+                        <button
+                          onClick={() => {
+                            setTenantSubscriptions((prev) =>
+                              prev.map((p) => (p.id === pack.id ? { ...p, enabled: !p.enabled } : p))
+                            );
+                          }}
+                          className={pack.enabled ? 'btn-odoo-secondary' : 'btn-odoo-primary'}
+                          style={{ flex: 1, fontSize: '0.8125rem', padding: '6px 12px' }}
+                        >
+                          {pack.enabled ? 'Disable Pack' : 'Enable Pack'}
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (pack.id === 'discrete-automotive') setPackSubTab('automotive');
+                            else if (pack.id === 'electronics-pcb') setPackSubTab('electronics');
+                            else if (pack.id === 'process-chemical') setPackSubTab('process');
+                            else if (pack.id === 'medical-device') setPackSubTab('medical');
+                            else if (pack.id === 'configured-products') setPackSubTab('configured');
+                          }}
+                          className="btn-odoo-secondary"
+                          style={{ fontSize: '0.8125rem', padding: '6px 12px' }}
+                        >
+                          Open Workspace
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* TAB 2: DISCRETE & AUTOMOTIVE (IND-01) */}
+            {packSubTab === 'automotive' && (
+              <div>
+                <div style={{ background: '#f8fafc', border: '1px solid var(--odoo-border)', borderRadius: '6px', padding: '16px', marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                    <div>
+                      <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: 'var(--brand-charcoal)' }}>
+                        AIAG PPAP Submission Tracker &amp; Automotive Controls (IATF 16949)
+                      </h3>
+                      <div style={{ fontSize: '0.8125rem', color: '#64748b', marginTop: '2px' }}>
+                        Part: <strong>TRANSMISSION-SHAFT-GEN3 (Rev B)</strong> · Supplier: <strong>Bosch Powertrain GmbH</strong>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <label style={{ fontSize: '0.8125rem', fontWeight: 600 }}>PPAP Level:</label>
+                        <select
+                          value={ppapLevel}
+                          onChange={(e) => setPpapLevel(Number(e.target.value))}
+                          style={{ padding: '4px 8px', borderRadius: '4px', border: '1px solid var(--odoo-border)' }}
+                        >
+                          <option value={1}>Level 1 (PSW Only)</option>
+                          <option value={2}>Level 2 (PSW + Samples)</option>
+                          <option value={3}>Level 3 (Full 18 Elements)</option>
+                          <option value={4}>Level 4 (Customer Defined)</option>
+                          <option value={5}>Level 5 (On-site Audit)</option>
+                        </select>
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <label style={{ fontSize: '0.8125rem', fontWeight: 600 }}>IMDS MDS ID:</label>
+                        <input
+                          type="text"
+                          value={ppapImds}
+                          onChange={(e) => setPpapImds(e.target.value)}
+                          style={{ padding: '4px 8px', borderRadius: '4px', border: '1px solid var(--odoo-border)', width: '130px' }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* PPAP Status Progress Bar */}
+                  {(() => {
+                    const completedCount = ppapElements.filter((e) => e.status === 'completed').length;
+                    const pct = Math.round((completedCount / ppapElements.length) * 100);
+                    const canApprove = pct === 100 && ppapPswSigned && Boolean(ppapImds);
+
+                    return (
+                      <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '12px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                          <span style={{ fontSize: '0.8125rem', fontWeight: 700 }}>
+                            PPAP Completion: {completedCount} / {ppapElements.length} Elements ({pct}%)
+                          </span>
+                          <span style={{
+                            fontSize: '0.75rem',
+                            fontWeight: 700,
+                            padding: '2px 8px',
+                            borderRadius: '4px',
+                            background: canApprove ? '#dcfce7' : '#fef3c7',
+                            color: canApprove ? '#15803d' : '#92400e'
+                          }}>
+                            {canApprove ? '✓ APPROVED & WARRANT SIGNED' : 'PENDING ELEMENTS'}
+                          </span>
+                        </div>
+                        <div style={{ width: '100%', height: '8px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
+                          <div style={{ width: `${pct}%`, height: '100%', background: canApprove ? '#10b981' : 'var(--brand-orange)' }} />
+                        </div>
+                        <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <input
+                            type="checkbox"
+                            id="psw-sign"
+                            checked={ppapPswSigned}
+                            onChange={(e) => setPpapPswSigned(e.target.checked)}
+                          />
+                          <label htmlFor="psw-sign" style={{ fontSize: '0.8125rem', fontWeight: 600, cursor: 'pointer' }}>
+                            Part Submission Warrant (PSW) Digitally Signed by Quality Lead
+                          </label>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                <table className="odoo-table">
+                  <thead>
+                    <tr>
+                      <th style={{ width: '50px' }}>#</th>
+                      <th>AIAG PPAP Element</th>
+                      <th>Element Document Artifact</th>
+                      <th style={{ width: '160px' }}>Verification Status</th>
+                      <th style={{ width: '120px' }}>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {ppapElements.map((el) => (
+                      <tr key={el.num}>
+                        <td style={{ fontWeight: 700, color: '#64748b' }}>{el.num}</td>
+                        <td style={{ fontWeight: 600 }}>{el.name}</td>
+                        <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: '#475569' }}>
+                          DOC-PPAP-TS-{el.num.toString().padStart(2, '0')}.pdf
+                        </td>
+                        <td>
+                          <span style={{
+                            fontSize: '0.75rem',
+                            fontWeight: 700,
+                            padding: '2px 8px',
+                            borderRadius: '3px',
+                            background: el.status === 'completed' ? '#dcfce7' : (el.status === 'in_progress' ? '#fef3c7' : '#f1f5f9'),
+                            color: el.status === 'completed' ? '#15803d' : (el.status === 'in_progress' ? '#92400e' : '#64748b')
+                          }}>
+                            {el.status === 'completed' && '✓ COMPLETED'}
+                            {el.status === 'in_progress' && '⏳ IN REVIEW'}
+                            {el.status === 'not_started' && '○ NOT STARTED'}
+                          </span>
+                        </td>
+                        <td>
+                          <button
+                            onClick={() => {
+                              setPpapElements((prev) =>
+                                prev.map((item) =>
+                                  item.num === el.num
+                                    ? { ...item, status: item.status === 'completed' ? 'in_progress' : 'completed' }
+                                    : item
+                                )
+                              );
+                            }}
+                            className="btn-odoo-secondary"
+                            style={{ fontSize: '0.75rem', padding: '2px 8px' }}
+                          >
+                            Toggle Status
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* TAB 3: ELECTRONICS & PCB (IND-02) */}
+            {packSubTab === 'electronics' && (
+              <div>
+                <div style={{ background: '#f8fafc', border: '1px solid var(--odoo-border)', borderRadius: '6px', padding: '16px', marginBottom: '20px' }}>
+                  <h3 style={{ margin: '0 0 8px', fontSize: '1.05rem', fontWeight: 700, color: 'var(--brand-charcoal)' }}>
+                    PCB Smart Reference Designator Engine &amp; ECAD Attributes
+                  </h3>
+                  <div style={{ fontSize: '0.8125rem', color: '#64748b', marginBottom: '16px' }}>
+                    Automatically expand ranges like <code>C1-C10</code>, detect duplicate designators across BOM lines, and enforce line quantity parity.
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr auto', gap: '12px', alignItems: 'flex-end' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, marginBottom: '4px' }}>
+                        Raw Reference Designators (Comma / Range):
+                      </label>
+                      <input
+                        type="text"
+                        value={pcbRawDesignators}
+                        onChange={(e) => setPcbRawDesignators(e.target.value)}
+                        placeholder="e.g. C1-C6, C10, R1-R4, U1-U2"
+                        style={{ width: '100%', padding: '6px 10px', borderRadius: '4px', border: '1px solid var(--odoo-border)' }}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, marginBottom: '4px' }}>
+                        BOM Line Quantity:
+                      </label>
+                      <input
+                        type="number"
+                        value={pcbLineQty}
+                        onChange={(e) => setPcbLineQty(Number(e.target.value))}
+                        style={{ width: '100%', padding: '6px 10px', borderRadius: '4px', border: '1px solid var(--odoo-border)' }}
+                      />
+                    </div>
+
+                    <div>
+                      <button
+                        onClick={() => {
+                          const expanded = expandReferenceDesignators(pcbRawDesignators);
+                          const valid = expanded.length === pcbLineQty;
+                          setPcbValidationResult({
+                            valid,
+                            count: expanded.length,
+                            expanded,
+                            message: valid
+                              ? `✓ Parity Verified: Exactly ${expanded.length} reference designators match line quantity ${pcbLineQty}.`
+                              : `⚠️ Parity Error: Line quantity (${pcbLineQty}) does not match expanded designator count (${expanded.length}).`
+                          });
+                        }}
+                        className="btn-odoo-primary"
+                        style={{ height: '36px' }}
+                      >
+                        Expand &amp; Validate Designators
+                      </button>
+                    </div>
+                  </div>
+
+                  {pcbValidationResult && (
+                    <div style={{
+                      marginTop: '16px',
+                      padding: '12px',
+                      borderRadius: '6px',
+                      background: pcbValidationResult.valid ? '#ecfdf5' : '#fef2f2',
+                      border: `1px solid ${pcbValidationResult.valid ? '#a7f3d0' : '#fecaca'}`
+                    }}>
+                      <div style={{ fontWeight: 700, fontSize: '0.875rem', color: pcbValidationResult.valid ? '#065f46' : '#991b1b', marginBottom: '6px' }}>
+                        {pcbValidationResult.message}
+                      </div>
+                      <div style={{ fontSize: '0.8125rem', color: '#475569' }}>
+                        <strong>Expanded Designators ({pcbValidationResult.count}):</strong> {pcbValidationResult.expanded.join(', ')}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <h4 style={{ margin: '0 0 12px', fontSize: '0.9375rem', fontWeight: 700 }}>
+                  Active PCB Component Master Attributes (IPC-7351B &amp; J-STD-020)
+                </h4>
+                <table className="odoo-table">
+                  <thead>
+                    <tr>
+                      <th>Part Number</th>
+                      <th>Description</th>
+                      <th>Package / Footprint</th>
+                      <th>Pins</th>
+                      <th>Tolerance</th>
+                      <th>MSL Rating</th>
+                      <th>RoHS 3</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td style={{ fontWeight: 700, color: 'var(--brand-orange-hover)' }}>ELC-CAP-0402-10UF</td>
+                      <td>10µF 6.3V X5R Ceramic Capacitor</td>
+                      <td><code>0402 (1005 Metric)</code></td>
+                      <td>2</td>
+                      <td>±10%</td>
+                      <td><span style={{ background: '#dcfce7', color: '#15803d', padding: '2px 6px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 700 }}>MSL 1</span></td>
+                      <td><span style={{ color: '#15803d', fontWeight: 700 }}>✓ COMPLIANT</span></td>
+                    </tr>
+                    <tr>
+                      <td style={{ fontWeight: 700, color: 'var(--brand-orange-hover)' }}>ELC-RES-0603-10K</td>
+                      <td>10kΩ 0.1W Thick Film Resistor</td>
+                      <td><code>0603 (1608 Metric)</code></td>
+                      <td>2</td>
+                      <td>±1%</td>
+                      <td><span style={{ background: '#dcfce7', color: '#15803d', padding: '2px 6px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 700 }}>MSL 1</span></td>
+                      <td><span style={{ color: '#15803d', fontWeight: 700 }}>✓ COMPLIANT</span></td>
+                    </tr>
+                    <tr>
+                      <td style={{ fontWeight: 700, color: 'var(--brand-orange-hover)' }}>MCU-STM32H743-LQFP</td>
+                      <td>ARM Cortex-M7 High-Performance MCU</td>
+                      <td><code>LQFP-144</code></td>
+                      <td>144</td>
+                      <td>N/A</td>
+                      <td><span style={{ background: '#fef3c7', color: '#92400e', padding: '2px 6px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 700 }}>MSL 3 (168 Hrs)</span></td>
+                      <td><span style={{ color: '#15803d', fontWeight: 700 }}>✓ COMPLIANT</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* TAB 4: PROCESS & CHEMICAL (IND-03) */}
+            {packSubTab === 'process' && (
+              <div>
+                <div style={{ background: '#f8fafc', border: '1px solid var(--odoo-border)', borderRadius: '6px', padding: '16px', marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                    <div>
+                      <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: 'var(--brand-charcoal)' }}>
+                        Formulation Recipe Scaler &amp; Dynamic Potency Compensation
+                      </h3>
+                      <div style={{ fontSize: '0.8125rem', color: '#64748b', marginTop: '2px' }}>
+                        Product: <strong>Ibuprofen 200mg Compressed Tablets</strong> · Master Recipe: <strong>RCP-IBU-200</strong>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <label style={{ fontSize: '0.8125rem', fontWeight: 600 }}>Batch Target (kg):</label>
+                        <input
+                          type="number"
+                          value={targetBatchKg}
+                          onChange={(e) => setTargetBatchKg(Number(e.target.value))}
+                          style={{ width: '100px', padding: '4px 8px', borderRadius: '4px', border: '1px solid var(--odoo-border)' }}
+                        />
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <label style={{ fontSize: '0.8125rem', fontWeight: 600 }}>API Tested Potency (%):</label>
+                        <input
+                          type="number"
+                          value={apiPotency}
+                          onChange={(e) => setApiPotency(Number(e.target.value))}
+                          style={{ width: '80px', padding: '4px 8px', borderRadius: '4px', border: '1px solid var(--odoo-border)' }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {(() => {
+                    const scaled = scaleFormulationBatch(
+                      {
+                        id: 'RCP-IBU-200',
+                        tenantId: 'tenant_default',
+                        recipeCode: 'RCP-IBU-200',
+                        productPartId: 'PART-IBU-TABLET',
+                        standardBatchSizeKg: 100,
+                        expectedLossPercentage: 2.0,
+                        ingredients: [
+                          {
+                            ingredientPartId: 'ING-API-IBU',
+                            ingredientName: 'Ibuprofen Micronized Active (API)',
+                            casNumber: '15687-27-1',
+                            targetPercentage: 40,
+                            isApi: true,
+                            basePotencyPercent: 100,
+                            actualPotencyPercent: apiPotency
+                          },
+                          {
+                            ingredientPartId: 'ING-EXC-MCC',
+                            ingredientName: 'Microcrystalline Cellulose PH-102 (Balancing Filler)',
+                            casNumber: '9004-34-6',
+                            targetPercentage: 55,
+                            isApi: false,
+                            isCompensatingFiller: true
+                          },
+                          {
+                            ingredientPartId: 'ING-LUB-MAG',
+                            ingredientName: 'Magnesium Stearate (Lubricant)',
+                            casNumber: '557-04-0',
+                            targetPercentage: 5,
+                            isApi: false
+                          }
+                        ]
+                      },
+                      targetBatchKg
+                    );
+
+                    return (
+                      <div>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '16px' }}>
+                          <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '10px' }}>
+                            <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Target Batch Size</div>
+                            <div style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--brand-charcoal)' }}>{scaled.requestedBatchSizeKg.toLocaleString()} kg</div>
+                          </div>
+                          <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '10px' }}>
+                            <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Theoretical Yield</div>
+                            <div style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--brand-charcoal)' }}>{scaled.theoreticalYieldKg.toLocaleString()} kg</div>
+                          </div>
+                          <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '10px' }}>
+                            <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Expected Actual Yield (2% Loss)</div>
+                            <div style={{ fontSize: '1.125rem', fontWeight: 700, color: '#059669' }}>{scaled.expectedActualYieldKg.toLocaleString()} kg</div>
+                          </div>
+                          <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '10px' }}>
+                            <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Yield Efficiency</div>
+                            <div style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--brand-orange-hover)' }}>{scaled.yieldEfficiencyPercent}%</div>
+                          </div>
+                        </div>
+
+                        <table className="odoo-table">
+                          <thead>
+                            <tr>
+                              <th>Ingredient Name</th>
+                              <th>CAS Number</th>
+                              <th>Target %</th>
+                              <th>Nominal Weight</th>
+                              <th>Potency Compensated Weight</th>
+                              <th>Ingredient Type</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {scaled.lines.map((line: any) => (
+                              <tr key={line.ingredientPartId}>
+                                <td style={{ fontWeight: 600 }}>{line.ingredientName}</td>
+                                <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8125rem' }}>{line.casNumber}</td>
+                                <td>{line.percentageOfBatch}%</td>
+                                <td style={{ fontFamily: 'var(--font-mono)' }}>{line.targetWeightKg.toFixed(2)} kg</td>
+                                <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: line.isApi ? '#dc2626' : '#15803d' }}>
+                                  {line.adjustedWeightKg.toFixed(2)} kg
+                                </td>
+                                <td>
+                                  {line.isApi ? (
+                                    <span style={{ background: '#fee2e2', color: '#991b1b', padding: '2px 6px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 700 }}>
+                                      API (Potency {apiPotency}%)
+                                    </span>
+                                  ) : (
+                                    <span style={{ background: '#f1f5f9', color: '#475569', padding: '2px 6px', borderRadius: '3px', fontSize: '0.75rem' }}>
+                                      Excipient / Filler
+                                    </span>
+                                  )}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    );
+                  })()}
+                </div>
+              </div>
+            )}
+
+            {/* TAB 5: REGULATED MEDICAL (IND-04) */}
+            {packSubTab === 'medical' && (
+              <div>
+                <div style={{ background: '#f8fafc', border: '1px solid var(--odoo-border)', borderRadius: '6px', padding: '16px', marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                    <div>
+                      <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: 'var(--brand-charcoal)' }}>
+                        FDA 21 CFR Part 820 Design Controls &amp; Design History File (DHF)
+                      </h3>
+                      <div style={{ fontSize: '0.8125rem', color: '#64748b', marginTop: '2px' }}>
+                        Device: <strong>Autoinjector Drug Delivery System (Class II)</strong> · ISO 14971 Risk File: <strong>RISK-AI-004</strong>
+                      </div>
+                    </div>
+
+                    <span style={{ background: '#dcfce7', color: '#15803d', border: '1px solid #86efac', padding: '4px 10px', borderRadius: '4px', fontSize: '0.8125rem', fontWeight: 700 }}>
+                      ✓ DHF COMPLETE &amp; DMR COMPILED
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px' }}>
+                    {[
+                      { name: '1. Design Inputs', status: '✓ APPROVED', code: 'DI' },
+                      { name: '2. Design Outputs', status: '✓ APPROVED', code: 'DO' },
+                      { name: '3. Verification', status: '✓ PASS', code: 'DV' },
+                      { name: '4. Validation', status: '✓ PASS', code: 'VAL' },
+                      { name: '5. Risk Analysis', status: '✓ CLOSED', code: 'RA' },
+                      { name: '6. Transfer Plan', status: '✓ READY', code: 'DT' },
+                      { name: '7. Design Review', status: '✓ SIGNED', code: 'DR' }
+                    ].map((sec) => (
+                      <div key={sec.name} style={{ background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '4px', padding: '8px', textAlign: 'center' }}>
+                        <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--brand-charcoal)' }}>{sec.name}</div>
+                        <div style={{ fontSize: '0.6875rem', color: '#15803d', fontWeight: 700, marginTop: '4px' }}>{sec.status}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <h4 style={{ margin: '0 0 12px', fontSize: '0.9375rem', fontWeight: 700 }}>
+                  Closed-Loop User Need to Verification Test Traceability Matrix
+                </h4>
+                <table className="odoo-table">
+                  <thead>
+                    <tr>
+                      <th>User Need ID</th>
+                      <th>Design Input Requirement</th>
+                      <th>Design Output (Part / BOM)</th>
+                      <th>Verification Protocol</th>
+                      <th>Test Result</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td style={{ fontWeight: 700 }}>UN-0101 (Needle Safety)</td>
+                      <td>Automatic needle retraction &lt; 0.2s post-injection</td>
+                      <td style={{ fontFamily: 'var(--font-mono)' }}>PART-NEEDLE-SHIELD-REV-C</td>
+                      <td style={{ fontFamily: 'var(--font-mono)' }}>TP-RETRACT-SPEED-004</td>
+                      <td><span style={{ color: '#15803d', fontWeight: 700 }}>✓ PASS (0.14s)</span></td>
+                    </tr>
+                    <tr>
+                      <td style={{ fontWeight: 700 }}>UN-0102 (Dose Accuracy)</td>
+                      <td>Deliver 1.0 mL ± 0.05 mL at 20°C viscosity</td>
+                      <td style={{ fontFamily: 'var(--font-mono)' }}>PART-PLUNGER-DRIVE-REV-B</td>
+                      <td style={{ fontFamily: 'var(--font-mono)' }}>TP-DOSE-ACCURACY-009</td>
+                      <td><span style={{ color: '#15803d', fontWeight: 700 }}>✓ PASS (0.992 mL)</span></td>
+                    </tr>
+                    <tr>
+                      <td style={{ fontWeight: 700 }}>UN-0103 (Biocompatibility)</td>
+                      <td>Fluid path parts must comply with ISO 10993-1</td>
+                      <td style={{ fontFamily: 'var(--font-mono)' }}>MAT-COP-POLYMER-PHARMA</td>
+                      <td style={{ fontFamily: 'var(--font-mono)' }}>TP-BIOCOMP-CYTOX-001</td>
+                      <td><span style={{ color: '#15803d', fontWeight: 700 }}>✓ PASS (Non-toxic)</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* TAB 6: CONFIGURED PRODUCTS (IND-05) */}
+            {packSubTab === 'configured' && (
+              <div>
+                <div style={{ background: '#f8fafc', border: '1px solid var(--odoo-border)', borderRadius: '6px', padding: '16px', marginBottom: '20px' }}>
+                  <h3 style={{ margin: '0 0 6px', fontSize: '1.05rem', fontWeight: 700, color: 'var(--brand-charcoal)' }}>
+                    150% Modular Super-BOM Configurator &amp; Constraint Solver
+                  </h3>
+                  <div style={{ fontSize: '0.8125rem', color: '#64748b', marginBottom: '16px' }}>
+                    Select customer feature options. Constraint solver validates rules (Requires/Excludes) and generates 100% resolved configured BOM.
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '16px' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, marginBottom: '4px' }}>
+                        1. Power Input:
+                      </label>
+                      <select
+                        value={selectedPower}
+                        onChange={(e) => setSelectedPower(e.target.value)}
+                        style={{ width: '100%', padding: '6px 10px', borderRadius: '4px', border: '1px solid var(--odoo-border)' }}
+                      >
+                        <option value="PWR-120V">120V 1-Phase (+$0)</option>
+                        <option value="PWR-480V">480V 3-Phase Industrial (+$650)</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, marginBottom: '4px' }}>
+                        2. Motor Size:
+                      </label>
+                      <select
+                        value={selectedMotor}
+                        onChange={(e) => setSelectedMotor(e.target.value)}
+                        style={{ width: '100%', padding: '6px 10px', borderRadius: '4px', border: '1px solid var(--odoo-border)' }}
+                      >
+                        <option value="MTR-5HP">5 HP Standard Motor (+$0)</option>
+                        <option value="MTR-15HP">15 HP Severe Duty Motor (+$1,200)</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, marginBottom: '4px' }}>
+                        3. Wetted Materials &amp; Volute:
+                      </label>
+                      <select
+                        value={selectedEnclosure}
+                        onChange={(e) => setSelectedEnclosure(e.target.value)}
+                        style={{ width: '100%', padding: '6px 10px', borderRadius: '4px', border: '1px solid var(--odoo-border)' }}
+                      >
+                        <option value="ENC-CAST">Cast Iron Standard (+$0)</option>
+                        <option value="ENC-SS316">316L Stainless Sanitary (+$2,400)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {(() => {
+                    const result = resolveConfiguredBom(
+                      {
+                        basePartId: 'MTR-PUMP-GEN3',
+                        modelName: 'Industrial Slurry Pump Gen 3',
+                        features: [
+                          {
+                            featureCode: 'POWER',
+                            name: 'Power Input',
+                            required: true,
+                            options: [
+                              { optionCode: 'PWR-120V', name: '120V 1-Phase', priceDelta: 0 },
+                              { optionCode: 'PWR-480V', name: '480V 3-Phase Industrial', priceDelta: 650 }
+                            ]
+                          },
+                          {
+                            featureCode: 'MOTOR',
+                            name: 'Motor Size',
+                            required: true,
+                            options: [
+                              { optionCode: 'MTR-5HP', name: '5 HP Standard Duty', priceDelta: 0 },
+                              { optionCode: 'MTR-15HP', name: '15 HP Severe Duty', priceDelta: 1200 }
+                            ]
+                          },
+                          {
+                            featureCode: 'ENCLOSURE',
+                            name: 'Wetted Materials & Enclosure',
+                            required: true,
+                            options: [
+                              { optionCode: 'ENC-CAST', name: 'Cast Iron Standard', priceDelta: 0 },
+                              { optionCode: 'ENC-SS316', name: '316L Stainless Steel Sanitary', priceDelta: 2400 }
+                            ]
+                          }
+                        ],
+                        rules: [
+                          {
+                            id: 'RULE-01',
+                            ruleType: 'REQUIRES',
+                            ifSelectedOption: 'PWR-480V',
+                            targetOption: 'MTR-15HP',
+                            errorMessage: 'Rule Violation: 480V 3-Phase power option REQUIRES 15 HP Severe Duty motor.'
+                          },
+                          {
+                            id: 'RULE-02',
+                            ruleType: 'EXCLUDES',
+                            ifSelectedOption: 'ENC-SS316',
+                            targetOption: 'MTR-5HP',
+                            errorMessage: 'Rule Violation: 316L Stainless Steel enclosure CANNOT be paired with 5 HP motor.'
+                          }
+                        ],
+                        modularBom: [
+                          { id: 'MBOM-1', componentPartId: 'PART-MTR-15HP-480V', componentName: '15HP Severe Duty Electric Motor', quantity: 1, assignedOptionCodes: ['MTR-15HP'] },
+                          { id: 'MBOM-2', componentPartId: 'PART-MTR-5HP-120V', componentName: '5HP Standard Electric Motor', quantity: 1, assignedOptionCodes: ['MTR-5HP'] },
+                          { id: 'MBOM-3', componentPartId: 'PART-VOLUTE-SS316', componentName: '316L Stainless Pump Volute Casing', quantity: 1, assignedOptionCodes: ['ENC-SS316'] },
+                          { id: 'MBOM-4', componentPartId: 'PART-VOLUTE-CAST', componentName: 'Cast Iron Pump Volute Casing', quantity: 1, assignedOptionCodes: ['ENC-CAST'] }
+                        ]
+                      },
+                      [selectedPower, selectedMotor, selectedEnclosure]
+                    );
+
+                    return (
+                      <div>
+                        {result.valid ? (
+                          <div style={{ background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '6px', padding: '12px', marginBottom: '16px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <CheckCircle2 size={18} color="#059669" />
+                                <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#065f46' }}>
+                                  Configuration Valid · Generated SKU: {result.configCode}
+                                </span>
+                              </div>
+                              <span style={{ fontSize: '0.9375rem', fontWeight: 700, color: '#059669' }}>
+                                Total Option Delta: +${result.totalPriceDelta.toLocaleString()}
+                              </span>
+                            </div>
+                          </div>
+                        ) : (
+                          <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '6px', padding: '12px', marginBottom: '16px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#991b1b', fontWeight: 700, fontSize: '0.875rem' }}>
+                              <AlertTriangle size={18} /> Configuration Incompatible
+                            </div>
+                            <ul style={{ margin: '6px 0 0', paddingLeft: '20px', color: '#b91c1c', fontSize: '0.8125rem' }}>
+                              {result.ruleViolations.map((v: string, i: number) => (
+                                <li key={i}>{v}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        <h4 style={{ margin: '0 0 10px', fontSize: '0.9375rem', fontWeight: 700 }}>
+                          Resolved 100% Configured BOM Lines ({result.resolvedBomLines.length} Components)
+                        </h4>
+                        <table className="odoo-table">
+                          <thead>
+                            <tr>
+                              <th>Component Part Number</th>
+                              <th>Component Description</th>
+                              <th>Qty</th>
+                              <th>Triggered By Option</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {result.resolvedBomLines.map((line: any) => (
+                              <tr key={line.componentPartId}>
+                                <td style={{ fontWeight: 700, color: 'var(--brand-orange-hover)' }}>{line.componentPartId}</td>
+                                <td>{line.componentName}</td>
+                                <td><strong>{line.quantity} EA</strong></td>
+                                <td>
+                                  <span style={{ background: '#eff6ff', color: '#1d4ed8', padding: '2px 6px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 700 }}>
+                                    {line.triggeredByOption}
+                                  </span>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    );
+                  })()}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
 }
+

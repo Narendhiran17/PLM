@@ -1,0 +1,27 @@
+{
+  "name": "@universal-plm/industry-capabilities",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Pluggable industry capability framework for Discrete, Electronics, Process, Medical, and Configured Products",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@universal-plm/domain-core": "*",
+    "@universal-plm/authorization": "*",
+    "@universal-plm/manufacturing": "*"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0"
+  }
+}
