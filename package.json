@@ -9,8 +9,12 @@
   ],
   "scripts": {
     "build": "npm run build --workspaces",
+    "test": "vitest run",
     "dev:api": "npm --workspace=@universal-plm/api run dev",
     "dev:web": "npm --workspace=@universal-plm/web run dev"
+  },
+  "devDependencies": {
+    "vitest": "^2.1.9"
   },
   "keywords": [
     "plm",

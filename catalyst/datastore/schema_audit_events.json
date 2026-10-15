@@ -1,0 +1,13 @@
+{
+  "table_name": "AuditEvents",
+  "description": "Immutable tamper-evident audit log of all system transitions and release events",
+  "columns": [
+    { "column_name": "tenant_id", "data_type": "Var Char", "max_length": 64, "is_mandatory": true },
+    { "column_name": "actor_id", "data_type": "Var Char", "max_length": 128, "is_mandatory": true },
+    { "column_name": "event_type", "data_type": "Var Char", "max_length": 64, "is_mandatory": true },
+    { "column_name": "entity_type", "data_type": "Var Char", "max_length": 64, "is_mandatory": true },
+    { "column_name": "entity_id", "data_type": "Var Char", "max_length": 64, "is_mandatory": true },
+    { "column_name": "payload_json", "data_type": "Var Char", "max_length": 4000, "is_mandatory": false },
+    { "column_name": "created_at", "data_type": "Date Time", "is_mandatory": true }
+  ]
+}

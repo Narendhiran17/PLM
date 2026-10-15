@@ -1,0 +1,16 @@
+{
+  "table_name": "BomLines",
+  "description": "EBOM and MBOM assembly relationships",
+  "columns": [
+    { "column_name": "tenant_id", "data_type": "Var Char", "max_length": 64, "is_mandatory": true },
+    { "column_name": "parent_revision_id", "data_type": "Bigint", "is_mandatory": true },
+    { "column_name": "child_part_id", "data_type": "Bigint", "is_mandatory": true },
+    { "column_name": "child_revision_id", "data_type": "Bigint", "is_mandatory": false },
+    { "column_name": "find_number", "data_type": "Integer", "is_mandatory": false },
+    { "column_name": "quantity", "data_type": "Double", "is_mandatory": true },
+    { "column_name": "uom", "data_type": "Var Char", "max_length": 16, "is_mandatory": true },
+    { "column_name": "bom_type", "data_type": "Var Char", "max_length": 16, "is_mandatory": true },
+    { "column_name": "reference_designators", "data_type": "Var Char", "max_length": 1000, "is_mandatory": false },
+    { "column_name": "is_phantom", "data_type": "Boolean", "is_mandatory": true, "default_value": false }
+  ]
+}

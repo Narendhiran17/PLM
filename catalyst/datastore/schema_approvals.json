@@ -1,0 +1,14 @@
+{
+  "table_name": "EcoApprovals",
+  "description": "Multi-stage reviewer signatures and voting records",
+  "columns": [
+    { "column_name": "tenant_id", "data_type": "Var Char", "max_length": 64, "is_mandatory": true },
+    { "column_name": "change_order_id", "data_type": "Bigint", "is_mandatory": true },
+    { "column_name": "stage_name", "data_type": "Var Char", "max_length": 64, "is_mandatory": true },
+    { "column_name": "reviewer_id", "data_type": "Var Char", "max_length": 128, "is_mandatory": true },
+    { "column_name": "reviewer_role", "data_type": "Var Char", "max_length": 64, "is_mandatory": true },
+    { "column_name": "decision", "data_type": "Var Char", "max_length": 32, "is_mandatory": true },
+    { "column_name": "comment", "data_type": "Var Char", "max_length": 2000, "is_mandatory": false },
+    { "column_name": "decided_at", "data_type": "Date Time", "is_mandatory": true }
+  ]
+}

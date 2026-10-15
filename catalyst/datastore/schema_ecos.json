@@ -1,0 +1,14 @@
+{
+  "table_name": "ChangeOrders",
+  "description": "Engineering Change Orders (ECOs) tracking baseline releases",
+  "columns": [
+    { "column_name": "tenant_id", "data_type": "Var Char", "max_length": 64, "is_mandatory": true },
+    { "column_name": "eco_number", "data_type": "Var Char", "max_length": 64, "is_mandatory": true },
+    { "column_name": "title", "data_type": "Var Char", "max_length": 255, "is_mandatory": true },
+    { "column_name": "description", "data_type": "Var Char", "max_length": 2000, "is_mandatory": false },
+    { "column_name": "ecr_id", "data_type": "Bigint", "is_mandatory": false },
+    { "column_name": "status", "data_type": "Var Char", "max_length": 32, "is_mandatory": true },
+    { "column_name": "effective_date", "data_type": "Date Time", "is_mandatory": false },
+    { "column_name": "assigned_to", "data_type": "Var Char", "max_length": 128, "is_mandatory": false }
+  ]
+}
