@@ -6,6 +6,7 @@ import { partRoutes } from './routes/parts.js';
 import { bomRoutes } from './routes/boms.js';
 import { changeRoutes } from './routes/changes.js';
 import { variantRoutes } from './routes/variants.js';
+import { documentRoutes } from './routes/documents.js';
 
 export async function buildServer() {
   const server = Fastify({
@@ -30,6 +31,7 @@ export async function buildServer() {
   await server.register(bomRoutes, { prefix: '/api/v1/boms' });
   await server.register(changeRoutes, { prefix: '/api/v1/changes' });
   await server.register(variantRoutes, { prefix: '/api/v1/variants' });
+  await server.register(documentRoutes, { prefix: '/api/v1/documents' });
 
   return server;
 }

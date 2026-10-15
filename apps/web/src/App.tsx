@@ -18,7 +18,14 @@ import {
   GitCompare,
   Network,
   Sliders,
-  Calendar
+  Calendar,
+  Lock,
+  Unlock,
+  ShieldAlert,
+  KeyRound,
+  Download,
+  Eye,
+  AlertTriangle
 } from 'lucide-react';
 
 interface EcoCard {
@@ -40,10 +47,47 @@ interface EcoCard {
 
 export default function App() {
   // Navigation State
-  const [currentMenu, setCurrentMenu] = useState<'ecos' | 'products' | 'bom_tree' | 'capabilities'>('ecos');
+  const [currentMenu, setCurrentMenu] = useState<'ecos' | 'products' | 'bom_tree' | 'documents' | 'capabilities'>('ecos');
   const [viewMode, setViewMode] = useState<'kanban' | 'form' | 'list'>('kanban');
   const [selectedEcoId, setSelectedEcoId] = useState<string>('eco-001');
-  const [formNotebookTab, setFormNotebookTab] = useState<'bom_changes' | 'approvals' | 'notes'>('bom_changes');
+  const [formNotebookTab, setFormNotebookTab] = useState<'bom_changes' | 'approvals' | 'documents' | 'concurrency' | 'notes'>('bom_changes');
+  const [activeBaselineSim, setActiveBaselineSim] = useState<'MATCH' | 'COLLISION'>('MATCH');
+  const [releaseStatusAlert, setReleaseStatusAlert] = useState<{ type: 'success' | 'collision'; msg: string } | null>(null);
+  const [vaultDocs, setVaultDocs] = useState([
+    {
+      id: 'doc-001',
+      docNumber: 'DOC-SPEC-1000',
+      title: 'Autonomous Articulated Robotic Arm — Master Specification',
+      category: 'SPECIFICATION',
+      revision: '1.0',
+      status: 'RELEASED',
+      file: 'ROB-1000-SPEC-v1.0.pdf',
+      size: '3.1 MB',
+      lockedBy: null as string | null,
+    },
+    {
+      id: 'doc-002',
+      docNumber: 'DOC-CAD-1010',
+      title: 'Precision Harmonic Servo Actuator — 3D CAD Assembly',
+      category: 'CAD_3D_MODEL',
+      revision: '2.0',
+      status: 'RELEASED',
+      file: 'ROB-1010-HARMONIC.STEP',
+      size: '14.8 MB',
+      lockedBy: 'Marcus Vance' as string | null,
+    },
+    {
+      id: 'doc-003',
+      docNumber: 'DOC-DWG-4001',
+      title: 'Multi-Axis Motor Controller PCB — Fabrication Drawing',
+      category: 'DRAWING_2D',
+      revision: 'A',
+      status: 'RELEASED',
+      file: 'PCB-4001-FAB-REV-A.pdf',
+      size: '1.2 MB',
+      lockedBy: null as string | null,
+    },
+  ]);
   const [bomSubTab, setBomSubTab] = useState<'tree' | 'compare' | 'where_used' | 'variants' | 'effectivity'>('tree');
   const [selectedWhereUsedPart, setSelectedWhereUsedPart] = useState<string>('ELC-0052');
   const [effectivityDate, setEffectivityDate] = useState<string>('2026-10-15');
@@ -263,6 +307,57 @@ export default function App() {
     ]);
   };
 
+  const handleToggleDocLock = (docId: string) => {
+    setVaultDocs(
+      vaultDocs.map((d) => {
+        if (d.id === docId) {
+          const isNowLocked = !d.lockedBy;
+          return {
+            ...d,
+            lockedBy: isNowLocked ? 'Marcus Vance' : null,
+          };
+        }
+        return d;
+      })
+    );
+  };
+
+  const handleAtomicReleaseEco = () => {
+    const pending = approvals.filter((a) => a.status !== 'APPROVED');
+    if (pending.length > 0) {
+      setReleaseStatusAlert({
+        type: 'collision',
+        msg: `Cannot release ECO ${activeEco.ecoNumber}: Required sign-offs pending from [${pending.map((a) => a.role).join(', ')}]`,
+      });
+      return;
+    }
+
+    if (activeBaselineSim === 'COLLISION') {
+      setReleaseStatusAlert({
+        type: 'collision',
+        msg: `Baseline Concurrency Collision (INV-06): Expected baseline 'rev-001-A' has been superseded by 'rev-001-A1' from another concurrent ECO. Please re-baseline affected items before release.`,
+      });
+      return;
+    }
+
+    setEcos(ecos.map((e) => (e.id === activeEco.id ? { ...e, stage: 'effective' } : e)));
+    setReleaseStatusAlert({
+      type: 'success',
+      msg: `✓ Atomic Release Succeeded: ECO ${activeEco.ecoNumber} released. Revision B baseline locked. Emitted tamper-evident audit record SHA256-${activeEco.ecoNumber}-MV.`,
+    });
+    setChatterMessages([
+      ...chatterMessages,
+      {
+        id: Date.now(),
+        author: 'Marcus Vance',
+        initials: 'MV',
+        time: 'Just now',
+        type: 'status',
+        content: `Atomic Release Executed: Baseline locked for Revision B. State transitioned to Effective.`,
+      },
+    ]);
+  };
+
   const handleAddNote = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newNoteText.trim()) return;
@@ -403,6 +498,22 @@ export default function App() {
               }}
             >
               Bill of Materials
+            </button>
+
+            <button
+              onClick={() => {
+                setCurrentMenu('documents');
+                setViewMode('list');
+              }}
+              style={{
+                background: currentMenu === 'documents' ? 'var(--brand-orange)' : 'transparent',
+                color: currentMenu === 'documents' ? '#1E293B' : '#ffffff',
+                padding: '6px 14px',
+                borderRadius: '4px',
+                fontWeight: currentMenu === 'documents' ? 700 : 500,
+              }}
+            >
+              Document Vault
             </button>
 
             <button
@@ -758,11 +869,11 @@ export default function App() {
 
                   {activeEco.stage === 'validated' && (
                     <button
-                      onClick={() => handleStageChange('effective')}
+                      onClick={handleAtomicReleaseEco}
                       className="btn-odoo-primary"
                       style={{ background: 'var(--odoo-success)', color: '#ffffff' }}
                     >
-                      Apply Changes & Release BOM
+                      Apply Changes & Release BOM (Atomic)
                     </button>
                   )}
 
@@ -782,6 +893,28 @@ export default function App() {
                   ))}
                 </div>
               </div>
+
+              {/* Release / Concurrency Alert Notification */}
+              {releaseStatusAlert && (
+                <div
+                  style={{
+                    margin: '16px 24px 0 24px',
+                    padding: '12px 18px',
+                    borderRadius: '6px',
+                    background: releaseStatusAlert.type === 'success' ? '#ecfdf5' : '#fef2f2',
+                    border: `1px solid ${releaseStatusAlert.type === 'success' ? '#a7f3d0' : '#fecaca'}`,
+                    color: releaseStatusAlert.type === 'success' ? '#065f46' : '#991b1b',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                  }}
+                >
+                  {releaseStatusAlert.type === 'success' ? <CheckCircle2 size={18} /> : <AlertTriangle size={18} />}
+                  <span>{releaseStatusAlert.msg}</span>
+                </div>
+              )}
 
               {/* Sheet Body */}
               <div style={{ padding: '24px' }}>
@@ -865,7 +998,9 @@ export default function App() {
                 <div style={{ borderBottom: '1px solid var(--odoo-border)', display: 'flex', gap: '8px' }}>
                   {[
                     { id: 'bom_changes', label: `BOM Changes (${activeEco.bomChangesCount})` },
-                    { id: 'approvals', label: 'Approvals & Signatures' },
+                    { id: 'approvals', label: 'Approvals & E-Signatures' },
+                    { id: 'documents', label: `Controlled Documents (${vaultDocs.length})` },
+                    { id: 'concurrency', label: 'Concurrency Gate (INV-06)' },
                     { id: 'notes', label: 'Engineering Rationale' },
                   ].map((tab) => (
                     <button
@@ -944,17 +1079,26 @@ export default function App() {
                   </div>
                 )}
 
-                {/* TAB 2: APPROVALS */}
+                {/* TAB 2: APPROVALS & E-SIGNATURES */}
                 {formNotebookTab === 'approvals' && (
                   <div style={{ paddingTop: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                      <div style={{ fontSize: '0.8125rem', color: '#64748b', fontWeight: 600 }}>
+                        QUORUM RULE: <span style={{ color: 'var(--brand-charcoal)', fontWeight: 700 }}>ALL_MUST_APPROVE (Unanimous Reviewers Sign-Off)</span>
+                      </div>
+                      <span style={{ fontSize: '0.75rem', background: '#ecfdf5', color: '#065f46', padding: '2px 8px', borderRadius: '4px', fontWeight: 600 }}>
+                        21 CFR Part 11 Electronic Signature Compliant
+                      </span>
+                    </div>
+
                     <table className="odoo-table">
                       <thead>
                         <tr>
                           <th>Stage</th>
                           <th>Required Role</th>
                           <th>Assigned Approver</th>
-                          <th>Approval Status</th>
-                          <th>Date Approved</th>
+                          <th>Status</th>
+                          <th>Electronic Signature Hash</th>
                           <th>Actions</th>
                         </tr>
                       </thead>
@@ -978,7 +1122,9 @@ export default function App() {
                                 {app.status}
                               </span>
                             </td>
-                            <td>{app.date}</td>
+                            <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: app.status === 'APPROVED' ? 'var(--brand-orange-hover)' : '#94a3b8' }}>
+                              {app.status === 'APPROVED' ? 'HMAC-SHA256: 7f83b165...e491' : 'Pending Signature Attestation'}
+                            </td>
                             <td>
                               {app.status === 'PENDING' ? (
                                 <button
@@ -987,11 +1133,11 @@ export default function App() {
                                   style={{ padding: '3px 10px', fontSize: '0.75rem' }}
                                 >
                                   <Check size={12} />
-                                  Approve
+                                  Approve & Sign
                                 </button>
                               ) : (
                                 <span style={{ color: '#10b981', fontSize: '0.8125rem', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600 }}>
-                                  <CheckCircle2 size={14} /> Signed
+                                  <CheckCircle2 size={14} /> Attested
                                 </span>
                               )}
                             </td>
@@ -1002,7 +1148,143 @@ export default function App() {
                   </div>
                 )}
 
-                {/* TAB 3: NOTES */}
+                {/* TAB 3: CONTROLLED DOCUMENTS (B01, B05) */}
+                {formNotebookTab === 'documents' && (
+                  <div style={{ paddingTop: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+                      <span style={{ fontSize: '0.8125rem', color: '#64748b', fontWeight: 600 }}>
+                        ATTACHED ENGINEERING DOCUMENTS & CAD ARTIFACTS
+                      </span>
+                      <button className="btn-odoo-secondary" style={{ fontSize: '0.75rem', padding: '4px 10px' }}>
+                        <Plus size={12} /> Attach Document
+                      </button>
+                    </div>
+
+                    <table className="odoo-table">
+                      <thead>
+                        <tr>
+                          <th>Document No</th>
+                          <th>Title</th>
+                          <th>Category</th>
+                          <th>Revision</th>
+                          <th>File Artifact</th>
+                          <th>Check-Out Lock (B05)</th>
+                          <th>Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {vaultDocs.map((doc) => (
+                          <tr key={doc.id}>
+                            <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--brand-orange-hover)' }}>
+                              {doc.docNumber}
+                            </td>
+                            <td style={{ fontWeight: 600 }}>{doc.title}</td>
+                            <td>
+                              <span style={{ background: '#f1f5f9', color: '#475569', padding: '2px 6px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 600 }}>
+                                {doc.category}
+                              </span>
+                            </td>
+                            <td>Rev {doc.revision}</td>
+                            <td>
+                              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8125rem' }}>{doc.file}</span>{' '}
+                              <span style={{ color: '#94a3b8', fontSize: '0.75rem' }}>({doc.size})</span>
+                            </td>
+                            <td>
+                              {doc.lockedBy ? (
+                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: '#fee2e2', color: '#991b1b', padding: '2px 8px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 700 }}>
+                                  <Lock size={12} /> Locked by {doc.lockedBy}
+                                </span>
+                              ) : (
+                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: '#dcfce7', color: '#15803d', padding: '2px 8px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 600 }}>
+                                  <Unlock size={12} /> Available (Unlocked)
+                                </span>
+                              )}
+                            </td>
+                            <td>
+                              <button
+                                onClick={() => handleToggleDocLock(doc.id)}
+                                style={{
+                                  background: doc.lockedBy ? '#f1f5f9' : 'var(--brand-charcoal)',
+                                  color: doc.lockedBy ? '#334155' : 'var(--brand-orange)',
+                                  border: '1px solid #cbd5e1',
+                                  padding: '4px 10px',
+                                  borderRadius: '4px',
+                                  fontSize: '0.75rem',
+                                  fontWeight: 600,
+                                  cursor: 'pointer',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                }}
+                              >
+                                {doc.lockedBy ? <Unlock size={12} /> : <Lock size={12} />}
+                                {doc.lockedBy ? 'Check In (Unlock)' : 'Check Out (Lock)'}
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                {/* TAB 4: CONCURRENCY & RELEASE GATE (INV-06) */}
+                {formNotebookTab === 'concurrency' && (
+                  <div style={{ paddingTop: '16px' }}>
+                    <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '16px', marginBottom: '16px' }}>
+                      <div style={{ fontSize: '0.8125rem', color: '#475569', fontWeight: 700, marginBottom: '6px' }}>
+                        INVARIANT 6: CONCURRENCY COLLISION PREVENTION ENGINE
+                      </div>
+                      <p style={{ fontSize: '0.8125rem', color: '#64748b', lineHeight: '1.5', marginBottom: '14px' }}>
+                        The Universal PLM engine guarantees that no ECO can release changes on top of a superseded or stale baseline.
+                        Toggle the test scenario below to observe how the release command behaves.
+                      </p>
+
+                      <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 600 }}>
+                          <input
+                            type="radio"
+                            name="concurrencySim"
+                            checked={activeBaselineSim === 'MATCH'}
+                            onChange={() => setActiveBaselineSim('MATCH')}
+                          />
+                          <span>✓ Clean Baseline (Expected rev-001-A == Active Database rev-001-A)</span>
+                        </label>
+
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 600, color: '#dc2626' }}>
+                          <input
+                            type="radio"
+                            name="concurrencySim"
+                            checked={activeBaselineSim === 'COLLISION'}
+                            onChange={() => setActiveBaselineSim('COLLISION')}
+                          />
+                          <span>⚠️ Stale Collision Simulation (Database has rev-001-A1 from concurrent ECO)</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '16px' }}>
+                      <div>
+                        <div style={{ fontWeight: 700, fontSize: '0.9375rem', color: 'var(--brand-charcoal)' }}>
+                          Atomic Release Command Verification
+                        </div>
+                        <div style={{ fontSize: '0.8125rem', color: '#64748b', marginTop: '2px' }}>
+                          Validates all sign-offs, checks baseline concurrency, locks revisions (INV-03), and logs audit signature (INV-05).
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={handleAtomicReleaseEco}
+                        className="btn-odoo-primary"
+                        style={{ padding: '8px 18px', fontSize: '0.875rem' }}
+                      >
+                        Execute Atomic Release
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* TAB 5: NOTES */}
                 {formNotebookTab === 'notes' && (
                   <div style={{ paddingTop: '16px', color: '#334155', fontSize: '0.875rem', lineHeight: '1.6' }}>
                     <p>
@@ -1638,7 +1920,104 @@ export default function App() {
           </div>
         )}
 
-        {/* VIEW 5: CONFIGURATION */}
+        {/* VIEW 5: CONTROLLED DOCUMENT VAULT (B01, B05) */}
+        {currentMenu === 'documents' && (
+          <div className="odoo-sheet" style={{ padding: '24px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+              <div>
+                <span style={{ fontSize: '0.8125rem', color: 'var(--brand-orange-hover)', fontWeight: 700 }}>
+                  SECURE REPOSITORY · CATALYST STRATUS OBJECT STORAGE
+                </span>
+                <h2 style={{ fontSize: '1.375rem', fontWeight: 700, color: 'var(--brand-charcoal)', marginTop: '2px' }}>
+                  Controlled Document Vault & CAD Artifacts
+                </h2>
+              </div>
+              <button className="btn-odoo-primary">
+                <Plus size={14} /> New Document
+              </button>
+            </div>
+
+            <p style={{ color: 'var(--odoo-text-muted)', fontSize: '0.875rem', marginBottom: '20px' }}>
+              Immutable version control (Rev 1.0, 2.0), CAD 3D models (STEP/SolidWorks), technical drawings, and exclusive check-in / check-out locking (B01, B05).
+            </p>
+
+            <table className="odoo-table">
+              <thead>
+                <tr>
+                  <th>Document Number</th>
+                  <th>Title & Description</th>
+                  <th>Category</th>
+                  <th>Active Revision</th>
+                  <th>File Artifact</th>
+                  <th>Size</th>
+                  <th>Check-Out Lock Status (B05)</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {vaultDocs.map((doc) => (
+                  <tr key={doc.id}>
+                    <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--brand-orange-hover)' }}>
+                      {doc.docNumber}
+                    </td>
+                    <td>
+                      <div style={{ fontWeight: 600 }}>{doc.title}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--odoo-text-muted)', marginTop: '2px' }}>
+                        Linked to ROB-1000 Assembly & Subsystems
+                      </div>
+                    </td>
+                    <td>
+                      <span style={{ background: '#f1f5f9', color: '#475569', padding: '2px 8px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 600 }}>
+                        {doc.category}
+                      </span>
+                    </td>
+                    <td>
+                      <span style={{ background: '#e0f2fe', color: '#0369a1', padding: '2px 8px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 700 }}>
+                        Rev {doc.revision}
+                      </span>
+                    </td>
+                    <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8125rem' }}>{doc.file}</td>
+                    <td>{doc.size}</td>
+                    <td>
+                      {doc.lockedBy ? (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: '#fee2e2', color: '#991b1b', padding: '2px 8px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 700 }}>
+                          <Lock size={12} /> Locked by {doc.lockedBy}
+                        </span>
+                      ) : (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: '#dcfce7', color: '#15803d', padding: '2px 8px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 600 }}>
+                          <Unlock size={12} /> Available (Unlocked)
+                        </span>
+                      )}
+                    </td>
+                    <td>
+                      <button
+                        onClick={() => handleToggleDocLock(doc.id)}
+                        style={{
+                          background: doc.lockedBy ? '#f1f5f9' : 'var(--brand-charcoal)',
+                          color: doc.lockedBy ? '#334155' : 'var(--brand-orange)',
+                          border: '1px solid #cbd5e1',
+                          padding: '4px 10px',
+                          borderRadius: '4px',
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                        }}
+                      >
+                        {doc.lockedBy ? <Unlock size={12} /> : <Lock size={12} />}
+                        {doc.lockedBy ? 'Check In (Unlock)' : 'Check Out (Lock)'}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* VIEW 6: CONFIGURATION */}
         {currentMenu === 'capabilities' && (
           <div className="odoo-sheet" style={{ padding: '24px' }}>
             <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--brand-charcoal)', marginBottom: '6px' }}>

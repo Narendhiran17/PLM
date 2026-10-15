@@ -1,0 +1,26 @@
+{
+  "name": "@universal-plm/change-management",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Universal PLM ECR/ECO change workflows, multi-stage approval matrix, concurrency detection, and atomic release",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@universal-plm/domain-core": "*",
+    "@universal-plm/authorization": "*"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0"
+  }
+}
