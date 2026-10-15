@@ -22,7 +22,8 @@
       "@universal-plm/configuration-engine": ["./packages/configuration-engine/dist/index.d.ts"],
       "@universal-plm/manufacturing": ["./packages/manufacturing/dist/index.d.ts"],
       "@universal-plm/industry-capabilities": ["./packages/industry-capabilities/dist/index.d.ts"],
-      "@universal-plm/enterprise-scale": ["./packages/enterprise-scale/dist/index.d.ts"]
+      "@universal-plm/enterprise-scale": ["./packages/enterprise-scale/dist/index.d.ts"],
+      "@universal-plm/autonomous-operations": ["./packages/autonomous-operations/dist/index.d.ts"]
     }
   }
 }

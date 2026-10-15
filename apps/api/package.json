@@ -20,6 +20,7 @@
     "@universal-plm/manufacturing": "*",
     "@universal-plm/industry-capabilities": "*",
     "@universal-plm/enterprise-scale": "*",
+    "@universal-plm/autonomous-operations": "*",
     "fastify": "^5.1.0"
   },
   "devDependencies": {

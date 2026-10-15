@@ -52,7 +52,11 @@ import {
   Server,
   Zap,
   Database,
-  DownloadCloud
+  DownloadCloud,
+  Bot,
+  Box,
+  Maximize2,
+  FileCheck
 } from 'lucide-react';
 import {
   expandReferenceDesignators,
@@ -71,6 +75,17 @@ import {
   validateBackupArchiveForRestore,
   PLAN_TIERS
 } from '@universal-plm/enterprise-scale';
+import {
+  analyzeChangeImpact,
+  recommendAlternateParts,
+  generateAuditComplianceDossier,
+  createSyntheticDigitalTwinAssembly,
+  computeExplodedAssemblyTransforms,
+  evaluateCrossSectionSlicing,
+  syncCrmDealToPlmProject,
+  ingestCreatorQualityNcrToPlmEcr,
+  formatPlmEcoNotificationForCrm
+} from '@universal-plm/autonomous-operations';
 
 interface EcoCard {
   id: string;
@@ -91,8 +106,29 @@ interface EcoCard {
 
 export default function App() {
   // Navigation State
-  const [currentMenu, setCurrentMenu] = useState<'ecos' | 'products' | 'bom_tree' | 'documents' | 'capabilities' | 'manufacturing' | 'industry_packs' | 'enterprise'>('ecos');
+  const [currentMenu, setCurrentMenu] = useState<'ecos' | 'products' | 'bom_tree' | 'documents' | 'capabilities' | 'manufacturing' | 'industry_packs' | 'enterprise' | 'autonomous'>('ecos');
   const [mfgTab, setMfgTab] = useState<'mbom' | 'routings' | 'sourcing' | 'cost_rollup' | 'lead_time' | 'erp_sync'>('mbom');
+
+  // Phase 7: AI Copilot, 3D CAD Digital Twin & Zoho Connectors State
+  const [autoTab, setAutoTab] = useState<'copilot' | 'digital_twin' | 'zoho_connectors'>('copilot');
+  const [copilotEcoSelect, setCopilotEcoSelect] = useState<'ECO-001' | 'ECO-002'>('ECO-001');
+  const [analyzedImpact, setAnalyzedImpact] = useState<any>(null);
+  const [alternateTargetPart, setAlternateTargetPart] = useState<string>('RES-0402-10K');
+  const [alternateRecs, setAlternateRecs] = useState<any>(null);
+  const [generatedAuditDossier, setGeneratedAuditDossier] = useState<any>(null);
+  const [explodeSlider, setExplodeSlider] = useState<number>(0);
+  const [sliceAxis, setSliceAxis] = useState<'x' | 'y' | 'z'>('y');
+  const [sliceSlider, setSliceSlider] = useState<number>(100);
+  const [selected3dPart, setSelected3dPart] = useState<string | null>(null);
+  const [crmDeals, setCrmDeals] = useState<any[]>([
+    { dealId: 'CRM-DEAL-849201', dealName: 'AeroSpace Tier-1 Cockpit Display Unit', accountName: 'Lockheed Martin Space Systems', amountUsd: 1450000, stage: 'Contract Signed / Closed Won', closingDate: '2027-03-31', synced: true },
+    { dealId: 'CRM-DEAL-992104', dealName: 'Electric Powertrain Inverter Upgrade', accountName: 'Tesla Energy & Propulsion', amountUsd: 875000, stage: 'Proposal / Contract In Review', closingDate: '2026-11-30', synced: false }
+  ]);
+  const [creatorNcrs, setCreatorNcrs] = useState<any[]>([
+    { recordId: 'NCR-STN3-00481', inspectionStationId: 'INSP-SMT-LINE-02', inspectorName: 'Devon Patel', partNumber: 'PCBA-MCU-MAIN', lotNumber: 'LOT-202610-092', defectCategory: 'electrical', severity: 'critical', defectDescription: 'Short-circuit detected between 3.3V power rail and ground plane during automated flying probe test.', detectedQuantity: 14, timestamp: '2026-10-15T12:00:00Z', escalated: false },
+    { recordId: 'NCR-STN1-00219', inspectionStationId: 'INSP-CNC-MILL-01', inspectorName: 'Elena Rostova', partNumber: 'CHASSIS-BASE-01', lotNumber: 'LOT-202609-114', defectCategory: 'dimensional', severity: 'major', defectDescription: 'M4 mounting hole pitch out of tolerance by +0.32mm on datum face B.', detectedQuantity: 8, timestamp: '2026-10-15T09:15:00Z', escalated: true }
+  ]);
+  const [crmNotificationSent, setCrmNotificationSent] = useState<string | null>(null);
   const [selectedPlant, setSelectedPlant] = useState<'PLANT-DETROIT' | 'PLANT-CHENNAI'>('PLANT-DETROIT');
   const [mfgBatchSize, setMfgBatchSize] = useState<number>(50);
   const [erpSyncStatus, setErpSyncStatus] = useState<{ synced: boolean; system: string; eventId: string; time: string } | null>(null);
@@ -816,6 +852,25 @@ export default function App() {
             >
               Enterprise &amp; Scale
             </button>
+
+            <button
+              onClick={() => {
+                setCurrentMenu('autonomous');
+                setViewMode('form');
+              }}
+              style={{
+                background: currentMenu === 'autonomous' ? 'var(--brand-orange)' : 'transparent',
+                color: currentMenu === 'autonomous' ? '#1E293B' : '#ffffff',
+                padding: '6px 14px',
+                borderRadius: '4px',
+                fontWeight: currentMenu === 'autonomous' ? 700 : 500,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+            >
+              <Bot size={15} /> AI &amp; Digital Twin
+            </button>
           </div>
         </div>
 
@@ -899,7 +954,18 @@ export default function App() {
               {currentMenu === 'capabilities' && 'Configuration Studio & Automation'}
               {currentMenu === 'industry_packs' && 'Industry Capability Framework & Specialized Packs'}
               {currentMenu === 'enterprise' && 'Enterprise Maturity, Scale & Disaster Recovery'}
+              {currentMenu === 'autonomous' && 'Autonomous Operations, AI Copilot & 3D Digital Twin'}
             </span>
+            {currentMenu === 'autonomous' && (
+              <>
+                <span style={{ color: 'var(--odoo-text-muted)' }}>/</span>
+                <span style={{ color: 'var(--brand-orange-hover)', fontWeight: 700 }}>
+                  {autoTab === 'copilot' && 'AI Engineering Copilot (Impact, Alternates & Regulatory Audit)'}
+                  {autoTab === 'digital_twin' && 'Interactive 3D CAD Digital Twin & WebGL Assembly Viewer'}
+                  {autoTab === 'zoho_connectors' && 'Zoho Ecosystem Integration (CRM Deals & Creator Quality NCR)'}
+                </span>
+              </>
+            )}
             {currentMenu === 'ecos' && viewMode === 'form' && (
               <>
                 <span style={{ color: 'var(--odoo-text-muted)' }}>/</span>
@@ -5194,6 +5260,755 @@ export default function App() {
                       )}
                     </div>
                   )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* 10. AUTONOMOUS OPERATIONS, AI COPILOT & 3D DIGITAL TWIN (PHASE 7) */}
+        {currentMenu === 'autonomous' && (
+          <div className="odoo-sheet">
+            {/* Sheet Header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--odoo-border)', paddingBottom: '16px', marginBottom: '20px' }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                  <span style={{ background: '#fef3c7', color: '#92400e', fontSize: '0.75rem', fontWeight: 700, padding: '2px 8px', borderRadius: '4px' }}>
+                    PHASE 7 AUTONOMOUS OPERATIONS
+                  </span>
+                  <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                    Engine: <strong>AI Copilot + WebGL Digital Twin + Zoho Connectors</strong>
+                  </span>
+                </div>
+                <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700, color: 'var(--brand-charcoal)' }}>
+                  Autonomous Operations, AI Copilot &amp; 3D Digital Twin
+                </h1>
+                <p style={{ margin: '4px 0 0', fontSize: '0.875rem', color: '#64748b' }}>
+                  Automated change impact &amp; scrap risk predictions, real-time 3D CAD assembly visualizer, and bi-directional Zoho CRM &amp; Creator synchronization.
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <span style={{ background: '#ecfdf5', color: '#065f46', border: '1px solid #a7f3d0', fontSize: '0.8125rem', fontWeight: 700, padding: '6px 14px', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Zap size={14} /> AI Copilot Active
+                </span>
+              </div>
+            </div>
+
+            {/* Notebook Tabs */}
+            <div className="odoo-notebook-tabs" style={{ marginBottom: '20px' }}>
+              <button
+                className={`odoo-tab ${autoTab === 'copilot' ? 'active' : ''}`}
+                onClick={() => setAutoTab('copilot')}
+              >
+                AI Engineering Copilot (Impact, Alternates &amp; Audit)
+              </button>
+              <button
+                className={`odoo-tab ${autoTab === 'digital_twin' ? 'active' : ''}`}
+                onClick={() => setAutoTab('digital_twin')}
+              >
+                3D CAD Digital Twin &amp; Assembly Viewer
+              </button>
+              <button
+                className={`odoo-tab ${autoTab === 'zoho_connectors' ? 'active' : ''}`}
+                onClick={() => setAutoTab('zoho_connectors')}
+              >
+                Zoho Ecosystem Integration (CRM &amp; Creator)
+              </button>
+            </div>
+
+            {/* TAB 1: AI ENGINEERING COPILOT */}
+            {autoTab === 'copilot' && (
+              <div>
+                {/* 1A: Change Impact Simulator */}
+                <div style={{ background: '#ffffff', border: '1px solid var(--odoo-border)', borderRadius: '6px', padding: '16px', marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                    <div>
+                      <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: 'var(--brand-charcoal)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Bot size={18} color="var(--brand-orange-hover)" /> Automated Change Impact &amp; Scrap Risk Analyzer
+                      </h3>
+                      <p style={{ margin: '2px 0 0', fontSize: '0.8125rem', color: '#64748b' }}>
+                        Predicts active WIP rework exposure, on-hand inventory scrap, supplier PO liabilities, and assembly blast radius.
+                      </p>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      <select
+                        value={copilotEcoSelect}
+                        onChange={(e) => setCopilotEcoSelect(e.target.value as any)}
+                        style={{ padding: '6px 10px', borderRadius: '4px', border: '1px solid var(--odoo-border)', fontSize: '0.8125rem' }}
+                      >
+                        <option value="ECO-001">ECO-001 (Chassis &amp; Heatsink Rev C Update)</option>
+                        <option value="ECO-002">ECO-002 (Power Electronics PCB Component Replacement)</option>
+                      </select>
+
+                      <button
+                        onClick={() => {
+                          const isEco1 = copilotEcoSelect === 'ECO-001';
+                          const eco = {
+                            id: isEco1 ? 'ECO-2026-001' : 'ECO-2026-002',
+                            ecoNumber: isEco1 ? 'ECO-001' : 'ECO-002',
+                            title: isEco1 ? 'Structural Revision to Main Inverter Chassis and Stator' : 'Power Stage Diode & Capacitor Upgrade',
+                            category: isEco1 ? 'Mechanical Redesign' : 'Electronics Component Obsolescence'
+                          };
+                          const affectedItems = isEco1
+                            ? [
+                                { partId: 'PART-CHASSIS-01', partNumber: 'CHASSIS-01', name: 'Cast Aluminum Chassis Baseplate', currentRevision: 'B', newRevision: 'C', action: 'replace' as const, costPerUnit: 145.0, leadTimeDays: 45 },
+                                { partId: 'PART-HEATSINK-01', partNumber: 'HEATSINK-01', name: 'Extruded Copper Heatsink', currentRevision: 'A', newRevision: 'B', action: 'modify' as const, costPerUnit: 62.0, leadTimeDays: 15 }
+                              ]
+                            : [
+                                { partId: 'PART-DIODE-01', partNumber: 'DIODE-FAST-SCHOTTKY', name: '600V 30A Fast Recovery Diode', currentRevision: 'A', newRevision: 'B', action: 'replace' as const, costPerUnit: 4.5, leadTimeDays: 20 },
+                                { partId: 'PART-CAP-01', partNumber: 'CAP-FILM-100UF', name: 'Polypropylene Film Capacitor 100uF', currentRevision: 'A', newRevision: 'A1', action: 'modify' as const, costPerUnit: 18.0, leadTimeDays: 40 }
+                              ];
+                          const inventory = isEco1
+                            ? [
+                                { partId: 'PART-CHASSIS-01', onHandQty: 100, wipQty: 50, openPoQty: 200 },
+                                { partId: 'PART-HEATSINK-01', onHandQty: 300, wipQty: 80, openPoQty: 0 }
+                              ]
+                            : [
+                                { partId: 'PART-DIODE-01', onHandQty: 1200, wipQty: 400, openPoQty: 2000 },
+                                { partId: 'PART-CAP-01', onHandQty: 150, wipQty: 60, openPoQty: 300 }
+                              ];
+                          const bomLines = [
+                            { parentPartId: 'ASM-1000', parentPartNumber: 'ASM-1000-TURBINE', childPartId: isEco1 ? 'PART-CHASSIS-01' : 'PART-DIODE-01', childPartNumber: isEco1 ? 'CHASSIS-01' : 'DIODE-FAST-SCHOTTKY', quantity: 1 },
+                            { parentPartId: 'ASM-2000', parentPartNumber: 'ASM-2000-GENERATOR', childPartId: isEco1 ? 'PART-CHASSIS-01' : 'PART-CAP-01', childPartNumber: isEco1 ? 'CHASSIS-01' : 'CAP-FILM-100UF', quantity: 1 }
+                          ];
+                          const result = analyzeChangeImpact(eco, affectedItems, inventory, bomLines);
+                          setAnalyzedImpact(result);
+                        }}
+                        className="btn-odoo-primary"
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                      >
+                        <Zap size={14} /> Run AI Impact Analysis
+                      </button>
+                    </div>
+                  </div>
+
+                  {analyzedImpact && (
+                    <div style={{ marginTop: '16px' }}>
+                      {/* KPI Metric Cards */}
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '16px' }}>
+                        <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '12px' }}>
+                          <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b' }}>OVERALL RISK SCORE</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                            <span style={{ fontSize: '1.5rem', fontWeight: 800, color: analyzedImpact.overallRiskScore >= 50 ? '#b91c1c' : '#15803d' }}>
+                              {analyzedImpact.overallRiskScore} / 100
+                            </span>
+                            <span style={{
+                              fontSize: '0.75rem',
+                              fontWeight: 700,
+                              padding: '2px 8px',
+                              borderRadius: '4px',
+                              background: analyzedImpact.riskCategory === 'CRITICAL' || analyzedImpact.riskCategory === 'HIGH' ? '#fee2e2' : '#fef3c7',
+                              color: analyzedImpact.riskCategory === 'CRITICAL' || analyzedImpact.riskCategory === 'HIGH' ? '#991b1b' : '#92400e'
+                            }}>
+                              {analyzedImpact.riskCategory}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '4px' }}>
+                            Est. Approval: <strong>{analyzedImpact.estimatedApprovalDays} Days</strong>
+                          </div>
+                        </div>
+
+                        <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '12px' }}>
+                          <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b' }}>TOTAL FINANCIAL EXPOSURE</span>
+                          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#991b1b', marginTop: '4px' }}>
+                            ${analyzedImpact.financialExposure.totalFinancialRisk.toLocaleString()}
+                          </div>
+                          <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '4px' }}>
+                            Scrap: ${analyzedImpact.financialExposure.inventoryScrapCost.toLocaleString()} · Rework: ${analyzedImpact.financialExposure.wipReworkCost.toLocaleString()}
+                          </div>
+                        </div>
+
+                        <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '12px' }}>
+                          <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b' }}>OPEN PO LIABILITY</span>
+                          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#d97706', marginTop: '4px' }}>
+                            ${analyzedImpact.financialExposure.openPoLiability.toLocaleString()}
+                          </div>
+                          <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '4px' }}>
+                            Contracted supplier pipeline
+                          </div>
+                        </div>
+
+                        <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '12px' }}>
+                          <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b' }}>BLAST RADIUS</span>
+                          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--brand-charcoal)', marginTop: '4px' }}>
+                            {analyzedImpact.blastRadius.impactedParentAssemblies.length} Assemblies
+                          </div>
+                          <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '4px' }}>
+                            Direct Parts: {analyzedImpact.blastRadius.directAffectedParts} items
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* AI Recommendations & Bottlenecks */}
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                        <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '6px', padding: '14px' }}>
+                          <div style={{ fontWeight: 700, fontSize: '0.875rem', color: '#1e40af', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <Sparkles size={16} /> AI Strategic Recommendations
+                          </div>
+                          <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '0.8125rem', color: '#1e3a8a', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                            {analyzedImpact.aiRecommendations.map((rec: string, i: number) => (
+                              <li key={i}>{rec}</li>
+                            ))}
+                          </ul>
+                        </div>
+
+                        <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '6px', padding: '14px' }}>
+                          <div style={{ fontWeight: 700, fontSize: '0.875rem', color: '#92400e', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <AlertTriangle size={16} /> Supply Chain Bottlenecks &amp; Blast Radius
+                          </div>
+                          {analyzedImpact.supplyChainBottlenecks.length > 0 ? (
+                            <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '0.8125rem', color: '#78350f', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                              {analyzedImpact.supplyChainBottlenecks.map((b: any, i: number) => (
+                                <li key={i}>
+                                  <strong>{b.partNumber}</strong>: {b.riskReason}
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <div style={{ fontSize: '0.8125rem', color: '#78350f' }}>Zero critical supply chain lead-time bottlenecks detected.</div>
+                          )}
+                          <div style={{ marginTop: '8px', fontSize: '0.75rem', color: '#92400e' }}>
+                            Impacted Top-Level Assemblies: <strong>{analyzedImpact.blastRadius.impactedParentAssemblies.join(', ')}</strong>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* 1B: Smart Alternate Recommender & 1C: Audit Dossier */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  {/* Smart Alternates */}
+                  <div style={{ background: '#ffffff', border: '1px solid var(--odoo-border)', borderRadius: '6px', padding: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                      <h4 style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 700, color: 'var(--brand-charcoal)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <RefreshCw size={16} color="var(--brand-orange-hover)" /> Smart Alternate Component Recommender
+                      </h4>
+
+                      <button
+                        onClick={() => {
+                          const targetPart = { partNumber: alternateTargetPart, unitCost: 0.15, leadTimeDays: 28 };
+                          const candidates = [
+                            { partId: 'ALT-1', partNumber: 'YAGEO-0402-10K', name: 'SMD Thick Film Resistor 10k 1%', manufacturer: 'Yageo', unitCost: 0.11, leadTimeDays: 7, qualificationStatus: 'preferred' as const, specifications: { tolerance: '1%', power: '0.063W' } },
+                            { partId: 'ALT-2', partNumber: 'VISHAY-0402-10K', name: 'Precision Thin Film Resistor 10k 0.1%', manufacturer: 'Vishay', unitCost: 0.38, leadTimeDays: 35, qualificationStatus: 'approved' as const, specifications: { tolerance: '0.1%', power: '0.063W' } },
+                            { partId: 'ALT-3', partNumber: 'PANASONIC-0402-10K', name: 'Anti-Surge Resistor 10k', manufacturer: 'Panasonic', unitCost: 0.14, leadTimeDays: 14, qualificationStatus: 'approved' as const, specifications: { tolerance: '1%', power: '0.1W' } }
+                          ];
+                          const recs = recommendAlternateParts(targetPart, candidates);
+                          setAlternateRecs(recs);
+                        }}
+                        className="btn-odoo-secondary"
+                        style={{ fontSize: '0.75rem', padding: '4px 10px' }}
+                      >
+                        Score Alternates
+                      </button>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                      <label style={{ fontSize: '0.8125rem', fontWeight: 600 }}>Target Part Number:</label>
+                      <input
+                        type="text"
+                        value={alternateTargetPart}
+                        onChange={(e) => setAlternateTargetPart(e.target.value)}
+                        style={{ padding: '4px 8px', borderRadius: '4px', border: '1px solid var(--odoo-border)', fontSize: '0.8125rem' }}
+                      />
+                    </div>
+
+                    {alternateRecs && (
+                      <table className="odoo-table" style={{ fontSize: '0.8125rem' }}>
+                        <thead>
+                          <tr>
+                            <th>Candidate Part</th>
+                            <th>Vendor</th>
+                            <th>Cost Delta</th>
+                            <th>Lead Time</th>
+                            <th>Suitability</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {alternateRecs.recommendations.map((r: any) => (
+                            <tr key={r.partId}>
+                              <td>
+                                <strong>{r.partNumber}</strong>
+                                <div style={{ fontSize: '0.7rem', color: '#64748b' }}>{r.name}</div>
+                              </td>
+                              <td>{r.qualificationStatus.toUpperCase()}</td>
+                              <td>
+                                <span style={{
+                                  padding: '2px 6px',
+                                  borderRadius: '3px',
+                                  fontSize: '0.75rem',
+                                  fontWeight: 700,
+                                  background: r.costDeltaPct <= 0 ? '#dcfce7' : '#fee2e2',
+                                  color: r.costDeltaPct <= 0 ? '#15803d' : '#991b1b'
+                                }}>
+                                  {r.costDeltaPct > 0 ? `+${r.costDeltaPct}%` : `${r.costDeltaPct}%`}
+                                </span>
+                              </td>
+                              <td>
+                                {r.leadTimeSavingsDays > 0 ? (
+                                  <span style={{ color: '#15803d', fontWeight: 700 }}>-{r.leadTimeSavingsDays}d</span>
+                                ) : (
+                                  <span style={{ color: '#991b1b' }}>+{Math.abs(r.leadTimeSavingsDays)}d</span>
+                                )}
+                              </td>
+                              <td>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                  <div style={{ flex: 1, background: '#e2e8f0', borderRadius: '3px', height: '6px', width: '50px' }}>
+                                    <div style={{ background: r.suitabilityScore >= 80 ? '#10b981' : '#f59e0b', height: '100%', borderRadius: '3px', width: `${r.suitabilityScore}%` }} />
+                                  </div>
+                                  <span style={{ fontWeight: 700 }}>{r.suitabilityScore}%</span>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    )}
+                  </div>
+
+                  {/* Regulatory Audit Dossier */}
+                  <div style={{ background: '#ffffff', border: '1px solid var(--odoo-border)', borderRadius: '6px', padding: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                      <h4 style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 700, color: 'var(--brand-charcoal)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <FileCheck size={16} color="var(--brand-orange-hover)" /> 21 CFR Part 11 Compliance Dossier
+                      </h4>
+
+                      <button
+                        onClick={() => {
+                          const eco = {
+                            ecoNumber: 'ECO-905',
+                            title: 'Critical Medical Infusion Pump Valve Firmware and Seal Update',
+                            category: 'Design Verification & Regulatory Compliance',
+                            snapshotHash: 'SHA256:7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069'
+                          };
+                          const signatures = [
+                            { signerName: 'Dr. Sarah Jenkins', signerRole: 'Quality Assurance Director', signedAt: new Date().toISOString(), quorumResult: 'APPROVED' },
+                            { signerName: 'Marcus Vance', signerRole: 'Chief Regulatory Officer', signedAt: new Date().toISOString(), quorumResult: 'APPROVED' }
+                          ];
+                          const affectedItems = [
+                            { partId: 'VALVE-SEAL-01', partNumber: 'VALVE-SEAL-01', name: 'Silicone Diaphragm Gasket', currentRevision: 'A', newRevision: 'B', action: 'modify' as const, costPerUnit: 12.5, leadTimeDays: 14 }
+                          ];
+                          const dossier = generateAuditComplianceDossier(eco, signatures, affectedItems);
+                          setGeneratedAuditDossier(dossier);
+                        }}
+                        className="btn-odoo-secondary"
+                        style={{ fontSize: '0.75rem', padding: '4px 10px' }}
+                      >
+                        Compile Audit Dossier
+                      </button>
+                    </div>
+
+                    <p style={{ margin: '0 0 12px', fontSize: '0.8125rem', color: '#64748b' }}>
+                      Assembles formal electronic signature attestations, baseline snapshot hashes, and affected item deltas for FDA 21 CFR Part 11 and ISO 9001:2015 auditor inspections.
+                    </p>
+
+                    {generatedAuditDossier && (
+                      <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '12px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                          <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: 'var(--brand-charcoal)' }}>
+                            Dossier Ref: {generatedAuditDossier.dossierId}
+                          </span>
+                          <span style={{ fontSize: '0.75rem', background: '#dcfce7', color: '#15803d', padding: '2px 8px', borderRadius: '4px', fontWeight: 700 }}>
+                            21 CFR PART 11 VERIFIED
+                          </span>
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: '#64748b', marginBottom: '6px' }}>
+                          ECO: <strong>{generatedAuditDossier.ecoNumber}</strong> · Signatures: <strong>{generatedAuditDossier.approvalQuorumSummary}</strong>
+                        </div>
+                        <pre style={{
+                          margin: 0,
+                          fontSize: '0.7rem',
+                          background: '#ffffff',
+                          border: '1px solid #e2e8f0',
+                          borderRadius: '4px',
+                          padding: '10px',
+                          maxHeight: '160px',
+                          overflowY: 'auto',
+                          fontFamily: 'var(--font-mono)'
+                        }}>
+                          {generatedAuditDossier.dossierMarkdown}
+                        </pre>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 2: 3D CAD DIGITAL TWIN & WEBGL/CANVAS ASSEMBLY VIEWER */}
+            {autoTab === 'digital_twin' && (() => {
+              const syntheticAssembly = createSyntheticDigitalTwinAssembly('ASM-1000', 'Industrial High-Torque Power Inverter');
+              const explodedMeshes = computeExplodedAssemblyTransforms(syntheticAssembly.meshes, explodeSlider / 100, 90);
+              const slices = evaluateCrossSectionSlicing(syntheticAssembly.meshes, sliceAxis, sliceSlider);
+
+              return (
+                <div>
+                  {/* Controls Header */}
+                  <div style={{ background: '#ffffff', border: '1px solid var(--odoo-border)', borderRadius: '6px', padding: '16px', marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1, minWidth: '280px' }}>
+                      <label style={{ fontSize: '0.8125rem', fontWeight: 700, minWidth: '140px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Maximize2 size={16} /> Explosion: {explodeSlider}%
+                      </label>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={explodeSlider}
+                        onChange={(e) => setExplodeSlider(Number(e.target.value))}
+                        style={{ width: '100%', accentColor: 'var(--brand-orange)' }}
+                      />
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <label style={{ fontSize: '0.8125rem', fontWeight: 600 }}>Slice Plane:</label>
+                        <select
+                          value={sliceAxis}
+                          onChange={(e) => setSliceAxis(e.target.value as any)}
+                          style={{ padding: '4px 8px', borderRadius: '4px', border: '1px solid var(--odoo-border)', fontSize: '0.8125rem' }}
+                        >
+                          <option value="y">Y-Axis (Elevation Slice)</option>
+                          <option value="x">X-Axis (Lateral Slice)</option>
+                          <option value="z">Z-Axis (Depth Slice)</option>
+                        </select>
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <label style={{ fontSize: '0.8125rem', fontWeight: 600 }}>Position:</label>
+                        <input
+                          type="range"
+                          min="-80"
+                          max="80"
+                          value={sliceSlider}
+                          onChange={(e) => setSliceSlider(Number(e.target.value))}
+                          style={{ width: '100px', accentColor: 'var(--brand-orange)' }}
+                        />
+                      </div>
+
+                      <button
+                        onClick={() => {
+                          setExplodeSlider(explodeSlider === 0 ? 100 : 0);
+                        }}
+                        className="btn-odoo-secondary"
+                        style={{ fontSize: '0.8125rem', padding: '4px 12px' }}
+                      >
+                        {explodeSlider === 0 ? 'Full Explode' : 'Reassemble'}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Main Split: 3D Isometric Canvas on Left, 3D BOM on Right */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '16px' }}>
+                    {/* Interactive 3D Assembly Visualizer */}
+                    <div style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '6px', padding: '16px', position: 'relative', minHeight: '440px', display: 'flex', flexDirection: 'column' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: '#94a3b8', fontSize: '0.75rem', marginBottom: '8px' }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <Box size={14} color="var(--brand-orange)" /> 3D Digital Twin Viewport (Isometric Projection Engine)
+                        </span>
+                        <span>Assembly: <strong>{syntheticAssembly.assemblyName}</strong></span>
+                      </div>
+
+                      {/* SVG 3D Isometric Projection View */}
+                      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <svg viewBox="0 0 540 380" style={{ width: '100%', height: '360px' }}>
+                          <defs>
+                            <radialGradient id="stageGlow" cx="50%" cy="50%" r="50%">
+                              <stop offset="0%" stopColor="#1e293b" stopOpacity="0.8" />
+                              <stop offset="100%" stopColor="#0f172a" stopOpacity="0" />
+                            </radialGradient>
+                          </defs>
+
+                          {/* Assembly Ground Plane Grid */}
+                          <ellipse cx="270" cy="300" rx="200" ry="60" fill="url(#stageGlow)" />
+                          <ellipse cx="270" cy="300" rx="180" ry="50" fill="none" stroke="#334155" strokeDasharray="4 4" strokeWidth="1" />
+
+                          {/* Render Exploded 3D Mesh Nodes */}
+                          {explodedMeshes.map((mesh, index) => {
+                            const isSelected = selected3dPart === mesh.partNumber;
+                            const slice = slices.find((s) => s.partNumber === mesh.partNumber);
+                            const opacity = slice && slice.visibleVolumePct < 100 ? Math.max(0.2, slice.visibleVolumePct / 100) : 1.0;
+
+                            // Isometric 3D Projection Formula
+                            const posX = mesh.currentPosition?.x ?? mesh.center.x;
+                            const posY = mesh.currentPosition?.y ?? mesh.center.y;
+                            const posZ = mesh.currentPosition?.z ?? mesh.center.z;
+
+                            // Origin: (270, 220)
+                            const isoX = 270 + (posX - posZ) * 0.9;
+                            const isoY = 220 + (posX + posZ) * 0.45 - posY * 1.1;
+
+                            const w = mesh.bounds.dimensions.x * 0.6;
+                            const h = mesh.bounds.dimensions.y * 0.7;
+                            const d = mesh.bounds.dimensions.z * 0.5;
+
+                            return (
+                              <g
+                                key={mesh.id}
+                                opacity={opacity}
+                                style={{ cursor: 'pointer', transition: 'all 0.2s ease' }}
+                                onClick={() => setSelected3dPart(isSelected ? null : mesh.partNumber)}
+                              >
+                                {/* Projected 3D Box Faces */}
+                                {/* Top Face */}
+                                <polygon
+                                  points={`
+                                    ${isoX},${isoY - h}
+                                    ${isoX + w * 0.5},${isoY - h - d * 0.3}
+                                    ${isoX},${isoY - h - d * 0.6}
+                                    ${isoX - w * 0.5},${isoY - h - d * 0.3}
+                                  `}
+                                  fill={mesh.colorHex}
+                                  stroke={isSelected ? 'var(--brand-orange)' : '#1e293b'}
+                                  strokeWidth={isSelected ? 2.5 : 1}
+                                  filter={isSelected ? 'drop-shadow(0 0 6px #f59e0b)' : 'none'}
+                                />
+                                {/* Front Face */}
+                                <polygon
+                                  points={`
+                                    ${isoX - w * 0.5},${isoY - h - d * 0.3}
+                                    ${isoX},${isoY - h}
+                                    ${isoX},${isoY}
+                                    ${isoX - w * 0.5},${isoY - d * 0.3}
+                                  `}
+                                  fill={mesh.colorHex}
+                                  fillOpacity="0.85"
+                                  stroke={isSelected ? 'var(--brand-orange)' : '#0f172a'}
+                                  strokeWidth={isSelected ? 2.5 : 1}
+                                />
+                                {/* Right Face */}
+                                <polygon
+                                  points={`
+                                    ${isoX},${isoY - h}
+                                    ${isoX + w * 0.5},${isoY - h - d * 0.3}
+                                    ${isoX + w * 0.5},${isoY - d * 0.3}
+                                    ${isoX},${isoY}
+                                  `}
+                                  fill={mesh.colorHex}
+                                  fillOpacity="0.7"
+                                  stroke={isSelected ? 'var(--brand-orange)' : '#0f172a'}
+                                  strokeWidth={isSelected ? 2.5 : 1}
+                                />
+
+                                {/* Component Centroid Label */}
+                                <text
+                                  x={isoX}
+                                  y={isoY - h - d * 0.6 - 6}
+                                  textAnchor="middle"
+                                  fill={isSelected ? '#fbbf24' : '#cbd5e1'}
+                                  fontSize="9"
+                                  fontWeight="700"
+                                  fontFamily="sans-serif"
+                                >
+                                  {mesh.partNumber.replace('ASM-1000-', '')}
+                                </text>
+                              </g>
+                            );
+                          })}
+                        </svg>
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #1e293b', paddingTop: '8px', color: '#64748b', fontSize: '0.75rem' }}>
+                        <span>Click any part to isolate · Drag explosion slider to view interior components</span>
+                        <span>Parts Count: <strong>{syntheticAssembly.partsCount}</strong></span>
+                      </div>
+                    </div>
+
+                    {/* Synchronized Component Inspector */}
+                    <div style={{ background: '#ffffff', border: '1px solid var(--odoo-border)', borderRadius: '6px', padding: '16px' }}>
+                      <h4 style={{ margin: '0 0 12px', fontSize: '0.9375rem', fontWeight: 700, color: 'var(--brand-charcoal)' }}>
+                        3D Digital Twin BOM Hierarchy
+                      </h4>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '380px', overflowY: 'auto' }}>
+                        {syntheticAssembly.meshes.map((mesh) => {
+                          const isSelected = selected3dPart === mesh.partNumber;
+                          const slice = slices.find((s) => s.partNumber === mesh.partNumber);
+
+                          return (
+                            <div
+                              key={mesh.id}
+                              onClick={() => setSelected3dPart(isSelected ? null : mesh.partNumber)}
+                              style={{
+                                border: `1px solid ${isSelected ? 'var(--brand-orange)' : '#e2e8f0'}`,
+                                background: isSelected ? '#fffbeb' : '#f8fafc',
+                                borderRadius: '6px',
+                                padding: '10px 12px',
+                                cursor: 'pointer',
+                                transition: 'all 0.15s ease'
+                              }}
+                            >
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                  <div style={{ width: '12px', height: '12px', borderRadius: '3px', background: mesh.colorHex }} />
+                                  <span style={{ fontWeight: 700, fontSize: '0.8125rem', color: isSelected ? 'var(--brand-orange-hover)' : 'var(--brand-charcoal)' }}>
+                                    {mesh.partNumber}
+                                  </span>
+                                </div>
+                                <span style={{ fontSize: '0.7rem', background: '#e2e8f0', color: '#475569', padding: '1px 6px', borderRadius: '3px', fontWeight: 600 }}>
+                                  {mesh.material}
+                                </span>
+                              </div>
+
+                              <div style={{ fontSize: '0.75rem', color: '#475569', marginBottom: '4px' }}>
+                                {mesh.name}
+                              </div>
+
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.7rem', color: '#64748b' }}>
+                                <span>Size: {mesh.bounds.dimensions.x}&times;{mesh.bounds.dimensions.y}&times;{mesh.bounds.dimensions.z} mm</span>
+                                <span>Slice Visibility: <strong>{slice ? slice.visibleVolumePct : 100}%</strong></span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* TAB 3: ZOHO ECOSYSTEM INTEGRATION (CRM & CREATOR) */}
+            {autoTab === 'zoho_connectors' && (
+              <div>
+                {crmNotificationSent && (
+                  <div style={{ background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '6px', padding: '12px', marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#065f46', fontSize: '0.8125rem', fontWeight: 600 }}>
+                      <CheckCircle2 size={16} /> {crmNotificationSent}
+                    </div>
+                    <button onClick={() => setCrmNotificationSent(null)} style={{ background: 'none', border: 'none', color: '#065f46', cursor: 'pointer', fontWeight: 700 }}>&times;</button>
+                  </div>
+                )}
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  {/* Zoho CRM Deals Connector */}
+                  <div style={{ background: '#ffffff', border: '1px solid var(--odoo-border)', borderRadius: '6px', padding: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                      <h4 style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 700, color: 'var(--brand-charcoal)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <DollarSign size={16} color="var(--brand-orange-hover)" /> Zoho CRM Deals &rarr; PLM Projects Pipeline
+                      </h4>
+
+                      <button
+                        onClick={() => {
+                          const eco = { ecoNumber: 'ECO-840', title: 'Rev C Production Release for High-Torque Motor Assembly', releaseDate: '2026-10-15' };
+                          const notice = formatPlmEcoNotificationForCrm(eco, 'CRM-DEAL-849201', 'Lockheed Martin Space Systems');
+                          setCrmNotificationSent(`Dispatched PLM ECO milestone notice to Zoho CRM Deal #${notice.dealId} for ${notice.account}`);
+                        }}
+                        className="btn-odoo-secondary"
+                        style={{ fontSize: '0.75rem', padding: '4px 10px' }}
+                      >
+                        Notify CRM on ECO Release
+                      </button>
+                    </div>
+
+                    <p style={{ margin: '0 0 12px', fontSize: '0.8125rem', color: '#64748b' }}>
+                      Bi-directional deal synchronization: Closed-Won CRM deals automatically spawn NPI PLM Projects with commercial contract baselines.
+                    </p>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      {crmDeals.map((deal) => (
+                        <div key={deal.dealId} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '12px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                            <span style={{ fontWeight: 700, fontSize: '0.8125rem', color: 'var(--brand-charcoal)' }}>{deal.dealName}</span>
+                            <span style={{
+                              fontSize: '0.7rem',
+                              fontWeight: 700,
+                              padding: '2px 8px',
+                              borderRadius: '4px',
+                              background: deal.synced ? '#dcfce7' : '#fef3c7',
+                              color: deal.synced ? '#15803d' : '#92400e'
+                            }}>
+                              {deal.synced ? '● PLM SYNCED' : '○ PENDING SYNC'}
+                            </span>
+                          </div>
+
+                          <div style={{ fontSize: '0.75rem', color: '#475569', marginBottom: '6px' }}>
+                            Account: <strong>{deal.accountName}</strong> · Contract Value: <strong>${deal.amountUsd.toLocaleString()}</strong> · Stage: <em>{deal.stage}</em>
+                          </div>
+
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '6px', borderTop: '1px solid #e2e8f0' }}>
+                            <span style={{ fontSize: '0.7rem', color: '#64748b' }}>Target Release: {deal.closingDate}</span>
+                            {!deal.synced && (
+                              <button
+                                onClick={() => {
+                                  const project = syncCrmDealToPlmProject(deal, 'tenant_default');
+                                  setCrmDeals(crmDeals.map((d) => (d.dealId === deal.dealId ? { ...d, synced: true } : d)));
+                                  setCrmNotificationSent(`Synced Deal ${deal.dealId} to PLM Project #${project.projectId} (${project.projectName})`);
+                                }}
+                                className="btn-odoo-primary"
+                                style={{ fontSize: '0.7rem', padding: '3px 8px' }}
+                              >
+                                Sync to PLM Project
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Zoho Creator Shop-Floor Quality NCR Escalation */}
+                  <div style={{ background: '#ffffff', border: '1px solid var(--odoo-border)', borderRadius: '6px', padding: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                      <h4 style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 700, color: 'var(--brand-charcoal)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Wrench size={16} color="var(--brand-orange-hover)" /> Zoho Creator Quality NCR &rarr; PLM ECR Bridge
+                      </h4>
+                    </div>
+
+                    <p style={{ margin: '0 0 12px', fontSize: '0.8125rem', color: '#64748b' }}>
+                      Real-time shop-floor quality inspection integration: Nonconformance Records logged in Zoho Creator escalate directly to formal PLM ECR packages.
+                    </p>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      {creatorNcrs.map((ncr) => (
+                        <div key={ncr.recordId} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '12px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                            <span style={{ fontWeight: 700, fontSize: '0.8125rem', color: 'var(--brand-charcoal)' }}>
+                              {ncr.recordId} — {ncr.partNumber}
+                            </span>
+                            <span style={{
+                              fontSize: '0.7rem',
+                              fontWeight: 700,
+                              padding: '2px 8px',
+                              borderRadius: '4px',
+                              background: ncr.severity === 'critical' ? '#fee2e2' : '#fef3c7',
+                              color: ncr.severity === 'critical' ? '#991b1b' : '#92400e'
+                            }}>
+                              {ncr.severity.toUpperCase()}
+                            </span>
+                          </div>
+
+                          <div style={{ fontSize: '0.75rem', color: '#475569', marginBottom: '6px' }}>
+                            Station: <strong>{ncr.inspectionStationId}</strong> · Inspector: <strong>{ncr.inspectorName}</strong> · Lot: <code>{ncr.lotNumber}</code>
+                          </div>
+
+                          <div style={{ fontSize: '0.75rem', color: '#64748b', fontStyle: 'italic', marginBottom: '8px' }}>
+                            "{ncr.defectDescription}" ({ncr.detectedQuantity} units non-conforming)
+                          </div>
+
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '6px', borderTop: '1px solid #e2e8f0' }}>
+                            <span style={{ fontSize: '0.7rem', color: ncr.escalated ? '#15803d' : '#64748b', fontWeight: ncr.escalated ? 700 : 400 }}>
+                              {ncr.escalated ? '✓ Escalated to PLM ECR' : 'Pending Engineering Review'}
+                            </span>
+                            {!ncr.escalated && (
+                              <button
+                                onClick={() => {
+                                  const ecr = ingestCreatorQualityNcrToPlmEcr(ncr, 'tenant_default');
+                                  setCreatorNcrs(creatorNcrs.map((item) => (item.recordId === ncr.recordId ? { ...item, escalated: true } : item)));
+                                  setCrmNotificationSent(`Escalated Creator Quality NCR ${ncr.recordId} to formal PLM ${ecr.ecrNumber} (${ecr.priority.toUpperCase()} priority)`);
+                                }}
+                                className="btn-odoo-primary"
+                                style={{ fontSize: '0.7rem', padding: '3px 8px' }}
+                              >
+                                Escalate to PLM ECR
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
