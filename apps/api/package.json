@@ -16,6 +16,7 @@
     "@universal-plm/domain-core": "*",
     "@universal-plm/change-management": "*",
     "@universal-plm/document-control": "*",
+    "@universal-plm/configuration-engine": "*",
     "fastify": "^5.1.0"
   },
   "devDependencies": {

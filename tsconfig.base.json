@@ -18,7 +18,8 @@
       "@universal-plm/domain-core": ["./packages/domain-core/dist/index.d.ts"],
       "@universal-plm/authorization": ["./packages/authorization/dist/index.d.ts"],
       "@universal-plm/change-management": ["./packages/change-management/dist/index.d.ts"],
-      "@universal-plm/document-control": ["./packages/document-control/dist/index.d.ts"]
+      "@universal-plm/document-control": ["./packages/document-control/dist/index.d.ts"],
+      "@universal-plm/configuration-engine": ["./packages/configuration-engine/dist/index.d.ts"]
     }
   }
 }
