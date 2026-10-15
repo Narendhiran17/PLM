@@ -1,32 +1,36 @@
 :root {
-  /* Odoo PLM Signature Design System */
-  --odoo-purple: #714B67;
-  --odoo-purple-dark: #583950;
-  --odoo-purple-light: #875A7B;
-  --odoo-teal: #00A09D;
-  --odoo-teal-dark: #008784;
+  /* OfficeHub Tech Brand Design System & Odoo PLM Architecture */
+  --brand-charcoal: #20242B;
+  --brand-charcoal-dark: #16191E;
+  --brand-charcoal-light: #2D323B;
 
-  --odoo-bg-gray: #F1F3F5;
+  --brand-orange: #F59E0B;
+  --brand-orange-hover: #D97706;
+  --brand-orange-light: #FEF3C7;
+  --brand-orange-border: #FCD34D;
+  --brand-orange-glow: rgba(245, 158, 11, 0.25);
+
+  --odoo-bg-gray: #F4F6F8;
   --odoo-card-bg: #FFFFFF;
   --odoo-border: #DDE2E6;
   --odoo-border-light: #EBF0F3;
   --odoo-header-bg: #F8F9FA;
 
-  --odoo-text-main: #212529;
-  --odoo-text-muted: #6C757D;
-  --odoo-text-light: #adb5bd;
+  --odoo-text-main: #1E293B;
+  --odoo-text-muted: #64748B;
+  --odoo-text-light: #94A3B8;
 
-  --odoo-success: #28a745;
-  --odoo-warning: #ffc107;
-  --odoo-danger: #dc3545;
-  --odoo-info: #17a2b8;
+  --odoo-success: #10B981;
+  --odoo-warning: #F59E0B;
+  --odoo-danger: #EF4444;
+  --odoo-info: #0284C7;
 
   --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 
   --odoo-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
   --odoo-shadow-md: 0 3px 6px rgba(0, 0, 0, 0.08);
-  --odoo-shadow-sheet: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+  --odoo-shadow-sheet: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.15);
 }
 
 * {
@@ -56,27 +60,29 @@ input, select, textarea {
   outline: none;
 }
 
-/* Odoo Classic Primary & Secondary Buttons */
+/* OfficeHub Tech Primary Button (Brand Amber Orange) */
 .btn-odoo-primary {
-  background-color: var(--odoo-purple);
-  color: #ffffff;
-  font-weight: 500;
+  background-color: var(--brand-orange);
+  color: #1E293B;
+  font-weight: 600;
   border-radius: 4px;
   padding: 6px 14px;
   font-size: 0.875rem;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  box-shadow: 0 1px 2px rgba(245, 158, 11, 0.2);
 }
 
 .btn-odoo-primary:hover {
-  background-color: var(--odoo-purple-dark);
+  background-color: var(--brand-orange-hover);
+  color: #ffffff;
 }
 
+/* Secondary Button (Clean White with Charcoal text) */
 .btn-odoo-secondary {
   background-color: #ffffff;
-  color: #495057;
+  color: var(--brand-charcoal);
   border: 1px solid var(--odoo-border);
   font-weight: 500;
   border-radius: 4px;
@@ -89,11 +95,12 @@ input, select, textarea {
 
 .btn-odoo-secondary:hover {
   background-color: #f8f9fa;
-  border-color: #ced4da;
+  border-color: #cbd5e1;
 }
 
-.btn-odoo-teal {
-  background-color: var(--odoo-teal);
+/* Dark Charcoal Button */
+.btn-odoo-charcoal {
+  background-color: var(--brand-charcoal);
   color: #ffffff;
   font-weight: 500;
   border-radius: 4px;
@@ -104,21 +111,21 @@ input, select, textarea {
   gap: 6px;
 }
 
-.btn-odoo-teal:hover {
-  background-color: var(--odoo-teal-dark);
+.btn-odoo-charcoal:hover {
+  background-color: var(--brand-charcoal-dark);
 }
 
-/* Odoo Form "Sheet" Container */
+/* Form "Sheet" Container */
 .odoo-sheet {
   background: var(--odoo-card-bg);
   border: 1px solid var(--odoo-border);
-  border-radius: 3px;
+  border-radius: 4px;
   box-shadow: var(--odoo-shadow-sheet);
   max-width: 1240px;
   margin: 0 auto;
 }
 
-/* Odoo Pipeline Stage Arrow Chevron */
+/* Pipeline Stage Arrow Chevron */
 .odoo-statusbar {
   display: flex;
   align-items: center;
@@ -131,7 +138,7 @@ input, select, textarea {
 .odoo-stage-pipeline {
   display: flex;
   align-items: center;
-  border: 1px solid #ced4da;
+  border: 1px solid #cbd5e1;
   border-radius: 4px;
   overflow: hidden;
   background: #ffffff;
@@ -141,12 +148,13 @@ input, select, textarea {
   padding: 6px 14px;
   font-size: 0.8125rem;
   color: var(--odoo-text-muted);
-  border-right: 1px solid #ced4da;
+  border-right: 1px solid #cbd5e1;
   background: #ffffff;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 6px;
+  transition: all 0.15s ease;
 }
 
 .odoo-stage-step:last-child {
@@ -154,12 +162,12 @@ input, select, textarea {
 }
 
 .odoo-stage-step.active {
-  background: var(--odoo-purple);
-  color: #ffffff;
-  font-weight: 600;
+  background: var(--brand-orange);
+  color: #1e293b;
+  font-weight: 700;
 }
 
-/* Odoo Smart Buttons (Stat Boxes) */
+/* Smart Stat Buttons */
 .odoo-stat-button {
   background: #ffffff;
   border: 1px solid var(--odoo-border);
@@ -174,14 +182,14 @@ input, select, textarea {
 }
 
 .odoo-stat-button:hover {
-  background: #f8f9fa;
-  border-color: #adb5bd;
+  background: #fffbeb;
+  border-color: var(--brand-orange-border);
 }
 
 .odoo-stat-num {
   font-size: 1.125rem;
   font-weight: 700;
-  color: var(--odoo-purple);
+  color: var(--brand-orange-hover);
   line-height: 1.1;
 }
 
@@ -191,7 +199,7 @@ input, select, textarea {
   text-transform: uppercase;
 }
 
-/* Kanban Cards in Odoo */
+/* Kanban Cards */
 .odoo-kanban-column {
   background: #ebedf0;
   border-radius: 6px;
@@ -214,7 +222,8 @@ input, select, textarea {
 }
 
 .odoo-kanban-card:hover {
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 3px 8px rgba(245, 158, 11, 0.15);
+  border-color: var(--brand-orange-border);
   transform: translateY(-1px);
 }
 
@@ -226,8 +235,8 @@ input, select, textarea {
 }
 
 .odoo-table th {
-  background: #f8f9fa;
-  color: #495057;
+  background: #f8fafc;
+  color: #475569;
   font-weight: 600;
   text-align: left;
   padding: 10px 14px;
@@ -237,13 +246,13 @@ input, select, textarea {
 
 .odoo-table td {
   padding: 10px 14px;
-  border-bottom: 1px solid #edf0f2;
+  border-bottom: 1px solid #edf2f7;
   color: var(--odoo-text-main);
   vertical-align: middle;
 }
 
 .odoo-table tr:hover td {
-  background-color: #f8f9fa;
+  background-color: #fafbfc;
 }
 
 /* Scrollbar */
@@ -255,9 +264,9 @@ input, select, textarea {
   background: #f1f3f5;
 }
 ::-webkit-scrollbar-thumb {
-  background: #ced4da;
+  background: #cbd5e1;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #adb5bd;
+  background: var(--brand-orange);
 }

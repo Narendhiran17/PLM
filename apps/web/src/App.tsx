@@ -7,27 +7,14 @@ import {
   Star,
   Clock,
   CheckCircle2,
-  XCircle,
   FileText,
   Boxes,
-  GitBranch,
-  Settings,
-  ChevronRight,
-  ChevronDown,
-  Paperclip,
-  MessageSquare,
-  Activity,
-  UserCheck,
   Send,
   Plus,
-  ArrowRight,
+  Paperclip,
+  Activity,
   TrendingUp,
-  Sliders,
-  FolderTree,
-  Eye,
-  Check,
-  ExternalLink,
-  ShieldAlert
+  Check
 } from 'lucide-react';
 
 interface EcoCard {
@@ -56,7 +43,6 @@ export default function App() {
 
   // Search & Filter
   const [searchFilter, setSearchFilter] = useState('');
-  const [activeFilter, setActiveFilter] = useState<'all' | 'my' | 'in_review'>('all');
 
   // Chatter State
   const [chatterMessages, setChatterMessages] = useState([
@@ -74,7 +60,7 @@ export default function App() {
       initials: 'MV',
       time: 'Today at 10:48 AM',
       type: 'note',
-      content: 'Thermal dissipation model validated under 15A continuous joint load. Tolerance confirmed.',
+      content: 'Thermal dissipation model validated under 15A continuous joint load. Tolerance confirmed by OfficeHub Tech Engineering.',
     },
   ]);
   const [newNoteText, setNewNoteText] = useState('');
@@ -163,10 +149,8 @@ export default function App() {
     },
   ]);
 
-  // Selected ECO details
   const activeEco = ecos.find((e) => e.id === selectedEcoId) || ecos[0];
 
-  // Stage definitions matching standard Odoo PLM pipeline
   const stages: { id: EcoCard['stage']; label: string }[] = [
     { id: 'new', label: 'New' },
     { id: 'progress', label: 'In Progress' },
@@ -175,7 +159,6 @@ export default function App() {
     { id: 'effective', label: 'Effective' },
   ];
 
-  // Odoo BOM Diff changes for the active ECO
   const bomDiffs = [
     {
       id: 'diff-1',
@@ -209,7 +192,6 @@ export default function App() {
     },
   ];
 
-  // Approvals matrix in Odoo style
   const [approvals, setApprovals] = useState([
     {
       id: 'app-1',
@@ -243,7 +225,6 @@ export default function App() {
         a.id === approvalId ? { ...a, status: 'APPROVED', date: '2026-10-15' } : a
       )
     );
-    // Add chatter note
     setChatterMessages([
       ...chatterMessages,
       {
@@ -292,18 +273,19 @@ export default function App() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: 'var(--odoo-bg-gray)' }}>
-      {/* 1. ODOO SIGNATURE PURPLE TOP BAR */}
+      {/* 1. TOP NAVBAR IN OFFICEHUB TECH BRAND CHARCOAL (#20242B) & WARM AMBER ORANGE (#F59E0B) */}
       <nav
         style={{
-          background: 'var(--odoo-purple)',
+          background: 'var(--brand-charcoal)',
           color: '#ffffff',
-          height: '46px',
+          height: '52px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           padding: '0 16px',
           fontSize: '0.875rem',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+          boxShadow: '0 1px 4px rgba(0,0,0,0.25)',
+          borderBottom: '2px solid var(--brand-orange)',
           zIndex: 50,
         }}
       >
@@ -315,32 +297,67 @@ export default function App() {
               color: '#ffffff',
               display: 'flex',
               alignItems: 'center',
-              padding: '4px',
-              borderRadius: '3px',
+              padding: '6px',
+              borderRadius: '4px',
             }}
-            title="Odoo App Switcher"
+            title="App Launcher"
           >
             <LayoutGrid size={18} />
           </button>
 
-          {/* Odoo App Title */}
-          <span style={{ fontWeight: 700, fontSize: '1rem', letterSpacing: '-0.01em' }}>
-            PLM
-          </span>
+          {/* OfficeHub Tech Brand Logo */}
+          <div
+            onClick={() => {
+              setCurrentMenu('ecos');
+              setViewMode('kanban');
+            }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              cursor: 'pointer',
+              background: 'rgba(255, 255, 255, 0.95)',
+              padding: '4px 10px',
+              borderRadius: '6px',
+            }}
+          >
+            <img
+              src="/logo.png"
+              alt="OfficeHub Tech Logo"
+              style={{
+                height: '28px',
+                objectFit: 'contain',
+                display: 'block',
+              }}
+            />
+            <span
+              style={{
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                color: 'var(--brand-charcoal)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                borderLeft: '1px solid #cbd5e1',
+                paddingLeft: '8px',
+              }}
+            >
+              PLM
+            </span>
+          </div>
 
-          {/* Odoo Top Navigation Menu Items */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          {/* Navigation Menu Tabs */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '8px' }}>
             <button
               onClick={() => {
                 setCurrentMenu('ecos');
                 setViewMode('kanban');
               }}
               style={{
-                background: currentMenu === 'ecos' ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
-                color: '#ffffff',
-                padding: '6px 12px',
-                borderRadius: '3px',
-                fontWeight: currentMenu === 'ecos' ? 600 : 400,
+                background: currentMenu === 'ecos' ? 'var(--brand-orange)' : 'transparent',
+                color: currentMenu === 'ecos' ? '#1E293B' : '#ffffff',
+                padding: '6px 14px',
+                borderRadius: '4px',
+                fontWeight: currentMenu === 'ecos' ? 700 : 500,
               }}
             >
               Changes (ECOs)
@@ -352,11 +369,11 @@ export default function App() {
                 setViewMode('list');
               }}
               style={{
-                background: currentMenu === 'products' ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
-                color: '#ffffff',
-                padding: '6px 12px',
-                borderRadius: '3px',
-                fontWeight: currentMenu === 'products' ? 600 : 400,
+                background: currentMenu === 'products' ? 'var(--brand-orange)' : 'transparent',
+                color: currentMenu === 'products' ? '#1E293B' : '#ffffff',
+                padding: '6px 14px',
+                borderRadius: '4px',
+                fontWeight: currentMenu === 'products' ? 700 : 500,
               }}
             >
               Master Data
@@ -368,11 +385,11 @@ export default function App() {
                 setViewMode('form');
               }}
               style={{
-                background: currentMenu === 'bom_tree' ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
-                color: '#ffffff',
-                padding: '6px 12px',
-                borderRadius: '3px',
-                fontWeight: currentMenu === 'bom_tree' ? 600 : 400,
+                background: currentMenu === 'bom_tree' ? 'var(--brand-orange)' : 'transparent',
+                color: currentMenu === 'bom_tree' ? '#1E293B' : '#ffffff',
+                padding: '6px 14px',
+                borderRadius: '4px',
+                fontWeight: currentMenu === 'bom_tree' ? 700 : 500,
               }}
             >
               Bill of Materials
@@ -384,11 +401,11 @@ export default function App() {
                 setViewMode('kanban');
               }}
               style={{
-                background: currentMenu === 'capabilities' ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
-                color: '#ffffff',
-                padding: '6px 12px',
-                borderRadius: '3px',
-                fontWeight: currentMenu === 'capabilities' ? 600 : 400,
+                background: currentMenu === 'capabilities' ? 'var(--brand-orange)' : 'transparent',
+                color: currentMenu === 'capabilities' ? '#1E293B' : '#ffffff',
+                padding: '6px 14px',
+                borderRadius: '4px',
+                fontWeight: currentMenu === 'capabilities' ? 700 : 500,
               }}
             >
               Configuration
@@ -396,7 +413,7 @@ export default function App() {
           </div>
         </div>
 
-        {/* Right Corner: Company Switcher & User Profile */}
+        {/* Right Header Area: Company Context & User Badge */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <div
             style={{
@@ -404,34 +421,36 @@ export default function App() {
               alignItems: 'center',
               gap: '6px',
               fontSize: '0.8125rem',
-              color: 'rgba(255, 255, 255, 0.9)',
+              color: 'rgba(255, 255, 255, 0.85)',
               cursor: 'pointer',
             }}
           >
-            <Clock size={15} />
+            <Clock size={15} color="var(--brand-orange)" />
             <span>Activities</span>
           </div>
 
           <div
             style={{
-              background: 'rgba(0, 0, 0, 0.2)',
-              padding: '3px 10px',
-              borderRadius: '3px',
+              background: 'rgba(255, 255, 255, 0.08)',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
+              padding: '4px 12px',
+              borderRadius: '4px',
               fontSize: '0.8125rem',
-              fontWeight: 500,
+              fontWeight: 600,
+              color: 'var(--brand-orange)',
             }}
           >
-            Acme Robotics (San Francisco)
+            OfficeHub Tech Enterprise
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <div
               style={{
-                width: '26px',
-                height: '26px',
+                width: '28px',
+                height: '28px',
                 borderRadius: '50%',
-                background: '#ffffff',
-                color: 'var(--odoo-purple)',
+                background: 'var(--brand-orange)',
+                color: '#1E293B',
                 fontWeight: 700,
                 fontSize: '0.75rem',
                 display: 'flex',
@@ -465,14 +484,14 @@ export default function App() {
                 setViewMode('kanban');
                 setCurrentMenu('ecos');
               }}
-              style={{ color: 'var(--odoo-purple)', cursor: 'pointer' }}
+              style={{ color: 'var(--brand-charcoal)', cursor: 'pointer' }}
             >
               Engineering Change Orders
             </span>
             {viewMode === 'form' && (
               <>
                 <span style={{ color: 'var(--odoo-text-muted)' }}>/</span>
-                <span style={{ color: 'var(--odoo-text-main)' }}>{activeEco.ecoNumber}</span>
+                <span style={{ color: 'var(--brand-orange-hover)', fontWeight: 700 }}>{activeEco.ecoNumber}</span>
               </>
             )}
           </div>
@@ -490,24 +509,23 @@ export default function App() {
           </button>
         </div>
 
-        {/* Search, Filters & View Switchers */}
+        {/* Search & View Mode Switchers */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-          {/* Odoo Search Bar */}
           <div
             style={{
               display: 'flex',
               alignItems: 'center',
-              background: '#f8f9fa',
-              border: '1px solid #ced4da',
+              background: '#f8fafc',
+              border: '1px solid #cbd5e1',
               borderRadius: '4px',
-              padding: '4px 10px',
+              padding: '5px 12px',
               width: '320px',
             }}
           >
             <Search size={14} color="var(--odoo-text-muted)" style={{ marginRight: '6px' }} />
             <input
               type="text"
-              placeholder="Search ECOs, components, tags..."
+              placeholder="Search ECOs, parts, tags..."
               value={searchFilter}
               onChange={(e) => setSearchFilter(e.target.value)}
               style={{
@@ -520,14 +538,13 @@ export default function App() {
             <Filter size={14} color="var(--odoo-text-muted)" style={{ cursor: 'pointer' }} />
           </div>
 
-          {/* View Mode Switchers (Odoo Classic: Kanban, List, Form) */}
-          <div style={{ display: 'flex', border: '1px solid #ced4da', borderRadius: '4px', overflow: 'hidden' }}>
+          <div style={{ display: 'flex', border: '1px solid #cbd5e1', borderRadius: '4px', overflow: 'hidden' }}>
             <button
               onClick={() => setViewMode('kanban')}
               style={{
                 padding: '6px 10px',
-                background: viewMode === 'kanban' ? 'var(--odoo-purple)' : '#ffffff',
-                color: viewMode === 'kanban' ? '#ffffff' : 'var(--odoo-text-muted)',
+                background: viewMode === 'kanban' ? 'var(--brand-charcoal)' : '#ffffff',
+                color: viewMode === 'kanban' ? 'var(--brand-orange)' : 'var(--odoo-text-muted)',
                 display: 'flex',
                 alignItems: 'center',
               }}
@@ -539,10 +556,10 @@ export default function App() {
               onClick={() => setViewMode('list')}
               style={{
                 padding: '6px 10px',
-                background: viewMode === 'list' ? 'var(--odoo-purple)' : '#ffffff',
-                color: viewMode === 'list' ? '#ffffff' : 'var(--odoo-text-muted)',
-                borderLeft: '1px solid #ced4da',
-                borderRight: '1px solid #ced4da',
+                background: viewMode === 'list' ? 'var(--brand-charcoal)' : '#ffffff',
+                color: viewMode === 'list' ? 'var(--brand-orange)' : 'var(--odoo-text-muted)',
+                borderLeft: '1px solid #cbd5e1',
+                borderRight: '1px solid #cbd5e1',
                 display: 'flex',
                 alignItems: 'center',
               }}
@@ -554,8 +571,8 @@ export default function App() {
               onClick={() => setViewMode('form')}
               style={{
                 padding: '6px 10px',
-                background: viewMode === 'form' ? 'var(--odoo-purple)' : '#ffffff',
-                color: viewMode === 'form' ? '#ffffff' : 'var(--odoo-text-muted)',
+                background: viewMode === 'form' ? 'var(--brand-charcoal)' : '#ffffff',
+                color: viewMode === 'form' ? 'var(--brand-orange)' : 'var(--odoo-text-muted)',
                 display: 'flex',
                 alignItems: 'center',
               }}
@@ -573,7 +590,7 @@ export default function App() {
 
       {/* 3. MAIN WORKSPACE */}
       <div style={{ flex: 1, padding: '20px', overflowY: 'auto' }}>
-        {/* VIEW 1: ODOO KANBAN BOARD */}
+        {/* VIEW 1: KANBAN BOARD */}
         {viewMode === 'kanban' && currentMenu === 'ecos' && (
           <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start', overflowX: 'auto', paddingBottom: '20px' }}>
             {stages.map((stg) => {
@@ -583,18 +600,18 @@ export default function App() {
                   {/* Column Header */}
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--odoo-text-main)' }}>
+                      <span style={{ fontWeight: 700, fontSize: '0.875rem', color: 'var(--brand-charcoal)' }}>
                         {stg.label}
                       </span>
                       <span
                         style={{
                           background: '#ffffff',
-                          color: 'var(--odoo-text-muted)',
+                          color: 'var(--brand-charcoal)',
                           padding: '1px 7px',
                           borderRadius: '10px',
                           fontSize: '0.75rem',
-                          fontWeight: 600,
-                          border: '1px solid #d8dde3',
+                          fontWeight: 700,
+                          border: '1px solid #cbd5e1',
                         }}
                       >
                         {stageEcos.length}
@@ -618,12 +635,12 @@ export default function App() {
                         }}
                       >
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <span style={{ fontSize: '0.75rem', color: 'var(--odoo-purple)', fontWeight: 600 }}>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--brand-charcoal)', fontWeight: 700 }}>
                             {eco.ecoNumber}
                           </span>
-                          <div style={{ display: 'flex', gap: '2px', color: '#f59e0b' }}>
+                          <div style={{ display: 'flex', gap: '2px', color: 'var(--brand-orange)' }}>
                             {Array.from({ length: eco.priority }).map((_, i) => (
-                              <Star key={i} size={12} fill="#f59e0b" />
+                              <Star key={i} size={12} fill="var(--brand-orange)" />
                             ))}
                           </div>
                         </div>
@@ -636,17 +653,17 @@ export default function App() {
                           [{eco.productRef}] {eco.productName}
                         </div>
 
-                        {/* Tags */}
                         <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '8px' }}>
                           {eco.tags.map((t, idx) => (
                             <span
                               key={idx}
                               style={{
-                                background: '#edf2f7',
-                                color: '#4a5568',
+                                background: '#fef3c7',
+                                color: '#92400e',
                                 fontSize: '0.7rem',
                                 padding: '2px 6px',
                                 borderRadius: '3px',
+                                fontWeight: 500,
                               }}
                             >
                               {t}
@@ -654,7 +671,6 @@ export default function App() {
                           ))}
                         </div>
 
-                        {/* Card Footer: BOM Changes count & Assignee */}
                         <div
                           style={{
                             display: 'flex',
@@ -662,10 +678,10 @@ export default function App() {
                             justifyContent: 'space-between',
                             marginTop: '12px',
                             paddingTop: '8px',
-                            borderTop: '1px solid #f0f3f6',
+                            borderTop: '1px solid #f1f5f9',
                           }}
                         >
-                          <span style={{ fontSize: '0.75rem', color: 'var(--odoo-teal)', fontWeight: 600 }}>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--brand-orange-hover)', fontWeight: 700 }}>
                             {eco.bomChangesCount} BOM Changes
                           </span>
 
@@ -674,10 +690,10 @@ export default function App() {
                               width: '24px',
                               height: '24px',
                               borderRadius: '50%',
-                              background: 'var(--odoo-purple)',
-                              color: '#ffffff',
+                              background: 'var(--brand-charcoal)',
+                              color: 'var(--brand-orange)',
                               fontSize: '0.7rem',
-                              fontWeight: 600,
+                              fontWeight: 700,
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
@@ -696,11 +712,11 @@ export default function App() {
           </div>
         )}
 
-        {/* VIEW 2: ODOO SIGNATURE FORM VIEW ("THE SHEET") */}
+        {/* VIEW 2: FORM VIEW ("THE SHEET") */}
         {viewMode === 'form' && currentMenu === 'ecos' && (
           <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
             <div className="odoo-sheet">
-              {/* Odoo Statusbar: Action Buttons on Left, Arrow Chevron Pipeline on Right */}
+              {/* Statusbar */}
               <div className="odoo-statusbar">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   {activeEco.stage === 'new' && (
@@ -733,7 +749,8 @@ export default function App() {
                   {activeEco.stage === 'validated' && (
                     <button
                       onClick={() => handleStageChange('effective')}
-                      className="btn-odoo-teal"
+                      className="btn-odoo-primary"
+                      style={{ background: 'var(--odoo-success)', color: '#ffffff' }}
                     >
                       Apply Changes & Release BOM
                     </button>
@@ -742,7 +759,7 @@ export default function App() {
                   <button className="btn-odoo-secondary">Cancel</button>
                 </div>
 
-                {/* Sequential Stage Chevron */}
+                {/* Sequential Stage Chevron Tracker */}
                 <div className="odoo-stage-pipeline">
                   {stages.map((stg) => (
                     <div
@@ -758,10 +775,10 @@ export default function App() {
 
               {/* Sheet Body */}
               <div style={{ padding: '24px' }}>
-                {/* Smart Buttons Row (Top-Right Stat Boxes) */}
+                {/* Smart Buttons Row */}
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginBottom: '20px' }}>
                   <div className="odoo-stat-button">
-                    <Boxes size={22} color="var(--odoo-purple)" />
+                    <Boxes size={22} color="var(--brand-charcoal)" />
                     <div>
                       <div className="odoo-stat-num">Rev B</div>
                       <div className="odoo-stat-label">BOM Version</div>
@@ -769,7 +786,7 @@ export default function App() {
                   </div>
 
                   <div className="odoo-stat-button">
-                    <TrendingUp size={22} color="var(--odoo-teal)" />
+                    <TrendingUp size={22} color="var(--brand-orange)" />
                     <div>
                       <div className="odoo-stat-num">{activeEco.bomChangesCount}</div>
                       <div className="odoo-stat-label">BOM Changes</div>
@@ -777,7 +794,7 @@ export default function App() {
                   </div>
 
                   <div className="odoo-stat-button">
-                    <Paperclip size={22} color="#6c757d" />
+                    <Paperclip size={22} color="#64748b" />
                     <div>
                       <div className="odoo-stat-num">{activeEco.documentsCount}</div>
                       <div className="odoo-stat-label">Documents</div>
@@ -785,56 +802,56 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Form Main Title */}
+                {/* Form Header */}
                 <div style={{ marginBottom: '24px' }}>
-                  <div style={{ fontSize: '0.875rem', color: 'var(--odoo-purple)', fontWeight: 600 }}>
+                  <div style={{ fontSize: '0.875rem', color: 'var(--brand-orange-hover)', fontWeight: 700 }}>
                     {activeEco.ecoNumber}
                   </div>
-                  <h1 style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--odoo-text-main)', marginTop: '2px' }}>
+                  <h1 style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--brand-charcoal)', marginTop: '2px' }}>
                     {activeEco.name}
                   </h1>
                 </div>
 
-                {/* Odoo Standard 2-Column Fields Grid */}
+                {/* 2-Column Fields Grid */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '32px' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', alignItems: 'center' }}>
-                      <span style={{ fontWeight: 600, fontSize: '0.8125rem', color: '#495057' }}>Product:</span>
-                      <span style={{ color: 'var(--odoo-purple)', fontWeight: 600 }}>
+                      <span style={{ fontWeight: 600, fontSize: '0.8125rem', color: '#475569' }}>Product:</span>
+                      <span style={{ color: 'var(--brand-charcoal)', fontWeight: 700 }}>
                         [{activeEco.productRef}] {activeEco.productName}
                       </span>
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', alignItems: 'center' }}>
-                      <span style={{ fontWeight: 600, fontSize: '0.8125rem', color: '#495057' }}>Bill of Materials:</span>
+                      <span style={{ fontWeight: 600, fontSize: '0.8125rem', color: '#475569' }}>Bill of Materials:</span>
                       <span>BOM-{activeEco.productRef}-01 (Normal BOM)</span>
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', alignItems: 'center' }}>
-                      <span style={{ fontWeight: 600, fontSize: '0.8125rem', color: '#495057' }}>ECO Type:</span>
+                      <span style={{ fontWeight: 600, fontSize: '0.8125rem', color: '#475569' }}>ECO Type:</span>
                       <span>{activeEco.ecoType}</span>
                     </div>
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', alignItems: 'center' }}>
-                      <span style={{ fontWeight: 600, fontSize: '0.8125rem', color: '#495057' }}>Responsible:</span>
+                      <span style={{ fontWeight: 600, fontSize: '0.8125rem', color: '#475569' }}>Responsible:</span>
                       <span>{activeEco.responsible}</span>
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', alignItems: 'center' }}>
-                      <span style={{ fontWeight: 600, fontSize: '0.8125rem', color: '#495057' }}>Effective Date:</span>
+                      <span style={{ fontWeight: 600, fontSize: '0.8125rem', color: '#475569' }}>Effective Date:</span>
                       <span>{activeEco.effectiveDate}</span>
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', alignItems: 'center' }}>
-                      <span style={{ fontWeight: 600, fontSize: '0.8125rem', color: '#495057' }}>Company:</span>
-                      <span>Acme Robotics Corp</span>
+                      <span style={{ fontWeight: 600, fontSize: '0.8125rem', color: '#475569' }}>Company:</span>
+                      <span style={{ fontWeight: 600 }}>OfficeHub Tech</span>
                     </div>
                   </div>
                 </div>
 
-                {/* Notebook Tabs (Odoo Style) */}
+                {/* Notebook Tabs */}
                 <div style={{ borderBottom: '1px solid var(--odoo-border)', display: 'flex', gap: '8px' }}>
                   {[
                     { id: 'bom_changes', label: `BOM Changes (${activeEco.bomChangesCount})` },
@@ -847,9 +864,9 @@ export default function App() {
                       style={{
                         padding: '10px 16px',
                         background: 'transparent',
-                        color: formNotebookTab === tab.id ? 'var(--odoo-purple)' : 'var(--odoo-text-muted)',
+                        color: formNotebookTab === tab.id ? 'var(--brand-orange-hover)' : 'var(--odoo-text-muted)',
                         fontWeight: formNotebookTab === tab.id ? 700 : 500,
-                        borderBottom: formNotebookTab === tab.id ? '2px solid var(--odoo-purple)' : '2px solid transparent',
+                        borderBottom: formNotebookTab === tab.id ? '3px solid var(--brand-orange)' : '3px solid transparent',
                         fontSize: '0.875rem',
                       }}
                     >
@@ -858,7 +875,7 @@ export default function App() {
                   ))}
                 </div>
 
-                {/* TAB 1: BOM CHANGES (THE CLASSIC ODOO BOM REDLINE DIFF TABLE) */}
+                {/* TAB 1: BOM CHANGES (DIFF TABLE) */}
                 {formNotebookTab === 'bom_changes' && (
                   <div style={{ paddingTop: '16px' }}>
                     <table className="odoo-table">
@@ -885,16 +902,16 @@ export default function App() {
                                   fontWeight: 600,
                                   background:
                                     diff.action === 'ADD'
-                                      ? '#d4edda'
+                                      ? '#d1fae5'
                                       : diff.action === 'REMOVE'
-                                      ? '#f8d7da'
-                                      : '#cce5ff',
+                                      ? '#fee2e2'
+                                      : '#fef3c7',
                                   color:
                                     diff.action === 'ADD'
-                                      ? '#155724'
+                                      ? '#065f46'
                                       : diff.action === 'REMOVE'
-                                      ? '#721c24'
-                                      : '#004085',
+                                      ? '#991b1b'
+                                      : '#92400e',
                                 }}
                               >
                                 {diff.action === 'ADD' ? '+ ADDED' : diff.action === 'REMOVE' ? '- REMOVED' : 'MODIFIED'}
@@ -902,10 +919,10 @@ export default function App() {
                             </td>
                             <td style={{ fontWeight: 600 }}>{diff.component}</td>
                             <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8125rem' }}>{diff.partNumber}</td>
-                            <td style={{ color: diff.action === 'REMOVE' ? '#dc3545' : 'inherit' }}>
+                            <td style={{ color: diff.action === 'REMOVE' ? '#ef4444' : 'inherit' }}>
                               {diff.oldQty}
                             </td>
-                            <td style={{ color: diff.action === 'ADD' ? '#28a745' : 'inherit', fontWeight: 600 }}>
+                            <td style={{ color: diff.action === 'ADD' ? '#10b981' : 'inherit', fontWeight: 600 }}>
                               {diff.newQty}
                             </td>
                             <td>{diff.uom}</td>
@@ -944,8 +961,8 @@ export default function App() {
                                   padding: '2px 8px',
                                   borderRadius: '3px',
                                   fontWeight: 600,
-                                  background: app.status === 'APPROVED' ? '#d4edda' : '#fff3cd',
-                                  color: app.status === 'APPROVED' ? '#155724' : '#856404',
+                                  background: app.status === 'APPROVED' ? '#d1fae5' : '#fef3c7',
+                                  color: app.status === 'APPROVED' ? '#065f46' : '#92400e',
                                 }}
                               >
                                 {app.status}
@@ -956,14 +973,14 @@ export default function App() {
                               {app.status === 'PENDING' ? (
                                 <button
                                   onClick={() => handleApprove(app.id)}
-                                  className="btn-odoo-teal"
-                                  style={{ padding: '3px 8px', fontSize: '0.75rem' }}
+                                  className="btn-odoo-primary"
+                                  style={{ padding: '3px 10px', fontSize: '0.75rem' }}
                                 >
                                   <Check size={12} />
                                   Approve
                                 </button>
                               ) : (
-                                <span style={{ color: '#28a745', fontSize: '0.8125rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <span style={{ color: '#10b981', fontSize: '0.8125rem', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600 }}>
                                   <CheckCircle2 size={14} /> Signed
                                 </span>
                               )}
@@ -977,26 +994,25 @@ export default function App() {
 
                 {/* TAB 3: NOTES */}
                 {formNotebookTab === 'notes' && (
-                  <div style={{ paddingTop: '16px', color: '#495057', fontSize: '0.875rem', lineHeight: '1.6' }}>
+                  <div style={{ paddingTop: '16px', color: '#334155', fontSize: '0.875rem', lineHeight: '1.6' }}>
                     <p>
                       <strong>Summary of Change:</strong> Replaces baseline stepper motor actuators on joint 1 and 2 with high-precision harmonic drive servo units to eliminate 0.8mm backlash under payload conditions.
                     </p>
                     <p style={{ marginTop: '10px' }}>
-                      <strong>Tooling & Inventory Impact:</strong> Current inventory of 14 units of ACT-0021 can be retrofitted or repurposed for non-precision auxiliary conveyors. Zero scrap penalty incurred.
+                      <strong>Tooling & Inventory Impact:</strong> Current inventory of 14 units of ACT-0021 can be retrofitted or repurposed for non-precision auxiliary conveyors. Zero scrap penalty incurred by OfficeHub Tech.
                     </p>
                   </div>
                 )}
               </div>
 
-              {/* Odoo Signature "Chatter" Sidebar / Footer */}
+              {/* Odoo Chatter */}
               <div
                 style={{
-                  background: '#f8f9fa',
+                  background: '#f8fafc',
                   borderTop: '1px solid var(--odoo-border)',
                   padding: '20px 24px',
                 }}
               >
-                {/* Chatter Toolbar */}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
                   <div style={{ display: 'flex', gap: '10px' }}>
                     <button className="btn-odoo-secondary" style={{ fontSize: '0.8125rem' }}>
@@ -1018,7 +1034,6 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Add Quick Note */}
                 <form onSubmit={handleAddNote} style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
                   <input
                     type="text"
@@ -1028,7 +1043,7 @@ export default function App() {
                     style={{
                       flex: 1,
                       background: '#ffffff',
-                      border: '1px solid #ced4da',
+                      border: '1px solid #cbd5e1',
                       borderRadius: '4px',
                       padding: '8px 12px',
                       fontSize: '0.875rem',
@@ -1039,7 +1054,6 @@ export default function App() {
                   </button>
                 </form>
 
-                {/* Audit & Activity Timeline */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   {chatterMessages.map((msg) => (
                     <div key={msg.id} style={{ display: 'flex', gap: '12px' }}>
@@ -1048,8 +1062,8 @@ export default function App() {
                           width: '32px',
                           height: '32px',
                           borderRadius: '50%',
-                          background: 'var(--odoo-purple)',
-                          color: '#ffffff',
+                          background: 'var(--brand-charcoal)',
+                          color: 'var(--brand-orange)',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
@@ -1059,7 +1073,7 @@ export default function App() {
                       >
                         {msg.initials}
                       </div>
-                      <div style={{ flex: 1, background: '#ffffff', border: '1px solid #e9ecef', borderRadius: '4px', padding: '10px 14px' }}>
+                      <div style={{ flex: 1, background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '4px', padding: '10px 14px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
                           <span style={{ fontWeight: 600, fontSize: '0.8125rem', color: 'var(--odoo-text-main)' }}>
                             {msg.author}
@@ -1068,7 +1082,7 @@ export default function App() {
                             {msg.time}
                           </span>
                         </div>
-                        <div style={{ fontSize: '0.875rem', color: msg.type === 'status' ? 'var(--odoo-purple)' : '#495057' }}>
+                        <div style={{ fontSize: '0.875rem', color: msg.type === 'status' ? 'var(--brand-orange-hover)' : '#334155' }}>
                           {msg.content}
                         </div>
                       </div>
@@ -1080,11 +1094,13 @@ export default function App() {
           </div>
         )}
 
-        {/* VIEW 3: MASTER DATA / PRODUCTS LIST VIEW */}
+        {/* VIEW 3: MASTER DATA */}
         {currentMenu === 'products' && (
           <div className="odoo-sheet" style={{ padding: '20px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-              <h2 style={{ fontSize: '1.25rem', fontWeight: 700 }}>Engineering Product Master</h2>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--brand-charcoal)' }}>
+                OfficeHub Tech — Product Master
+              </h2>
               <button className="btn-odoo-primary">
                 <Plus size={14} /> Create Product
               </button>
@@ -1110,7 +1126,7 @@ export default function App() {
                   { ref: 'FRM-9002', name: 'Embedded RTOS Motor Controller Firmware', type: 'Software', rev: '1.2.0', status: 'Draft', uom: 'Units' },
                 ].map((item, idx) => (
                   <tr key={idx}>
-                    <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: 'var(--odoo-purple)' }}>{item.ref}</td>
+                    <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--brand-orange-hover)' }}>{item.ref}</td>
                     <td style={{ fontWeight: 600 }}>{item.name}</td>
                     <td>{item.type}</td>
                     <td>{item.rev}</td>
@@ -1121,8 +1137,8 @@ export default function App() {
                           padding: '2px 8px',
                           borderRadius: '3px',
                           fontWeight: 600,
-                          background: item.status === 'Released' ? '#d4edda' : item.status === 'In Review' ? '#cce5ff' : '#fff3cd',
-                          color: item.status === 'Released' ? '#155724' : item.status === 'In Review' ? '#004085' : '#856404',
+                          background: item.status === 'Released' ? '#d1fae5' : item.status === 'In Review' ? '#fef3c7' : '#fee2e2',
+                          color: item.status === 'Released' ? '#065f46' : item.status === 'In Review' ? '#92400e' : '#991b1b',
                         }}
                       >
                         {item.status}
@@ -1136,17 +1152,17 @@ export default function App() {
           </div>
         )}
 
-        {/* VIEW 4: BILL OF MATERIALS TREE */}
+        {/* VIEW 4: BOM TREE */}
         {currentMenu === 'bom_tree' && (
           <div className="odoo-sheet" style={{ padding: '24px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
               <div>
-                <span style={{ fontSize: '0.8125rem', color: 'var(--odoo-purple)', fontWeight: 600 }}>BOM-ROB-1000-01</span>
-                <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginTop: '2px' }}>
+                <span style={{ fontSize: '0.8125rem', color: 'var(--brand-orange-hover)', fontWeight: 700 }}>BOM-ROB-1000-01</span>
+                <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--brand-charcoal)', marginTop: '2px' }}>
                   Bill of Materials — Autonomous Articulated Robotic Arm
                 </h2>
               </div>
-              <span style={{ background: '#d4edda', color: '#155724', padding: '4px 10px', borderRadius: '4px', fontSize: '0.8125rem', fontWeight: 600 }}>
+              <span style={{ background: '#d1fae5', color: '#065f46', padding: '4px 10px', borderRadius: '4px', fontSize: '0.8125rem', fontWeight: 700 }}>
                 Normal BOM · Rev A
               </span>
             </div>
@@ -1193,21 +1209,21 @@ export default function App() {
                   <td style={{ fontFamily: 'var(--font-mono)' }}>ELC-0052</td>
                   <td>2.0</td>
                   <td>Units</td>
-                  <td style={{ color: 'var(--odoo-teal)', fontWeight: 600 }}>U1, U2</td>
+                  <td style={{ color: 'var(--brand-orange-hover)', fontWeight: 700 }}>U1, U2</td>
                 </tr>
               </tbody>
             </table>
           </div>
         )}
 
-        {/* VIEW 5: CONFIGURATION / INDUSTRY PACKS */}
+        {/* VIEW 5: CONFIGURATION */}
         {currentMenu === 'capabilities' && (
           <div className="odoo-sheet" style={{ padding: '24px' }}>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '6px' }}>
-              Industry Capability Configuration
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--brand-charcoal)', marginBottom: '6px' }}>
+              OfficeHub Tech — Industry Capability Plugins
             </h2>
             <p style={{ color: 'var(--odoo-text-muted)', fontSize: '0.875rem', marginBottom: '20px' }}>
-              Modular industry-specific BOM extensions running on the shared engineering core.
+              Configurable domain capability extensions on the Universal PLM shared engineering core.
             </p>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
@@ -1225,9 +1241,9 @@ export default function App() {
                         fontSize: '0.75rem',
                         padding: '2px 8px',
                         borderRadius: '3px',
-                        fontWeight: 600,
-                        background: item.active ? '#d4edda' : '#e9ecef',
-                        color: item.active ? '#155724' : '#6c757d',
+                        fontWeight: 700,
+                        background: item.active ? '#fef3c7' : '#f1f5f9',
+                        color: item.active ? '#92400e' : '#64748b',
                       }}
                     >
                       {item.active ? 'Installed' : 'Available'}
