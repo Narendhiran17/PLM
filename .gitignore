@@ -53,3 +53,8 @@ ehthumbs.db
 
 # Local development helper
 powershell.cmd
+
+# Internal Project Governance & Planning (Keep Local)
+PROJECT_MEMORY.md
+PLAN_CHANGES.md
+FUNCTIONALITY_CHECKLIST.md
