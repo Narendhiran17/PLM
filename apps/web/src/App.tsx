@@ -137,11 +137,11 @@ export default function App() {
   // Phase 5: Industry Capability Framework State
   const [packSubTab, setPackSubTab] = useState<'store' | 'automotive' | 'electronics' | 'process' | 'medical' | 'configured'>('store');
   const [tenantSubscriptions, setTenantSubscriptions] = useState([
-    { id: 'discrete-automotive', name: 'Discrete & Automotive Pack (IND-01)', version: '1.2.0', enabled: true, standard: 'AIAG PPAP Level 1-5 / IATF 16949' },
-    { id: 'electronics-pcb', name: 'Electronics & PCB Engineering Pack (IND-02)', version: '2.1.0', enabled: true, standard: 'IPC-7351B / RoHS 3 / REACH' },
-    { id: 'process-chemical', name: 'Process, Chemical & Formulations (IND-03)', version: '1.5.0', enabled: true, standard: 'OSHA HazCom GHS / 21 CFR Part 211' },
-    { id: 'medical-device', name: 'Regulated Medical Device Pack (IND-04)', version: '3.0.0', enabled: true, standard: 'FDA 21 CFR Part 820 / ISO 13485' },
-    { id: 'configured-products', name: 'Configured Products & ETO Modular BOM (IND-05)', version: '1.4.0', enabled: true, standard: 'Configure-To-Order / ISO 9001' },
+    { id: 'discrete-automotive', name: 'Discrete & Automotive Pack', version: '1.2.0', enabled: true, standard: 'AIAG PPAP Level 1-5 / IATF 16949' },
+    { id: 'electronics-pcb', name: 'Electronics & PCB Engineering Pack', version: '2.1.0', enabled: true, standard: 'IPC-7351B / RoHS 3 / REACH' },
+    { id: 'process-chemical', name: 'Process, Chemical & Formulations', version: '1.5.0', enabled: true, standard: 'OSHA HazCom GHS / 21 CFR Part 211' },
+    { id: 'medical-device', name: 'Regulated Medical Device Pack', version: '3.0.0', enabled: true, standard: 'FDA 21 CFR Part 820 / ISO 13485' },
+    { id: 'configured-products', name: 'Configured Products & ETO Modular BOM', version: '1.4.0', enabled: true, standard: 'Configure-To-Order / ISO 9001' },
   ]);
 
   // Automotive PPAP state
@@ -608,7 +608,7 @@ export default function App() {
     if (activeBaselineSim === 'COLLISION') {
       setReleaseStatusAlert({
         type: 'collision',
-        msg: `Baseline Concurrency Collision (INV-06): Expected baseline 'rev-001-A' has been superseded by 'rev-001-A1' from another concurrent ECO. Please re-baseline affected items before release.`,
+        msg: `Baseline Concurrency Collision: Expected baseline 'rev-001-A' has been superseded by 'rev-001-A1' from another concurrent ECO. Please re-baseline affected items before release.`,
       });
       return;
     }
@@ -977,9 +977,9 @@ export default function App() {
                 <span style={{ color: 'var(--odoo-text-muted)' }}>/</span>
                 <span style={{ color: 'var(--brand-orange-hover)', fontWeight: 700 }}>
                   {entTab === 'cad_sdk' && 'CAD Connector SDK & Bi-Directional Synchronization'}
-                  {entTab === 'benchmark' && 'High-Volume 10,000+ Line BOM Traversal & Cache (TST-07)'}
-                  {entTab === 'saas_billing' && 'Metered SaaS Billing & Entitlements (F08, COM-04)'}
-                  {entTab === 'backup_dr' && 'Disaster Recovery & Immutable Backup Archives (TST-08, COM-05)'}
+                  {entTab === 'benchmark' && 'High-Volume 10,000+ Line BOM Traversal & Cache'}
+                  {entTab === 'saas_billing' && 'Metered SaaS Billing & Entitlements'}
+                  {entTab === 'backup_dr' && 'Disaster Recovery & Immutable Backup Archives'}
                 </span>
               </>
             )}
@@ -988,11 +988,11 @@ export default function App() {
                 <span style={{ color: 'var(--odoo-text-muted)' }}>/</span>
                 <span style={{ color: 'var(--brand-orange-hover)', fontWeight: 700 }}>
                   {packSubTab === 'store' && 'Capability App Store & Tenant Subscriptions'}
-                  {packSubTab === 'automotive' && 'Discrete & Automotive (PPAP & Traceability - IND-01)'}
-                  {packSubTab === 'electronics' && 'Electronics & PCB Engineering (Ref Des - IND-02)'}
-                  {packSubTab === 'process' && 'Process, Chemical & Formulations (IND-03)'}
-                  {packSubTab === 'medical' && 'Regulated Medical Devices (DHF/DMR - IND-04)'}
-                  {packSubTab === 'configured' && 'Configured Products & Modular BOM (IND-05)'}
+                  {packSubTab === 'automotive' && 'Discrete & Automotive (PPAP & Traceability)'}
+                  {packSubTab === 'electronics' && 'Electronics & PCB Engineering (Reference Designators)'}
+                  {packSubTab === 'process' && 'Process, Chemical & Formulations'}
+                  {packSubTab === 'medical' && 'Regulated Medical Devices (DHF / DMR)'}
+                  {packSubTab === 'configured' && 'Configured Products & Modular Super-BOM'}
                 </span>
               </>
             )}
@@ -1000,12 +1000,12 @@ export default function App() {
               <>
                 <span style={{ color: 'var(--odoo-text-muted)' }}>/</span>
                 <span style={{ color: 'var(--brand-orange-hover)', fontWeight: 700 }}>
-                  {mfgTab === 'mbom' && 'EBOM-to-MBOM Transformation & Reconciliation (C01, C07)'}
-                  {mfgTab === 'routings' && 'Manufacturing Routings & Operations (C02, C03, C11)'}
-                  {mfgTab === 'sourcing' && 'Approved Manufacturers (AML) & Vendors (AVL) (C05, C06)'}
-                  {mfgTab === 'cost_rollup' && 'Multi-Level Cost Rollup & Budget Variance (C09)'}
-                  {mfgTab === 'lead_time' && 'Cumulative Lead Time & Critical Path Bottlenecks (C10)'}
-                  {mfgTab === 'erp_sync' && 'ERP/MRP Synchronization Outbox (C12)'}
+                  {mfgTab === 'mbom' && 'EBOM-to-MBOM Transformation & Reconciliation'}
+                  {mfgTab === 'routings' && 'Manufacturing Routings & Operations'}
+                  {mfgTab === 'sourcing' && 'Approved Manufacturers (AML) & Vendors (AVL)'}
+                  {mfgTab === 'cost_rollup' && 'Multi-Level Cost Rollup & Budget Variance'}
+                  {mfgTab === 'lead_time' && 'Cumulative Lead Time & Critical Path Bottlenecks'}
+                  {mfgTab === 'erp_sync' && 'ERP / MRP Synchronization Outbox'}
                 </span>
               </>
             )}
@@ -1013,12 +1013,12 @@ export default function App() {
               <>
                 <span style={{ color: 'var(--odoo-text-muted)' }}>/</span>
                 <span style={{ color: 'var(--brand-orange-hover)', fontWeight: 700 }}>
-                  {configSubTab === 'custom_fields' && 'Dynamic Custom Fields (E01, E07)'}
-                  {configSubTab === 'numbering' && 'Auto-Numbering Schemes (E05)'}
-                  {configSubTab === 'approval_rules' && 'Dynamic Approval Rules (E04)'}
-                  {configSubTab === 'fls' && 'Field-Level Security & Masking (E08)'}
-                  {configSubTab === 'importer' && 'Bulk CSV Importer (F06)'}
-                  {configSubTab === 'snapshots' && 'Release Rule Snapshots (INV-04)'}
+                  {configSubTab === 'custom_fields' && 'Dynamic Custom Fields'}
+                  {configSubTab === 'numbering' && 'Auto-Numbering Schemes'}
+                  {configSubTab === 'approval_rules' && 'Dynamic Approval Rules'}
+                  {configSubTab === 'fls' && 'Field-Level Security & Masking'}
+                  {configSubTab === 'importer' && 'Bulk CSV Importer'}
+                  {configSubTab === 'snapshots' && 'Release Rule Snapshots'}
                 </span>
               </>
             )}
@@ -1407,7 +1407,7 @@ export default function App() {
                     { id: 'bom_changes', label: `BOM Changes (${activeEco.bomChangesCount})` },
                     { id: 'approvals', label: 'Approvals & E-Signatures' },
                     { id: 'documents', label: `Controlled Documents (${vaultDocs.length})` },
-                    { id: 'concurrency', label: 'Concurrency Gate (INV-06)' },
+                    { id: 'concurrency', label: 'Concurrency & Baseline Gate' },
                     { id: 'notes', label: 'Engineering Rationale' },
                   ].map((tab) => (
                     <button
@@ -1640,7 +1640,7 @@ export default function App() {
                   <div style={{ paddingTop: '16px' }}>
                     <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '16px', marginBottom: '16px' }}>
                       <div style={{ fontSize: '0.8125rem', color: '#475569', fontWeight: 700, marginBottom: '6px' }}>
-                        INVARIANT 6: CONCURRENCY COLLISION PREVENTION ENGINE
+                        CONCURRENCY COLLISION PREVENTION ENGINE
                       </div>
                       <p style={{ fontSize: '0.8125rem', color: '#64748b', lineHeight: '1.5', marginBottom: '14px' }}>
                         The Universal PLM engine guarantees that no ECO can release changes on top of a superseded or stale baseline.
@@ -1676,7 +1676,7 @@ export default function App() {
                           Atomic Release Command Verification
                         </div>
                         <div style={{ fontSize: '0.8125rem', color: '#64748b', marginTop: '2px' }}>
-                          Validates all sign-offs, checks baseline concurrency, locks revisions (INV-03), and logs audit signature (INV-05).
+                          Validates all sign-offs, checks baseline concurrency, locks revisions, and logs audit signature.
                         </div>
                       </div>
 
@@ -1865,10 +1865,7 @@ export default function App() {
               </div>
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                 <span style={{ background: '#ecfdf5', color: '#065f46', border: '1px solid #a7f3d0', padding: '4px 10px', borderRadius: '4px', fontSize: '0.8125rem', fontWeight: 700 }}>
-                  ✓ Cycle-Safe Verified (DFS)
-                </span>
-                <span style={{ background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a', padding: '4px 10px', borderRadius: '4px', fontSize: '0.8125rem', fontWeight: 700 }}>
-                  Phase 1 Engineering Core
+                  ✓ Cycle-Safe Verified
                 </span>
               </div>
             </div>
@@ -1877,10 +1874,10 @@ export default function App() {
             <div style={{ display: 'flex', gap: '4px', borderBottom: '2px solid #e2e8f0', marginBottom: '20px' }}>
               {[
                 { id: 'tree', label: 'Multi-Level Tree', icon: Layers },
-                { id: 'compare', label: 'BOM Redline Diff (A13)', icon: GitCompare },
-                { id: 'where_used', label: 'Deep Where-Used (A06)', icon: Network },
-                { id: 'variants', label: 'Product Variants (A02)', icon: Sliders },
-                { id: 'effectivity', label: 'Effectivity Rules (A12)', icon: Calendar },
+                { id: 'compare', label: 'BOM Redline Diff', icon: GitCompare },
+                { id: 'where_used', label: 'Deep Where-Used', icon: Network },
+                { id: 'variants', label: 'Product Variants', icon: Sliders },
+                { id: 'effectivity', label: 'Effectivity Rules', icon: Calendar },
               ].map((tab) => {
                 const Icon = tab.icon;
                 const isActive = bomSubTab === tab.id;
@@ -2438,7 +2435,7 @@ export default function App() {
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span style={{ fontSize: '0.75rem', background: '#ecfdf5', color: '#065f46', border: '1px solid #a7f3d0', padding: '4px 10px', borderRadius: '4px', fontWeight: 700 }}>
-                  Phase 3: Active
+                  Active
                 </span>
               </div>
             </div>
@@ -2455,12 +2452,12 @@ export default function App() {
               }}
             >
               {[
-                { id: 'custom_fields', label: 'Dynamic Custom Fields (E01, E07)', icon: Settings2 },
-                { id: 'numbering', label: 'Auto-Numbering Schemes (E05)', icon: Hash },
-                { id: 'approval_rules', label: 'Dynamic Approval Rules (E04)', icon: Workflow },
-                { id: 'fls', label: 'Field-Level Security & Masking (E08)', icon: ShieldCheck },
-                { id: 'importer', label: 'Bulk CSV Importer (F06)', icon: FileSpreadsheet },
-                { id: 'snapshots', label: 'Release Rule Snapshots (INV-04)', icon: KeyRound },
+                { id: 'custom_fields', label: 'Dynamic Custom Fields', icon: Settings2 },
+                { id: 'numbering', label: 'Auto-Numbering Schemes', icon: Hash },
+                { id: 'approval_rules', label: 'Dynamic Approval Rules', icon: Workflow },
+                { id: 'fls', label: 'Field-Level Security & Masking', icon: ShieldCheck },
+                { id: 'importer', label: 'Bulk CSV Importer', icon: FileSpreadsheet },
+                { id: 'snapshots', label: 'Release Rule Snapshots', icon: KeyRound },
               ].map((tab) => {
                 const IconComponent = tab.icon;
                 const isActive = configSubTab === tab.id;
@@ -3082,7 +3079,7 @@ export default function App() {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
                   <div>
                     <h3 style={{ fontSize: '0.9375rem', fontWeight: 700, margin: 0 }}>
-                      Immutable Release Rule Snapshots (INV-04)
+                      Immutable Release Rule Snapshots
                     </h3>
                     <p style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '2px', marginBottom: 0 }}>
                       Cryptographic SHA-256 fingerprint capturing exact schemas, active fields, and approval rules at release time.
@@ -3104,11 +3101,11 @@ export default function App() {
                         rulesCount: 2,
                       };
                       setSnapshots([newSnap, ...snapshots]);
-                      setSnapshotAlert(`Captured snapshot ${newSnap.snapshotId} for REV-ROB-1000-B (INV-04 compliant).`);
+                      setSnapshotAlert(`Captured snapshot ${newSnap.snapshotId} for REV-ROB-1000-B with cryptographic integrity verification.`);
                     }}
                     className="btn-odoo-primary"
                   >
-                    <KeyRound size={14} /> Capture Release Rule Snapshot (INV-04)
+                    <KeyRound size={14} /> Capture Release Rule Snapshot
                   </button>
                 </div>
 
@@ -3188,7 +3185,7 @@ export default function App() {
                   <option value="PLANT-CHENNAI">Plant Chennai (Electronics Assembly #2)</option>
                 </select>
                 <span style={{ fontSize: '0.75rem', background: '#ecfdf5', color: '#065f46', border: '1px solid #a7f3d0', padding: '4px 10px', borderRadius: '4px', fontWeight: 700 }}>
-                  Phase 4: Active
+                  Operational
                 </span>
               </div>
             </div>
@@ -3205,12 +3202,12 @@ export default function App() {
               }}
             >
               {[
-                { id: 'mbom', label: 'EBOM-to-MBOM Transformation (C01, C07)', icon: Factory },
-                { id: 'routings', label: 'Routings & Work Centers (C02, C03)', icon: Wrench },
-                { id: 'sourcing', label: 'AML / AVL Sourcing (C05, C06)', icon: Truck },
-                { id: 'cost_rollup', label: 'Multi-Level Cost Rollup (C09)', icon: DollarSign },
-                { id: 'lead_time', label: 'Lead Time & Critical Path (C10)', icon: Timer },
-                { id: 'erp_sync', label: 'ERP / MRP Sync Outbox (C12)', icon: RefreshCw },
+                { id: 'mbom', label: 'EBOM-to-MBOM Transformation', icon: Factory },
+                { id: 'routings', label: 'Routings & Work Centers', icon: Wrench },
+                { id: 'sourcing', label: 'AML / AVL Sourcing', icon: Truck },
+                { id: 'cost_rollup', label: 'Multi-Level Cost Rollup', icon: DollarSign },
+                { id: 'lead_time', label: 'Lead Time & Critical Path', icon: Timer },
+                { id: 'erp_sync', label: 'ERP / MRP Sync Outbox', icon: RefreshCw },
               ].map((tab) => {
                 const IconComponent = tab.icon;
                 const isActive = mfgTab === tab.id;
@@ -3882,9 +3879,6 @@ export default function App() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--odoo-border)', paddingBottom: '16px', marginBottom: '20px' }}>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                  <span style={{ background: '#fef3c7', color: '#92400e', fontSize: '0.75rem', fontWeight: 700, padding: '2px 8px', borderRadius: '4px' }}>
-                    PHASE 5 CAPABILITY PACKS
-                  </span>
                   <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
                     Tenant Scope: <strong>tenant_default</strong>
                   </span>
@@ -3916,31 +3910,31 @@ export default function App() {
                 className={`odoo-tab ${packSubTab === 'automotive' ? 'active' : ''}`}
                 onClick={() => setPackSubTab('automotive')}
               >
-                Discrete &amp; Automotive (IND-01)
+                Discrete &amp; Automotive
               </button>
               <button
                 className={`odoo-tab ${packSubTab === 'electronics' ? 'active' : ''}`}
                 onClick={() => setPackSubTab('electronics')}
               >
-                Electronics &amp; PCB (IND-02)
+                Electronics &amp; PCB
               </button>
               <button
                 className={`odoo-tab ${packSubTab === 'process' ? 'active' : ''}`}
                 onClick={() => setPackSubTab('process')}
               >
-                Process &amp; Chemical (IND-03)
+                Process &amp; Chemical
               </button>
               <button
                 className={`odoo-tab ${packSubTab === 'medical' ? 'active' : ''}`}
                 onClick={() => setPackSubTab('medical')}
               >
-                Regulated Medical (IND-04)
+                Regulated Medical
               </button>
               <button
                 className={`odoo-tab ${packSubTab === 'configured' ? 'active' : ''}`}
                 onClick={() => setPackSubTab('configured')}
               >
-                Configured Products (IND-05)
+                Configured Products
               </button>
             </div>
 
@@ -4691,9 +4685,6 @@ export default function App() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--odoo-border)', paddingBottom: '16px', marginBottom: '20px' }}>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                  <span style={{ background: '#fef3c7', color: '#92400e', fontSize: '0.75rem', fontWeight: 700, padding: '2px 8px', borderRadius: '4px' }}>
-                    PHASE 6 COMMERCIAL SCALE
-                  </span>
                   <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
                     SaaS Engine: <strong>Catalyst AppSail + ZCQL Datastore</strong>
                   </span>
@@ -4725,19 +4716,19 @@ export default function App() {
                 className={`odoo-tab ${entTab === 'benchmark' ? 'active' : ''}`}
                 onClick={() => setEntTab('benchmark')}
               >
-                High-Volume BOM Traversal &amp; Cache (TST-07)
+                High-Volume BOM Traversal &amp; Cache
               </button>
               <button
                 className={`odoo-tab ${entTab === 'saas_billing' ? 'active' : ''}`}
                 onClick={() => setEntTab('saas_billing')}
               >
-                Metered SaaS Billing &amp; Quotas (F08, COM-04)
+                Metered SaaS Billing &amp; Quotas
               </button>
               <button
                 className={`odoo-tab ${entTab === 'backup_dr' ? 'active' : ''}`}
                 onClick={() => setEntTab('backup_dr')}
               >
-                Disaster Recovery &amp; Backup Archives (TST-08)
+                Disaster Recovery &amp; Backup Archives
               </button>
             </div>
 
@@ -4871,7 +4862,7 @@ export default function App() {
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
                     <div>
                       <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: 'var(--brand-charcoal)' }}>
-                        High-Volume BOM Traversal &amp; Memoized Subassembly Caching Benchmark (TST-07)
+                        High-Volume BOM Traversal &amp; Memoized Subassembly Caching Benchmark
                       </h3>
                       <div style={{ fontSize: '0.8125rem', color: '#64748b', marginTop: '2px' }}>
                         Enterprise Performance Gate: Explode 10,000+ line deeply nested hierarchical product BOM trees in sub-50 milliseconds.
@@ -5273,11 +5264,8 @@ export default function App() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--odoo-border)', paddingBottom: '16px', marginBottom: '20px' }}>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                  <span style={{ background: '#fef3c7', color: '#92400e', fontSize: '0.75rem', fontWeight: 700, padding: '2px 8px', borderRadius: '4px' }}>
-                    PHASE 7 AUTONOMOUS OPERATIONS
-                  </span>
                   <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
-                    Engine: <strong>AI Copilot + WebGL Digital Twin + Zoho Connectors</strong>
+                    Engine: <strong>AI Copilot + 3D Digital Twin + Zoho Connectors</strong>
                   </span>
                 </div>
                 <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700, color: 'var(--brand-charcoal)' }}>
@@ -5301,7 +5289,7 @@ export default function App() {
                 className={`odoo-tab ${autoTab === 'copilot' ? 'active' : ''}`}
                 onClick={() => setAutoTab('copilot')}
               >
-                AI Engineering Copilot (Impact, Alternates &amp; Audit)
+                AI Engineering Copilot
               </button>
               <button
                 className={`odoo-tab ${autoTab === 'digital_twin' ? 'active' : ''}`}
