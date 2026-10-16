@@ -42,6 +42,7 @@ export interface MultiLevelBomNode {
   uom: UnitOfMeasure;
   findNumber?: number;
   referenceDesignators?: string[];
+  customAttributes?: Record<string, unknown>;
   children?: MultiLevelBomNode[];
 }
 

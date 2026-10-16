@@ -123,6 +123,7 @@ export const partRoutes: FastifyPluginAsync = async (fastify) => {
       type: body.type,
       classificationId: body.classificationId,
       defaultUom: body.defaultUom,
+      customAttributes: body.customAttributes || {},
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };

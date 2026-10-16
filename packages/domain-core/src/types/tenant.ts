@@ -11,6 +11,8 @@ export interface Tenant {
   subdomain: string;
   isActive: boolean;
   tier: 'STARTER' | 'PROFESSIONAL' | 'ENTERPRISE';
+  primaryIndustry?: IndustryPack;
+  customAttributes?: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
 }

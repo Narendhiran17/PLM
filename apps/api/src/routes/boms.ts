@@ -83,6 +83,7 @@ export const bomRoutes: FastifyPluginAsync = async (fastify) => {
       uom: 'EA' | 'M' | 'MM' | 'KG' | 'G' | 'L' | 'ML' | 'SET';
       findNumber?: number;
       referenceDesignators?: string[];
+      customAttributes?: Record<string, unknown>;
     };
 
     // Cycle check: assert that adding parentPartId -> childPartId will not create a circular reference
@@ -106,6 +107,7 @@ export const bomRoutes: FastifyPluginAsync = async (fastify) => {
       uom: body.uom,
       bomType: 'EBOM',
       referenceDesignators: body.referenceDesignators,
+      customAttributes: body.customAttributes || {},
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };

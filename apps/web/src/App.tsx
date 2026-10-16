@@ -241,6 +241,91 @@ export default function App() {
   const [selectedPayload, setSelectedPayload] = useState<string>('10KG');
   const [selectedIpRating, setSelectedIpRating] = useState<string>('IP54');
 
+  // Multi-Industry BOM & Tenant Configuration Engine
+  type ActiveIndustryPackType = 'DISCRETE_AUTOMOTIVE' | 'ELECTRONICS_PCB' | 'PROCESS_CHEMICAL' | 'REGULATED_MEDICAL' | 'CONFIGURED_PRODUCTS';
+  const [activeIndustryPack, setActiveIndustryPack] = useState<ActiveIndustryPackType>('DISCRETE_AUTOMOTIVE');
+
+  // Industry-specific attribute definitions
+  const industryAttributesConfig: Record<ActiveIndustryPackType, {
+    label: string;
+    description: string;
+    badge: string;
+    partAttributes: Array<{ name: string; label: string; type: 'TEXT' | 'NUMBER' | 'DROPDOWN' | 'BOOLEAN'; options?: string[]; defaultValue?: string; placeholder?: string; help: string }>;
+    bomAttributes: Array<{ name: string; label: string; type: 'TEXT' | 'NUMBER' | 'DROPDOWN' | 'BOOLEAN'; options?: string[]; defaultValue?: string; placeholder?: string; help: string }>;
+  }> = {
+    DISCRETE_AUTOMOTIVE: {
+      label: 'Discrete Manufacturing & Automotive',
+      description: 'AIAG PPAP Level 1-5, scrap allowance, alternate parts, serial traceability, IATF 16949.',
+      badge: 'PPAP & IATF 16949',
+      partAttributes: [
+        { name: 'imdsMdsNumber', label: 'IMDS MDS Number', type: 'TEXT', placeholder: 'e.g. IMDS-984421', help: 'International Material Data System registration' },
+        { name: 'asilRating', label: 'ASIL Safety Rating', type: 'DROPDOWN', options: ['QM', 'ASIL-A', 'ASIL-B', 'ASIL-C', 'ASIL-D'], defaultValue: 'QM', help: 'ISO 26262 Automotive Safety Integrity Level' },
+        { name: 'traceabilityType', label: 'Traceability Level', type: 'DROPDOWN', options: ['Lot/Batch Tracked', 'Individual Serialized', 'Standard Bulk'], defaultValue: 'Lot/Batch Tracked', help: 'WIP production line tracking policy' },
+      ],
+      bomAttributes: [
+        { name: 'scrapPercentage', label: 'Scrap / Wastage %', type: 'NUMBER', placeholder: 'e.g. 2.5', help: 'Expected machining and stamping scrap factor' },
+        { name: 'isCriticalToQuality', label: 'Critical to Quality (CTQ)', type: 'BOOLEAN', defaultValue: 'false', help: 'Key safety/functional engineering characteristic' },
+        { name: 'findNumber', label: 'Drawing Balloon / Find #', type: 'NUMBER', placeholder: 'e.g. 10', help: 'CAD blueprint assembly callout position' },
+      ],
+    },
+    ELECTRONICS_PCB: {
+      label: 'Electronics, SMT & PCB Assembly',
+      description: 'IPC-7351B footprints, pin counts, solder paste type, RoHS 3 and REACH compliance.',
+      badge: 'IPC-7351 & RoHS 3',
+      partAttributes: [
+        { name: 'packageFootprint', label: 'IC Package / Footprint', type: 'TEXT', placeholder: 'e.g. QFN-32, 0402, BGA-256', help: 'SMT land pattern package dimension standard' },
+        { name: 'rohsStatus', label: 'RoHS 3 Compliance', type: 'DROPDOWN', options: ['RoHS Compliant (Directive 2011/65/EU)', 'RoHS Exempt', 'Non-Compliant'], defaultValue: 'RoHS Compliant (Directive 2011/65/EU)', help: 'Hazardous substance restriction certificate' },
+        { name: 'moistureSensitivity', label: 'MSL Level', type: 'DROPDOWN', options: ['MSL 1 (Unlimited)', 'MSL 2 (1 Year)', 'MSL 3 (168 Hours)', 'MSL 4 (72 Hours)'], defaultValue: 'MSL 1 (Unlimited)', help: 'JEDEC J-STD-020 moisture sensitivity handling' },
+      ],
+      bomAttributes: [
+        { name: 'solderProcess', label: 'Soldering Process', type: 'DROPDOWN', options: ['Reflow SMT (Top)', 'Reflow SMT (Bottom)', 'Wave Solder (Through-Hole)', 'Hand Solder'], defaultValue: 'Reflow SMT (Top)', help: 'SMT assembly line routing pass' },
+        { name: 'alternateMfrPart', label: 'Approved Alternate MPN', type: 'TEXT', placeholder: 'e.g. TI-SN65HVD230DR', help: 'Second-source manufacturing approved replacement' },
+      ],
+    },
+    PROCESS_CHEMICAL: {
+      label: 'Process, Chemical & Formulations',
+      description: 'Potency compensation, active ingredients (API), solvent evaporation, batch scaling w/w %.',
+      badge: 'OSHA GHS & 21 CFR 211',
+      partAttributes: [
+        { name: 'casRegistryNumber', label: 'CAS Registry Number', type: 'TEXT', placeholder: 'e.g. 50-78-2', help: 'Chemical Abstracts Service global identifier' },
+        { name: 'ghsClassification', label: 'GHS Hazard Class', type: 'DROPDOWN', options: ['Non-Hazardous', 'GHS02 Flammable', 'GHS05 Corrosive', 'GHS06 Toxic', 'GHS07 Harmful'], defaultValue: 'Non-Hazardous', help: 'OSHA / REACH Hazard communication label' },
+        { name: 'potencyAssay', label: 'Active Potency Assay %', type: 'NUMBER', placeholder: 'e.g. 98.5', help: 'Purity concentration used for dynamic batch scaling' },
+      ],
+      bomAttributes: [
+        { name: 'targetPercentageWw', label: 'Target Formulation % (w/w)', type: 'NUMBER', placeholder: 'e.g. 12.50', help: 'Weight-by-weight percentage of total batch vessel' },
+        { name: 'isActiveIngredient', label: 'Active Agent (API / Reactor)', type: 'BOOLEAN', defaultValue: 'false', help: 'Compensate filler excipients based on active purity' },
+        { name: 'lossPercentage', label: 'Evaporation / Filter Loss %', type: 'NUMBER', placeholder: 'e.g. 1.2', help: 'Volatile loss during mixing and distillation' },
+      ],
+    },
+    REGULATED_MEDICAL: {
+      label: 'Regulated Medical Devices & Diagnostics',
+      description: 'FDA 21 CFR Part 820, ISO 13485, Device Master Record (DMR), biocompatibility.',
+      badge: 'FDA 21 CFR 820 & ISO 13485',
+      partAttributes: [
+        { name: 'fdaDeviceClass', label: 'FDA Classification', type: 'DROPDOWN', options: ['Class I (General Controls)', 'Class II (510k Cleared)', 'Class III (PMA Approved)', 'Exempt'], defaultValue: 'Class II (510k Cleared)', help: 'Medical device regulatory risk tier' },
+        { name: 'biocompatibilityGrade', label: 'ISO 10993 Biocompatibility', type: 'DROPDOWN', options: ['Surface Contact', 'External Communicating', 'Implantable (>30d)', 'Non-Patient Contact'], defaultValue: 'Surface Contact', help: 'Tissue and blood contact safety standard' },
+        { name: 'sterilizationMethod', label: 'Sterilization Protocol', type: 'DROPDOWN', options: ['Ethylene Oxide (EtO)', 'Gamma Radiation', 'Steam Autoclave', 'Non-Sterile'], defaultValue: 'Ethylene Oxide (EtO)', help: 'Validated terminal sterilization cycle' },
+      ],
+      bomAttributes: [
+        { name: 'dmrSection', label: 'DMR Lineage Section', type: 'DROPDOWN', options: ['Patient Contact Subassembly', 'Electronic Sensing Core', 'Packaging & Sterile Barrier', 'IFU / Labeling'], defaultValue: 'Electronic Sensing Core', help: 'Device Master Record structural classification' },
+        { name: 'lotReleaseInspection', label: '100% Lot Release Inspection Required', type: 'BOOLEAN', defaultValue: 'true', help: 'Mandatory QA signoff before batch quarantine release' },
+      ],
+    },
+    CONFIGURED_PRODUCTS: {
+      label: 'Configured Products & ETO Machinery',
+      description: 'Engineer-To-Order modular option rules, voltage variants, modular phantoms.',
+      badge: 'Configure-To-Order & ISO 9001',
+      partAttributes: [
+        { name: 'configOptionFamily', label: 'Configurator Option Family', type: 'DROPDOWN', options: ['Drive System', 'Power Input Enclosure', 'Control Interface', 'Safety Guarding'], defaultValue: 'Drive System', help: 'Modular selection rule tree group' },
+        { name: 'leadTimeDays', label: 'Procurement Lead Time (Days)', type: 'NUMBER', placeholder: 'e.g. 21', help: 'Supplier and machining fabrication lead time' },
+      ],
+      bomAttributes: [
+        { name: 'selectionRuleCode', label: 'Selection Rule / Condition', type: 'TEXT', placeholder: 'e.g. IF POWER == "480V" AND ENCLOSURE == "SS316"', help: 'Boolean solver condition for automated BOM resolution' },
+        { name: 'isPhantomAssembly', label: 'Phantom Assembly (Transient)', type: 'BOOLEAN', defaultValue: 'false', help: 'Non-stocked structural grouping for production routings' },
+      ],
+    },
+  };
+
   // Phase 3: Platform Configuration & Studio States
   interface StudioField {
     id: string;
@@ -507,25 +592,53 @@ export default function App() {
   ]);
 
   // New Product Form State
-  const [newProductForm, setNewProductForm] = useState({
+  const [newProductForm, setNewProductForm] = useState<{
+    ref: string;
+    name: string;
+    type: string;
+    rev: string;
+    status: string;
+    uom: string;
+    customAttributes: Record<string, any>;
+  }>({
     ref: '',
     name: '',
     type: 'Assembly',
     rev: 'Rev A',
     status: 'Draft',
     uom: 'Units',
+    customAttributes: {},
   });
 
   // BOM Multi-Level Tree State
-  const [bomTreeLines, setBomTreeLines] = useState([
-    { level: '0', name: 'Autonomous Articulated Robotic Arm', partNumber: 'ROB-1000', rev: 'Rev A', qty: 1.0, uom: 'EA', refDes: '—', lifecycle: 'RELEASED' },
-    { level: '├── 1.1', name: 'Precision Harmonic Servo Actuator', partNumber: 'ROB-1010', rev: 'Rev B', qty: 6.0, uom: 'EA', refDes: 'Joints 1–6', lifecycle: 'RELEASED' },
-    { level: '├── 1.2', name: 'Multi-Axis Motor Controller PCB', partNumber: 'PCB-4001', rev: 'Rev A', qty: 1.0, uom: 'EA', refDes: 'Main Bay', lifecycle: 'RELEASED' },
-    { level: '└── 2.1', name: 'CAN-Bus Transceiver IC (AEC-Q100)', partNumber: 'ELC-0052', rev: 'Rev A', qty: 2.0, uom: 'EA', refDes: 'U1, U2', lifecycle: 'RELEASED' },
+  const [bomTreeLines, setBomTreeLines] = useState<Array<{
+    level: string;
+    name: string;
+    partNumber: string;
+    rev: string;
+    qty: number;
+    uom: string;
+    refDes: string;
+    lifecycle: string;
+    customAttributes?: Record<string, any>;
+  }>>([
+    { level: '0', name: 'Autonomous Articulated Robotic Arm', partNumber: 'ROB-1000', rev: 'Rev A', qty: 1.0, uom: 'EA', refDes: '—', lifecycle: 'RELEASED', customAttributes: { scrapPercentage: '0.0', isCriticalToQuality: 'true', findNumber: '1' } },
+    { level: '├── 1.1', name: 'Precision Harmonic Servo Actuator', partNumber: 'ROB-1010', rev: 'Rev B', qty: 6.0, uom: 'EA', refDes: 'Joints 1–6', lifecycle: 'RELEASED', customAttributes: { scrapPercentage: '1.5', isCriticalToQuality: 'true', findNumber: '10' } },
+    { level: '├── 1.2', name: 'Multi-Axis Motor Controller PCB', partNumber: 'PCB-4001', rev: 'Rev A', qty: 1.0, uom: 'EA', refDes: 'Main Bay', lifecycle: 'RELEASED', customAttributes: { scrapPercentage: '0.5', isCriticalToQuality: 'true', findNumber: '20' } },
+    { level: '└── 2.1', name: 'CAN-Bus Transceiver IC (AEC-Q100)', partNumber: 'ELC-0052', rev: 'Rev A', qty: 2.0, uom: 'EA', refDes: 'U1, U2', lifecycle: 'RELEASED', customAttributes: { scrapPercentage: '0.0', isCriticalToQuality: 'false', findNumber: '30' } },
   ]);
 
   // New BOM Component Form State
-  const [newBomLineForm, setNewBomLineForm] = useState({
+  const [newBomLineForm, setNewBomLineForm] = useState<{
+    name: string;
+    partNumber: string;
+    rev: string;
+    qty: number;
+    uom: string;
+    refDes: string;
+    level: string;
+    customAttributes: Record<string, any>;
+  }>({
     name: '',
     partNumber: '',
     rev: 'Rev A',
@@ -533,6 +646,7 @@ export default function App() {
     uom: 'EA',
     refDes: '',
     level: '├── 1.3',
+    customAttributes: {},
   });
 
   // New Document Form State
@@ -797,6 +911,7 @@ export default function App() {
       rev: newProductForm.rev || 'Rev A',
       status: newProductForm.status || 'Draft',
       uom: newProductForm.uom || 'Units',
+      customAttributes: newProductForm.customAttributes || {},
     };
     setProductsList((prev) => [...prev, newProd]);
     setIsProductModalOpen(false);
@@ -807,6 +922,7 @@ export default function App() {
       rev: 'Rev A',
       status: 'Draft',
       uom: 'Units',
+      customAttributes: {},
     });
   };
 
@@ -848,6 +964,7 @@ export default function App() {
       uom: newBomLineForm.uom || 'EA',
       refDes: newBomLineForm.refDes.trim() || '—',
       lifecycle: 'DRAFT',
+      customAttributes: newBomLineForm.customAttributes || {},
     };
     setBomTreeLines((prev) => [...prev, newLine]);
     setIsBomModalOpen(false);
@@ -859,6 +976,7 @@ export default function App() {
       uom: 'EA',
       refDes: '',
       level: '├── 1.3',
+      customAttributes: {},
     });
   };
 
@@ -1101,6 +1219,45 @@ export default function App() {
           >
             <Clock size={15} color="var(--brand-orange)" />
             <span>Activities</span>
+          </div>
+
+          {/* Customer Industry Template / BOM Profile Switcher */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              background: 'rgba(245, 158, 11, 0.12)',
+              border: '1px solid rgba(245, 158, 11, 0.35)',
+              padding: '3px 8px',
+              borderRadius: '6px',
+            }}
+          >
+            <span style={{ fontSize: '0.7rem', color: '#fcd34d', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              Industry Profile:
+            </span>
+            <select
+              value={activeIndustryPack}
+              onChange={(e) => setActiveIndustryPack(e.target.value as any)}
+              style={{
+                background: '#1e293b',
+                color: '#fbbf24',
+                border: '1px solid rgba(245, 158, 11, 0.4)',
+                borderRadius: '4px',
+                padding: '3px 8px',
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+                outline: 'none',
+              }}
+              title="Switch Industry BOM & Compliance Schema Profile"
+            >
+              <option value="DISCRETE_AUTOMOTIVE">Discrete Mfg &amp; Automotive (PPAP / IATF)</option>
+              <option value="ELECTRONICS_PCB">Electronics &amp; PCB Assembly (RoHS / IPC)</option>
+              <option value="PROCESS_CHEMICAL">Process &amp; Chemical (Formulation / GHS)</option>
+              <option value="REGULATED_MEDICAL">Medical Device (FDA 21 CFR / ISO 13485)</option>
+              <option value="CONFIGURED_PRODUCTS">Configured Products (ETO Modular BOM)</option>
+            </select>
           </div>
 
           <div
@@ -2134,6 +2291,7 @@ export default function App() {
                   <th>Current Revision</th>
                   <th>Status</th>
                   <th>Unit of Measure</th>
+                  <th>Industry Attributes ({industryAttributesConfig[activeIndustryPack].badge})</th>
                 </tr>
               </thead>
               <tbody>
@@ -2158,6 +2316,31 @@ export default function App() {
                       </span>
                     </td>
                     <td>{item.uom}</td>
+                    <td>
+                      {(item as any).customAttributes && Object.keys((item as any).customAttributes).length > 0 ? (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                          {Object.entries((item as any).customAttributes).map(([k, v]) => (
+                            <span
+                              key={k}
+                              style={{
+                                fontSize: '0.72rem',
+                                background: '#fef3c7',
+                                color: '#92400e',
+                                border: '1px solid #fde68a',
+                                padding: '1px 6px',
+                                borderRadius: '3px',
+                                fontFamily: 'var(--font-mono)',
+                              }}
+                              title={`${k}: ${String(v)}`}
+                            >
+                              <strong>{k}:</strong> {String(v)}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <span style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Universal Standard</span>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -2243,6 +2426,7 @@ export default function App() {
                       <th>Quantity</th>
                       <th>UOM</th>
                       <th>Reference Designators</th>
+                      <th>Industry Attributes ({industryAttributesConfig[activeIndustryPack].badge})</th>
                       <th>Lifecycle</th>
                     </tr>
                   </thead>
@@ -2266,6 +2450,31 @@ export default function App() {
                             <span style={{ color: 'var(--brand-orange-hover)', fontWeight: 700 }}>{line.refDes}</span>
                           ) : (
                             '—'
+                          )}
+                        </td>
+                        <td>
+                          {line.customAttributes && Object.keys(line.customAttributes).length > 0 ? (
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                              {Object.entries(line.customAttributes).map(([k, v]) => (
+                                <span
+                                  key={k}
+                                  style={{
+                                    fontSize: '0.72rem',
+                                    background: '#f1f5f9',
+                                    color: '#334155',
+                                    border: '1px solid #cbd5e1',
+                                    padding: '1px 6px',
+                                    borderRadius: '3px',
+                                    fontFamily: 'var(--font-mono)',
+                                  }}
+                                  title={`${k}: ${String(v)}`}
+                                >
+                                  <strong>{k}:</strong> {String(v)}
+                                </span>
+                              ))}
+                            </div>
+                          ) : (
+                            <span style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Standard Line</span>
                           )}
                         </td>
                         <td>
@@ -6573,6 +6782,77 @@ export default function App() {
                     </select>
                   </div>
                 </div>
+
+                {/* DYNAMIC INDUSTRY TEMPLATE ATTRIBUTES */}
+                <div style={{ marginTop: '16px', padding: '14px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--brand-charcoal)', textTransform: 'uppercase' }}>
+                        Industry Specification:
+                      </span>
+                      <span style={{ fontSize: '0.75rem', background: '#fef3c7', color: '#92400e', padding: '2px 8px', borderRadius: '4px', fontWeight: 700 }}>
+                        {industryAttributesConfig[activeIndustryPack].badge}
+                      </span>
+                    </div>
+                    <span style={{ fontSize: '0.7rem', color: '#64748b' }}>
+                      Profile: {industryAttributesConfig[activeIndustryPack].label}
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    {industryAttributesConfig[activeIndustryPack].partAttributes.map((attr) => (
+                      <div key={attr.name} className="odoo-form-group" style={{ marginBottom: 0 }}>
+                        <label className="odoo-form-label" style={{ fontSize: '0.75rem' }}>
+                          {attr.label}
+                        </label>
+                        {attr.type === 'DROPDOWN' && (
+                          <select
+                            className="odoo-form-select"
+                            style={{ fontSize: '0.8rem', padding: '6px 10px' }}
+                            value={newProductForm.customAttributes[attr.name] || attr.defaultValue || ''}
+                            onChange={(e) =>
+                              setNewProductForm({
+                                ...newProductForm,
+                                customAttributes: {
+                                  ...newProductForm.customAttributes,
+                                  [attr.name]: e.target.value,
+                                },
+                              })
+                            }
+                          >
+                            {attr.options?.map((opt) => (
+                              <option key={opt} value={opt}>
+                                {opt}
+                              </option>
+                            ))}
+                          </select>
+                        )}
+                        {(attr.type === 'TEXT' || attr.type === 'NUMBER') && (
+                          <input
+                            type={attr.type === 'NUMBER' ? 'number' : 'text'}
+                            step={attr.type === 'NUMBER' ? 'any' : undefined}
+                            className="odoo-form-input"
+                            style={{ fontSize: '0.8rem', padding: '6px 10px' }}
+                            placeholder={attr.placeholder}
+                            value={newProductForm.customAttributes[attr.name] || ''}
+                            onChange={(e) =>
+                              setNewProductForm({
+                                ...newProductForm,
+                                customAttributes: {
+                                  ...newProductForm.customAttributes,
+                                  [attr.name]: e.target.value,
+                                },
+                              })
+                            }
+                          />
+                        )}
+                        <span style={{ fontSize: '0.68rem', color: '#94a3b8', display: 'block', marginTop: '2px' }}>
+                          {attr.help}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               <div className="odoo-modal-footer">
@@ -6871,6 +7151,96 @@ export default function App() {
                     value={newBomLineForm.refDes}
                     onChange={(e) => setNewBomLineForm({ ...newBomLineForm, refDes: e.target.value })}
                   />
+                </div>
+
+                {/* DYNAMIC INDUSTRY BOM ATTRIBUTES */}
+                <div style={{ marginTop: '16px', padding: '14px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--brand-charcoal)', textTransform: 'uppercase' }}>
+                        BOM Industry Rules:
+                      </span>
+                      <span style={{ fontSize: '0.75rem', background: '#e0e7ff', color: '#3730a3', padding: '2px 8px', borderRadius: '4px', fontWeight: 700 }}>
+                        {industryAttributesConfig[activeIndustryPack].badge}
+                      </span>
+                    </div>
+                    <span style={{ fontSize: '0.7rem', color: '#64748b' }}>
+                      Profile: {industryAttributesConfig[activeIndustryPack].label}
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    {industryAttributesConfig[activeIndustryPack].bomAttributes.map((attr) => (
+                      <div key={attr.name} className="odoo-form-group" style={{ marginBottom: 0 }}>
+                        <label className="odoo-form-label" style={{ fontSize: '0.75rem' }}>
+                          {attr.label}
+                        </label>
+                        {attr.type === 'DROPDOWN' && (
+                          <select
+                            className="odoo-form-select"
+                            style={{ fontSize: '0.8rem', padding: '6px 10px' }}
+                            value={newBomLineForm.customAttributes[attr.name] || attr.defaultValue || ''}
+                            onChange={(e) =>
+                              setNewBomLineForm({
+                                ...newBomLineForm,
+                                customAttributes: {
+                                  ...newBomLineForm.customAttributes,
+                                  [attr.name]: e.target.value,
+                                },
+                              })
+                            }
+                          >
+                            {attr.options?.map((opt) => (
+                              <option key={opt} value={opt}>
+                                {opt}
+                              </option>
+                            ))}
+                          </select>
+                        )}
+                        {attr.type === 'BOOLEAN' && (
+                          <select
+                            className="odoo-form-select"
+                            style={{ fontSize: '0.8rem', padding: '6px 10px' }}
+                            value={newBomLineForm.customAttributes[attr.name] || attr.defaultValue || 'false'}
+                            onChange={(e) =>
+                              setNewBomLineForm({
+                                ...newBomLineForm,
+                                customAttributes: {
+                                  ...newBomLineForm.customAttributes,
+                                  [attr.name]: e.target.value,
+                                },
+                              })
+                            }
+                          >
+                            <option value="true">Yes / True</option>
+                            <option value="false">No / False</option>
+                          </select>
+                        )}
+                        {(attr.type === 'TEXT' || attr.type === 'NUMBER') && (
+                          <input
+                            type={attr.type === 'NUMBER' ? 'number' : 'text'}
+                            step={attr.type === 'NUMBER' ? 'any' : undefined}
+                            className="odoo-form-input"
+                            style={{ fontSize: '0.8rem', padding: '6px 10px' }}
+                            placeholder={attr.placeholder}
+                            value={newBomLineForm.customAttributes[attr.name] || ''}
+                            onChange={(e) =>
+                              setNewBomLineForm({
+                                ...newBomLineForm,
+                                customAttributes: {
+                                  ...newBomLineForm.customAttributes,
+                                  [attr.name]: e.target.value,
+                                },
+                              })
+                            }
+                          />
+                        )}
+                        <span style={{ fontSize: '0.68rem', color: '#94a3b8', display: 'block', marginTop: '2px' }}>
+                          {attr.help}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
 
