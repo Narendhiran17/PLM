@@ -4200,60 +4200,35 @@ export default function App() {
         {currentMenu === 'industry_packs' && (
           <div className="odoo-sheet">
             {/* Sheet Header */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--odoo-border)', paddingBottom: '16px', marginBottom: '20px' }}>
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                  <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
-                    Tenant Scope: <strong>tenant_default</strong>
-                  </span>
-                </div>
-                <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700, color: 'var(--brand-charcoal)' }}>
-                  Industry Capability Framework
-                </h1>
-                <p style={{ margin: '4px 0 0', fontSize: '0.875rem', color: '#64748b' }}>
-                  Modular domain plugins: Discrete &amp; Automotive, Electronics &amp; PCB, Process &amp; Chemicals, Medical Devices, and Configured Products.
-                </p>
-              </div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--odoo-border)', paddingBottom: '12px', marginBottom: '16px' }}>
+              <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: 'var(--brand-charcoal)' }}>
+                Industry Packs
+              </h2>
             </div>
 
             {/* Notebook Tabs */}
-            <div className="odoo-notebook-tabs" style={{ marginBottom: '20px' }}>
-              <button
-                className={`odoo-tab ${packSubTab === 'store' ? 'active' : ''}`}
-                onClick={() => setPackSubTab('store')}
-              >
-                Capability Store &amp; Subscriptions
-              </button>
-              <button
-                className={`odoo-tab ${packSubTab === 'automotive' ? 'active' : ''}`}
-                onClick={() => setPackSubTab('automotive')}
-              >
-                Discrete &amp; Automotive
-              </button>
-              <button
-                className={`odoo-tab ${packSubTab === 'electronics' ? 'active' : ''}`}
-                onClick={() => setPackSubTab('electronics')}
-              >
-                Electronics &amp; PCB
-              </button>
-              <button
-                className={`odoo-tab ${packSubTab === 'process' ? 'active' : ''}`}
-                onClick={() => setPackSubTab('process')}
-              >
-                Process &amp; Chemical
-              </button>
-              <button
-                className={`odoo-tab ${packSubTab === 'medical' ? 'active' : ''}`}
-                onClick={() => setPackSubTab('medical')}
-              >
-                Regulated Medical
-              </button>
-              <button
-                className={`odoo-tab ${packSubTab === 'configured' ? 'active' : ''}`}
-                onClick={() => setPackSubTab('configured')}
-              >
-                Configured Products
-              </button>
+            <div className="odoo-notebook-tabs">
+              {[
+                { id: 'store', label: 'Capability Store', icon: PackageCheck },
+                { id: 'automotive', label: 'Discrete & Automotive', icon: Factory },
+                { id: 'electronics', label: 'Electronics & PCB', icon: Cpu },
+                { id: 'process', label: 'Process & Chemical', icon: FlaskConical },
+                { id: 'medical', label: 'Regulated Medical', icon: Stethoscope },
+                { id: 'configured', label: 'Configured Products', icon: SlidersHorizontal },
+              ].map((tab) => {
+                const IconComponent = tab.icon;
+                const isActive = packSubTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setPackSubTab(tab.id as any)}
+                    className={`odoo-tab ${isActive ? 'active' : ''}`}
+                  >
+                    <IconComponent size={14} />
+                    {tab.label}
+                  </button>
+                );
+              })}
             </div>
 
             {/* TAB 1: CAPABILITY STORE */}
@@ -5000,48 +4975,33 @@ export default function App() {
         {currentMenu === 'enterprise' && (
           <div className="odoo-sheet">
             {/* Sheet Header */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--odoo-border)', paddingBottom: '16px', marginBottom: '20px' }}>
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                  <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
-                    SaaS Engine: <strong>Catalyst AppSail + ZCQL Datastore</strong>
-                  </span>
-                </div>
-                <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700, color: 'var(--brand-charcoal)' }}>
-                  Enterprise Operations &amp; Commercial Scale
-                </h1>
-                <p style={{ margin: '4px 0 0', fontSize: '0.875rem', color: '#64748b' }}>
-                  Bi-directional CAD connector SDK, 10,000+ line high-volume BOM caching engine, metered multi-tenant SaaS billing, and cryptographic disaster recovery archives.
-                </p>
-              </div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--odoo-border)', paddingBottom: '12px', marginBottom: '16px' }}>
+              <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: 'var(--brand-charcoal)' }}>
+                Enterprise &amp; Scale
+              </h2>
             </div>
 
             {/* Notebook Tabs */}
-            <div className="odoo-notebook-tabs" style={{ marginBottom: '20px' }}>
-              <button
-                className={`odoo-tab ${entTab === 'cad_sdk' ? 'active' : ''}`}
-                onClick={() => setEntTab('cad_sdk')}
-              >
-                CAD Connector SDK &amp; Sync
-              </button>
-              <button
-                className={`odoo-tab ${entTab === 'benchmark' ? 'active' : ''}`}
-                onClick={() => setEntTab('benchmark')}
-              >
-                High-Volume BOM Traversal &amp; Cache
-              </button>
-              <button
-                className={`odoo-tab ${entTab === 'saas_billing' ? 'active' : ''}`}
-                onClick={() => setEntTab('saas_billing')}
-              >
-                Metered SaaS Billing &amp; Quotas
-              </button>
-              <button
-                className={`odoo-tab ${entTab === 'backup_dr' ? 'active' : ''}`}
-                onClick={() => setEntTab('backup_dr')}
-              >
-                Disaster Recovery &amp; Backup Archives
-              </button>
+            <div className="odoo-notebook-tabs">
+              {[
+                { id: 'cad_sdk', label: 'CAD Connector SDK', icon: Cpu },
+                { id: 'benchmark', label: 'High-Volume BOM Cache', icon: Gauge },
+                { id: 'saas_billing', label: 'SaaS Billing & Quotas', icon: DollarSign },
+                { id: 'backup_dr', label: 'Disaster Recovery & Backup', icon: Database },
+              ].map((tab) => {
+                const IconComponent = tab.icon;
+                const isActive = entTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setEntTab(tab.id as any)}
+                    className={`odoo-tab ${isActive ? 'active' : ''}`}
+                  >
+                    <IconComponent size={14} />
+                    {tab.label}
+                  </button>
+                );
+              })}
             </div>
 
             {/* TAB 1: CAD CONNECTOR SDK */}
@@ -5573,42 +5533,32 @@ export default function App() {
         {currentMenu === 'autonomous' && (
           <div className="odoo-sheet">
             {/* Sheet Header */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--odoo-border)', paddingBottom: '16px', marginBottom: '20px' }}>
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                  <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
-                    Engine: <strong>AI Copilot + 3D Digital Twin + Zoho Connectors</strong>
-                  </span>
-                </div>
-                <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700, color: 'var(--brand-charcoal)' }}>
-                  Autonomous Operations, AI Copilot &amp; 3D Digital Twin
-                </h1>
-                <p style={{ margin: '4px 0 0', fontSize: '0.875rem', color: '#64748b' }}>
-                  Automated change impact &amp; scrap risk predictions, real-time 3D CAD assembly visualizer, and bi-directional Zoho CRM &amp; Creator synchronization.
-                </p>
-              </div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--odoo-border)', paddingBottom: '12px', marginBottom: '16px' }}>
+              <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: 'var(--brand-charcoal)' }}>
+                AI &amp; Digital Twin
+              </h2>
             </div>
 
             {/* Notebook Tabs */}
-            <div className="odoo-notebook-tabs" style={{ marginBottom: '20px' }}>
-              <button
-                className={`odoo-tab ${autoTab === 'copilot' ? 'active' : ''}`}
-                onClick={() => setAutoTab('copilot')}
-              >
-                AI Engineering Copilot
-              </button>
-              <button
-                className={`odoo-tab ${autoTab === 'digital_twin' ? 'active' : ''}`}
-                onClick={() => setAutoTab('digital_twin')}
-              >
-                3D CAD Digital Twin &amp; Assembly Viewer
-              </button>
-              <button
-                className={`odoo-tab ${autoTab === 'zoho_connectors' ? 'active' : ''}`}
-                onClick={() => setAutoTab('zoho_connectors')}
-              >
-                Zoho Ecosystem Integration (CRM &amp; Creator)
-              </button>
+            <div className="odoo-notebook-tabs">
+              {[
+                { id: 'copilot', label: 'AI Engineering Copilot', icon: Bot },
+                { id: 'digital_twin', label: '3D CAD Digital Twin', icon: Box },
+                { id: 'zoho_connectors', label: 'Zoho Ecosystem Integration', icon: RefreshCw },
+              ].map((tab) => {
+                const IconComponent = tab.icon;
+                const isActive = autoTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setAutoTab(tab.id as any)}
+                    className={`odoo-tab ${isActive ? 'active' : ''}`}
+                  >
+                    <IconComponent size={14} />
+                    {tab.label}
+                  </button>
+                );
+              })}
             </div>
 
             {/* TAB 1: AI ENGINEERING COPILOT */}
