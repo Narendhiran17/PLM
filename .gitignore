@@ -23,6 +23,7 @@ jspm_packages/
 
 # Build and distribution outputs
 dist/
+!apps/web/dist/
 build/
 out/
 .cache/
