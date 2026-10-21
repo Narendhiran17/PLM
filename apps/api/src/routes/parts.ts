@@ -2,90 +2,9 @@ import { FastifyPluginAsync } from 'fastify';
 import { CreatePartInput, PartMaster, PartRevision } from '@universal-plm/domain-core';
 import { assertPermission, Permissions } from '@universal-plm/authorization';
 
-// In-memory demo store for rapid baseline development before Catalyst ZCQL database syncing
-const partsStore: PartMaster[] = [
-  {
-    id: 'part-001',
-    tenantId: 'default-tenant',
-    partNumber: 'ROB-1000',
-    name: 'Autonomous Articulated Robotic Arm',
-    description: '6-Axis Industrial Robotic Manipulator Assembly',
-    type: 'ASSEMBLY',
-    defaultUom: 'EA',
-    currentRevisionId: 'rev-001-A',
-    latestReleasedRevisionId: 'rev-001-A',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: 'part-002',
-    tenantId: 'default-tenant',
-    partNumber: 'ROB-1010',
-    name: 'Precision Harmonic Servo Actuator',
-    description: 'High-torque brushless servo motor module',
-    type: 'MANUFACTURED',
-    defaultUom: 'EA',
-    currentRevisionId: 'rev-002-B',
-    latestReleasedRevisionId: 'rev-002-B',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: 'part-003',
-    tenantId: 'default-tenant',
-    partNumber: 'PCB-4001',
-    name: 'Multi-Axis Motor Controller PCB',
-    description: '4-layer embedded microcontroller drive board',
-    type: 'ASSEMBLY',
-    defaultUom: 'EA',
-    currentRevisionId: 'rev-003-A',
-    latestReleasedRevisionId: 'rev-003-A',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: 'part-004',
-    tenantId: 'default-tenant',
-    partNumber: 'ELC-0052',
-    name: 'CAN-Bus Transceiver IC',
-    description: 'Automotive-grade high speed differential transceiver',
-    type: 'PURCHASED',
-    defaultUom: 'EA',
-    currentRevisionId: 'rev-004-A',
-    latestReleasedRevisionId: 'rev-004-A',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-];
-
-const revisionsStore: PartRevision[] = [
-  {
-    id: 'rev-001-A',
-    tenantId: 'default-tenant',
-    partId: 'part-001',
-    revision: 'A',
-    lifecycleState: 'RELEASED',
-    releasedAt: new Date().toISOString(),
-    releasedBy: 'eng-lead@plm.io',
-    isBaselineLocked: true,
-    revisionNotes: 'Initial production baseline',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: 'rev-002-B',
-    tenantId: 'default-tenant',
-    partId: 'part-002',
-    revision: 'B',
-    lifecycleState: 'RELEASED',
-    releasedAt: new Date().toISOString(),
-    releasedBy: 'eng-lead@plm.io',
-    isBaselineLocked: true,
-    revisionNotes: 'Upgraded bearing tolerance for higher duty cycle',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-];
+// Store initialized empty for clean-slate user testing
+const partsStore: PartMaster[] = [];
+const revisionsStore: PartRevision[] = [];
 
 export const partRoutes: FastifyPluginAsync = async (fastify) => {
   // List Parts (Tenant scoped)

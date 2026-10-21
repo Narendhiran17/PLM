@@ -57,7 +57,14 @@ import {
   Box,
   Maximize2,
   FileCheck,
-  X
+  X,
+  ChevronDown,
+  Trash2,
+  Upload,
+  Download,
+  CheckCircle2,
+  AlertCircle,
+  FileText
 } from 'lucide-react';
 import {
   expandReferenceDesignators,
@@ -109,6 +116,7 @@ export default function App() {
   // Navigation State
   const [currentMenu, setCurrentMenu] = useState<'ecos' | 'products' | 'bom_tree' | 'documents' | 'capabilities' | 'manufacturing' | 'industry_packs' | 'enterprise' | 'autonomous'>('ecos');
   const [mfgTab, setMfgTab] = useState<'mbom' | 'routings' | 'sourcing' | 'cost_rollup' | 'lead_time' | 'erp_sync'>('mbom');
+  const [openNavDropdown, setOpenNavDropdown] = useState<string | null>(null);
 
   // Phase 7: AI Copilot, 3D CAD Digital Twin & Zoho Connectors State
   const [autoTab, setAutoTab] = useState<'copilot' | 'digital_twin' | 'zoho_connectors'>('copilot');
@@ -121,14 +129,8 @@ export default function App() {
   const [sliceAxis, setSliceAxis] = useState<'x' | 'y' | 'z'>('y');
   const [sliceSlider, setSliceSlider] = useState<number>(100);
   const [selected3dPart, setSelected3dPart] = useState<string | null>(null);
-  const [crmDeals, setCrmDeals] = useState<any[]>([
-    { dealId: 'CRM-DEAL-849201', dealName: 'AeroSpace Tier-1 Cockpit Display Unit', accountName: 'Lockheed Martin Space Systems', amountUsd: 1450000, stage: 'Contract Signed / Closed Won', closingDate: '2027-03-31', synced: true },
-    { dealId: 'CRM-DEAL-992104', dealName: 'Electric Powertrain Inverter Upgrade', accountName: 'Tesla Energy & Propulsion', amountUsd: 875000, stage: 'Proposal / Contract In Review', closingDate: '2026-11-30', synced: false }
-  ]);
-  const [creatorNcrs, setCreatorNcrs] = useState<any[]>([
-    { recordId: 'NCR-STN3-00481', inspectionStationId: 'INSP-SMT-LINE-02', inspectorName: 'Devon Patel', partNumber: 'PCBA-MCU-MAIN', lotNumber: 'LOT-202610-092', defectCategory: 'electrical', severity: 'critical', defectDescription: 'Short-circuit detected between 3.3V power rail and ground plane during automated flying probe test.', detectedQuantity: 14, timestamp: '2026-10-15T12:00:00Z', escalated: false },
-    { recordId: 'NCR-STN1-00219', inspectionStationId: 'INSP-CNC-MILL-01', inspectorName: 'Elena Rostova', partNumber: 'CHASSIS-BASE-01', lotNumber: 'LOT-202609-114', defectCategory: 'dimensional', severity: 'major', defectDescription: 'M4 mounting hole pitch out of tolerance by +0.32mm on datum face B.', detectedQuantity: 8, timestamp: '2026-10-15T09:15:00Z', escalated: true }
-  ]);
+  const [crmDeals, setCrmDeals] = useState<any[]>([]);
+  const [creatorNcrs, setCreatorNcrs] = useState<any[]>([]);
   const [crmNotificationSent, setCrmNotificationSent] = useState<string | null>(null);
   const [selectedPlant, setSelectedPlant] = useState<'PLANT-DETROIT' | 'PLANT-CHENNAI'>('PLANT-DETROIT');
   const [mfgBatchSize, setMfgBatchSize] = useState<number>(50);
@@ -185,11 +187,11 @@ export default function App() {
 
   // SaaS Billing State (F08, COM-04)
   const [selectedPlanTier, setSelectedPlanTier] = useState<'STARTER' | 'PROFESSIONAL' | 'ENTERPRISE'>('PROFESSIONAL');
-  const [usageUsers, setUsageUsers] = useState<number>(18);
-  const [usageParts, setUsageParts] = useState<number>(4500);
-  const [usageEcos, setUsageEcos] = useState<number>(110);
-  const [usageStorageGb, setUsageStorageGb] = useState<number>(85);
-  const [usageApiPerHour, setUsageApiPerHour] = useState<number>(5000);
+  const [usageUsers, setUsageUsers] = useState<number>(1);
+  const [usageParts, setUsageParts] = useState<number>(0);
+  const [usageEcos, setUsageEcos] = useState<number>(0);
+  const [usageStorageGb, setUsageStorageGb] = useState<number>(0);
+  const [usageApiPerHour, setUsageApiPerHour] = useState<number>(0);
 
   // Disaster Recovery State (TST-08, COM-05)
   const [backupArchive, setBackupArchive] = useState<any>(null);
@@ -199,42 +201,19 @@ export default function App() {
   const [formNotebookTab, setFormNotebookTab] = useState<'bom_changes' | 'approvals' | 'documents' | 'concurrency' | 'notes'>('bom_changes');
   const [activeBaselineSim, setActiveBaselineSim] = useState<'MATCH' | 'COLLISION'>('MATCH');
   const [releaseStatusAlert, setReleaseStatusAlert] = useState<{ type: 'success' | 'collision'; msg: string } | null>(null);
-  const [vaultDocs, setVaultDocs] = useState([
-    {
-      id: 'doc-001',
-      docNumber: 'DOC-SPEC-1000',
-      title: 'Autonomous Articulated Robotic Arm — Master Specification',
-      category: 'SPECIFICATION',
-      revision: '1.0',
-      status: 'RELEASED',
-      file: 'ROB-1000-SPEC-v1.0.pdf',
-      size: '3.1 MB',
-      lockedBy: null as string | null,
-    },
-    {
-      id: 'doc-002',
-      docNumber: 'DOC-CAD-1010',
-      title: 'Precision Harmonic Servo Actuator — 3D CAD Assembly',
-      category: 'CAD_3D_MODEL',
-      revision: '2.0',
-      status: 'RELEASED',
-      file: 'ROB-1010-HARMONIC.STEP',
-      size: '14.8 MB',
-      lockedBy: 'Marcus Vance' as string | null,
-    },
-    {
-      id: 'doc-003',
-      docNumber: 'DOC-DWG-4001',
-      title: 'Multi-Axis Motor Controller PCB — Fabrication Drawing',
-      category: 'DRAWING_2D',
-      revision: 'A',
-      status: 'RELEASED',
-      file: 'PCB-4001-FAB-REV-A.pdf',
-      size: '1.2 MB',
-      lockedBy: null as string | null,
-    },
-  ]);
+  const [vaultDocs, setVaultDocs] = useState<Array<{
+    id: string;
+    docNumber: string;
+    title: string;
+    category: string;
+    revision: string;
+    status: string;
+    file: string;
+    size: string;
+    lockedBy: string | null;
+  }>>([]);
   const [bomSubTab, setBomSubTab] = useState<'tree' | 'compare' | 'where_used' | 'variants' | 'effectivity'>('tree');
+  const [selectedBomProductRef, setSelectedBomProductRef] = useState<string>('');
   const [selectedWhereUsedPart, setSelectedWhereUsedPart] = useState<string>('ELC-0052');
   const [effectivityDate, setEffectivityDate] = useState<string>('2026-10-15');
   const [effectivitySerial, setEffectivitySerial] = useState<string>('SN-1500');
@@ -342,48 +321,7 @@ export default function App() {
   }
 
   const [configSubTab, setConfigSubTab] = useState<'custom_fields' | 'numbering' | 'approval_rules' | 'fls' | 'importer' | 'snapshots'>('custom_fields');
-  const [customFields, setCustomFields] = useState<StudioField[]>([
-    {
-      id: 'cf-01',
-      name: 'materialGrade',
-      label: 'Material Grade',
-      type: 'DROPDOWN',
-      targetEntity: 'PART',
-      required: true,
-      options: ['ALUMINUM_7075', 'TITANIUM_TI6AL4V', 'STAINLESS_316L', 'CARBON_FIBER'],
-      description: 'Aerospace structural alloy classification',
-    },
-    {
-      id: 'cf-02',
-      name: 'rohsCompliant',
-      label: 'RoHS 3 Compliant',
-      type: 'BOOLEAN',
-      targetEntity: 'PART',
-      required: false,
-      defaultValue: true,
-      description: 'Directive 2011/65/EU status',
-    },
-    {
-      id: 'cf-03',
-      name: 'targetCost',
-      label: 'Target Cost ($)',
-      type: 'NUMBER',
-      targetEntity: 'PART',
-      required: false,
-      validationRule: { min: 0, max: 100000 },
-      description: 'Allowable production cost baseline',
-    },
-    {
-      id: 'cf-04',
-      name: 'calculatedLandedCost',
-      label: 'Calculated Landed Cost',
-      type: 'FORMULA',
-      targetEntity: 'PART',
-      required: false,
-      formula: 'unitCost * 1.15 + freightAllowance',
-      description: 'Automatic 15% tariff and logistics overhead markup',
-    },
-  ]);
+  const [customFields, setCustomFields] = useState<StudioField[]>([]);
   const [newFieldForm, setNewFieldForm] = useState({
     name: '',
     label: '',
@@ -393,34 +331,15 @@ export default function App() {
     options: '',
   });
 
-  const [numberingSchemes, setNumberingSchemes] = useState([
-    {
-      id: 'sch-prt',
-      entityType: 'PART',
-      prefix: 'PRT',
-      category: 'MEC',
-      digits: 5,
-      currentSeq: 104,
-      pattern: '{PREFIX}-{CATEGORY}-{YEAR}-{SEQ}',
-    },
-    {
-      id: 'sch-eco',
-      entityType: 'ECO',
-      prefix: 'ECO',
-      digits: 4,
-      currentSeq: 12,
-      pattern: '{PREFIX}-{YEAR}-{SEQ}',
-    },
-    {
-      id: 'sch-doc',
-      entityType: 'DOC',
-      prefix: 'DOC',
-      category: 'SPEC',
-      digits: 4,
-      currentSeq: 35,
-      pattern: '{PREFIX}-{CATEGORY}-{YEAR}-{SEQ}',
-    },
-  ]);
+  const [numberingSchemes, setNumberingSchemes] = useState<Array<{
+    id: string;
+    entityType: string;
+    prefix: string;
+    category?: string;
+    digits: number;
+    currentSeq: number;
+    pattern: string;
+  }>>([]);
   const [lastGeneratedNumber, setLastGeneratedNumber] = useState<string | null>(null);
 
   const [testCostInput, setTestCostInput] = useState<number>(25000);
@@ -429,7 +348,7 @@ export default function App() {
   const [flsRole, setFlsRole] = useState<'ENGINEER' | 'SUPPLIER_PORTAL' | 'EXECUTIVE'>('SUPPLIER_PORTAL');
 
   const [csvInput, setCsvInput] = useState<string>(
-    `partNumber,name,type,uom,materialGrade\nPRT-MEC-2026-00105,Rotary Joint Yoke,COMPONENT,EA,TITANIUM_TI6AL4V\nPRT-MEC-2026-00106,Bushing Retainer Ring,COMPONENT,EA,STAINLESS_316L\n,Drive Shaft Pinion,COMPONENT,EA,ALUMINUM_7075`
+    `partNumber,name,type,uom,materialGrade\n`
   );
   const [csvResult, setCsvResult] = useState<{
     analyzed: boolean;
@@ -440,127 +359,34 @@ export default function App() {
     records: any[];
   } | null>(null);
 
-  const [snapshots, setSnapshots] = useState([
-    {
-      snapshotId: 'SNAP-1739598000-a8f102bc',
-      entityId: 'REV-ROB-1000-A',
-      entityType: 'PART_REVISION',
-      releasedBy: 'marcus.vance@officehubtech.com',
-      releasedAt: '2026-10-15 10:48 AM',
-      hash: 'a8f102bc944738da72efd092e449911e38b4c0274eef711a3028c1149d94fa21',
-      fieldsCount: 4,
-      rulesCount: 2,
-    },
-  ]);
+  const [snapshots, setSnapshots] = useState<Array<{
+    snapshotId: string;
+    entityId: string;
+    entityType: string;
+    releasedBy: string;
+    releasedAt: string;
+    hash: string;
+    fieldsCount: number;
+    rulesCount: number;
+  }>>([]);
   const [snapshotAlert, setSnapshotAlert] = useState<string | null>(null);
 
   // Search & Filter
   const [searchFilter, setSearchFilter] = useState('');
 
   // Chatter State
-  const [chatterMessages, setChatterMessages] = useState([
-    {
-      id: 1,
-      author: 'Marcus Vance',
-      initials: 'MV',
-      time: 'Today at 10:45 AM',
-      type: 'status',
-      content: 'Stage changed: In Progress ➔ Engineering Review',
-    },
-    {
-      id: 2,
-      author: 'Marcus Vance',
-      initials: 'MV',
-      time: 'Today at 10:48 AM',
-      type: 'note',
-      content: 'Thermal dissipation model validated under 15A continuous joint load. Tolerance confirmed by OfficeHub Tech Engineering.',
-    },
-  ]);
+  const [chatterMessages, setChatterMessages] = useState<Array<{
+    id: number;
+    author: string;
+    initials: string;
+    time: string;
+    type: string;
+    content: string;
+  }>>([]);
   const [newNoteText, setNewNoteText] = useState('');
 
-  // Sample ECOs across standard Odoo PLM stages
-  const [ecos, setEcos] = useState<EcoCard[]>([
-    {
-      id: 'eco-001',
-      ecoNumber: 'ECO-2026-0042',
-      name: 'Harmonic Actuator Joint 1 & 2 Upgrade',
-      productName: 'Autonomous Articulated Robotic Arm',
-      productRef: 'ROB-1000',
-      ecoType: 'Design Improvement',
-      stage: 'review',
-      priority: 2,
-      tags: ['Mechanical', 'High Torque'],
-      responsible: 'Marcus Vance',
-      responsibleInitials: 'MV',
-      effectiveDate: '2026-10-31',
-      bomChangesCount: 3,
-      documentsCount: 2,
-    },
-    {
-      id: 'eco-002',
-      ecoNumber: 'ECO-2026-0039',
-      name: 'CAN-Bus Transceiver AEC-Q100 Replacement',
-      productName: 'Multi-Axis Motor Controller PCB',
-      productRef: 'PCB-4001',
-      ecoType: 'Component Replacement',
-      stage: 'progress',
-      priority: 3,
-      tags: ['Electronics', 'Automotive'],
-      responsible: 'Elena Rostova',
-      responsibleInitials: 'ER',
-      effectiveDate: '2026-11-15',
-      bomChangesCount: 1,
-      documentsCount: 1,
-    },
-    {
-      id: 'eco-003',
-      ecoNumber: 'ECO-2026-0035',
-      name: 'Titanium Fastener Weight Reduction',
-      productName: 'Autonomous Articulated Robotic Arm',
-      productRef: 'ROB-1000',
-      ecoType: 'Cost & Weight',
-      stage: 'new',
-      priority: 1,
-      tags: ['Hardware'],
-      responsible: 'David Kim',
-      responsibleInitials: 'DK',
-      effectiveDate: '2026-12-01',
-      bomChangesCount: 4,
-      documentsCount: 0,
-    },
-    {
-      id: 'eco-004',
-      ecoNumber: 'ECO-2026-0028',
-      name: 'Optical Encoder Firmware 2.1 Calibration',
-      productName: 'Embedded RTOS Motor Controller',
-      productRef: 'FRM-9002',
-      ecoType: 'Firmware Update',
-      stage: 'validated',
-      priority: 2,
-      tags: ['Firmware', 'Safety'],
-      responsible: 'Marcus Vance',
-      responsibleInitials: 'MV',
-      effectiveDate: '2026-10-20',
-      bomChangesCount: 1,
-      documentsCount: 3,
-    },
-    {
-      id: 'eco-005',
-      ecoNumber: 'ECO-2026-0019',
-      name: 'Chassis Cast Aluminum Material Spec',
-      productName: 'Heavy Base Stabilizer Mount',
-      productRef: 'STB-0081',
-      ecoType: 'Manufacturing Routing',
-      stage: 'effective',
-      priority: 1,
-      tags: ['Casting', 'Vendor'],
-      responsible: 'Sarah Jenkins',
-      responsibleInitials: 'SJ',
-      effectiveDate: '2026-09-30',
-      bomChangesCount: 2,
-      documentsCount: 4,
-    },
-  ]);
+  // ECOs across standard Odoo PLM stages - initialized empty for clean-slate testing
+  const [ecos, setEcos] = useState<EcoCard[]>([]);
 
   // Separate Dedicated Creation Modal States
   const [isEcoModalOpen, setIsEcoModalOpen] = useState(false);
@@ -571,25 +397,46 @@ export default function App() {
   // New ECO Form State
   const [newEcoForm, setNewEcoForm] = useState({
     name: '',
-    productRef: 'ROB-1000',
-    productName: 'Autonomous Articulated Robotic Arm',
+    productRef: '',
+    productName: '',
     ecoType: 'Design Improvement',
     stage: 'new' as EcoCard['stage'],
     priority: 2,
-    responsible: 'Marcus Vance',
-    tags: 'Mechanical, Upgrade',
-    effectiveDate: '2026-11-01',
+    responsible: 'Engineering Lead',
+    tags: 'Mechanical',
+    effectiveDate: new Date().toISOString().slice(0, 10),
     description: '',
   });
 
-  // Products Master State
-  const [productsList, setProductsList] = useState([
-    { ref: 'ROB-1000', name: 'Autonomous Articulated Robotic Arm', type: 'Assembly', rev: 'Rev B', status: 'In Review', uom: 'Units' },
-    { ref: 'ROB-1010', name: 'Precision Harmonic Servo Actuator', type: 'Manufactured', rev: 'Rev B', status: 'Released', uom: 'Units' },
-    { ref: 'PCB-4001', name: 'Multi-Axis Motor Controller PCB', type: 'Assembly', rev: 'Rev A', status: 'Released', uom: 'Units' },
-    { ref: 'ELC-0052', name: 'CAN-Bus Transceiver IC (AEC-Q100)', type: 'Purchased', rev: 'Rev A', status: 'Released', uom: 'Units' },
-    { ref: 'FRM-9002', name: 'Embedded RTOS Motor Controller Firmware', type: 'Software', rev: '1.2.0', status: 'Draft', uom: 'Units' },
-  ]);
+  // Products Master State - initialized empty for clean-slate testing
+  const [productsList, setProductsList] = useState<Array<{
+    ref: string;
+    name: string;
+    type: string;
+    rev: string;
+    status: string;
+    uom: string;
+    customAttributes?: Record<string, any>;
+  }>>([]);
+
+  // Bulk Import State
+  const [isBulkImportModalOpen, setIsBulkImportModalOpen] = useState<boolean>(false);
+  const [bulkImportTab, setBulkImportTab] = useState<'templates' | 'upload' | 'paste'>('templates');
+  const [bulkImportRawText, setBulkImportRawText] = useState<string>('');
+  const [bulkImportParsedItems, setBulkImportParsedItems] = useState<Array<{
+    ref: string;
+    name: string;
+    type: string;
+    rev: string;
+    status: string;
+    uom: string;
+    parentRef?: string;
+    customAttributes?: Record<string, any>;
+  }>>([]);
+  const [bulkImportMode, setBulkImportMode] = useState<'append' | 'replace'>('append');
+  const [bulkImportWithBom, setBulkImportWithBom] = useState<boolean>(true);
+  const [bulkImportParseError, setBulkImportParseError] = useState<string | null>(null);
+  const [bulkImportSuccessMsg, setBulkImportSuccessMsg] = useState<string | null>(null);
 
   // New Product Form State
   const [newProductForm, setNewProductForm] = useState<{
@@ -610,7 +457,7 @@ export default function App() {
     customAttributes: {},
   });
 
-  // BOM Multi-Level Tree State
+  // BOM Multi-Level Tree State - initialized empty for clean-slate testing
   const [bomTreeLines, setBomTreeLines] = useState<Array<{
     level: string;
     name: string;
@@ -620,32 +467,34 @@ export default function App() {
     uom: string;
     refDes: string;
     lifecycle: string;
+    productRef?: string;
+    parentPartNumber?: string;
+    itemType?: 'Sub-Assembly' | 'Component';
     customAttributes?: Record<string, any>;
-  }>>([
-    { level: '0', name: 'Autonomous Articulated Robotic Arm', partNumber: 'ROB-1000', rev: 'Rev A', qty: 1.0, uom: 'EA', refDes: '—', lifecycle: 'RELEASED', customAttributes: { scrapPercentage: '0.0', isCriticalToQuality: 'true', findNumber: '1' } },
-    { level: '├── 1.1', name: 'Precision Harmonic Servo Actuator', partNumber: 'ROB-1010', rev: 'Rev B', qty: 6.0, uom: 'EA', refDes: 'Joints 1–6', lifecycle: 'RELEASED', customAttributes: { scrapPercentage: '1.5', isCriticalToQuality: 'true', findNumber: '10' } },
-    { level: '├── 1.2', name: 'Multi-Axis Motor Controller PCB', partNumber: 'PCB-4001', rev: 'Rev A', qty: 1.0, uom: 'EA', refDes: 'Main Bay', lifecycle: 'RELEASED', customAttributes: { scrapPercentage: '0.5', isCriticalToQuality: 'true', findNumber: '20' } },
-    { level: '└── 2.1', name: 'CAN-Bus Transceiver IC (AEC-Q100)', partNumber: 'ELC-0052', rev: 'Rev A', qty: 2.0, uom: 'EA', refDes: 'U1, U2', lifecycle: 'RELEASED', customAttributes: { scrapPercentage: '0.0', isCriticalToQuality: 'false', findNumber: '30' } },
-  ]);
+  }>>([]);
 
   // New BOM Component Form State
   const [newBomLineForm, setNewBomLineForm] = useState<{
+    catalogPartRef: string;
     name: string;
     partNumber: string;
     rev: string;
     qty: number;
     uom: string;
     refDes: string;
-    level: string;
+    parentPartNumber: string;
+    itemType: 'Sub-Assembly' | 'Component';
     customAttributes: Record<string, any>;
   }>({
+    catalogPartRef: '',
     name: '',
     partNumber: '',
     rev: 'Rev A',
     qty: 1.0,
     uom: 'EA',
     refDes: '',
-    level: '├── 1.3',
+    parentPartNumber: 'ROOT',
+    itemType: 'Component',
     customAttributes: {},
   });
 
@@ -669,65 +518,25 @@ export default function App() {
     { id: 'effective', label: 'Effective' },
   ];
 
-  const bomDiffs = [
-    {
-      id: 'diff-1',
-      action: 'REMOVE',
-      component: 'Standard Stepper Actuator',
-      partNumber: 'ACT-0021',
-      oldQty: 6,
-      newQty: 0,
-      uom: 'Units',
-      notes: 'Phased out due to gear backlash under load',
-    },
-    {
-      id: 'diff-2',
-      action: 'ADD',
-      component: 'Precision Harmonic Servo Actuator',
-      partNumber: 'ROB-1010',
-      oldQty: 0,
-      newQty: 6,
-      uom: 'Units',
-      notes: 'Zero-backlash, integrated absolute encoder',
-    },
-    {
-      id: 'diff-3',
-      action: 'MODIFY',
-      component: 'Drive Bracket Mount Hardware Kit',
-      partNumber: 'MNT-0902',
-      oldQty: 12,
-      newQty: 16,
-      uom: 'Units',
-      notes: 'Added 4x M5 high-tensile mounting bolts',
-    },
-  ];
+  const [bomDiffs, setBomDiffs] = useState<Array<{
+    id: string;
+    action: string;
+    component: string;
+    partNumber: string;
+    oldQty: number;
+    newQty: number;
+    uom: string;
+    notes: string;
+  }>>([]);
 
-  const [approvals, setApprovals] = useState([
-    {
-      id: 'app-1',
-      stage: 'Engineering Review',
-      role: 'Lead Mechanical Engineer',
-      user: 'Marcus Vance',
-      status: 'APPROVED',
-      date: '2026-10-15',
-    },
-    {
-      id: 'app-2',
-      stage: 'Engineering Review',
-      role: 'Quality & Regulatory Authority',
-      user: 'Rachel Adams',
-      status: 'PENDING',
-      date: '-',
-    },
-    {
-      id: 'app-3',
-      stage: 'Validated',
-      role: 'Manufacturing Engineering Manager',
-      user: 'Carlos Santana',
-      status: 'PENDING',
-      date: '-',
-    },
-  ]);
+  const [approvals, setApprovals] = useState<Array<{
+    id: string;
+    stage: string;
+    role: string;
+    user: string;
+    status: string;
+    date: string;
+  }>>([]);
 
   const handleApprove = (approvalId: string) => {
     setApprovals(
@@ -749,13 +558,14 @@ export default function App() {
   };
 
   const handleStageChange = (newStage: EcoCard['stage']) => {
+    if (!activeEco) return;
     setEcos(ecos.map((e) => (e.id === activeEco.id ? { ...e, stage: newStage } : e)));
     setChatterMessages([
       ...chatterMessages,
       {
         id: Date.now(),
-        author: 'Marcus Vance',
-        initials: 'MV',
+        author: activeEco.responsible || 'Engineering Lead',
+        initials: activeEco.responsibleInitials || 'EL',
         time: 'Just now',
         type: 'status',
         content: `Stage transitioned to: ${stages.find((s) => s.id === newStage)?.label}`,
@@ -770,7 +580,7 @@ export default function App() {
           const isNowLocked = !d.lockedBy;
           return {
             ...d,
-            lockedBy: isNowLocked ? 'Marcus Vance' : null,
+            lockedBy: isNowLocked ? 'Engineering Lead' : null,
           };
         }
         return d;
@@ -779,6 +589,7 @@ export default function App() {
   };
 
   const handleAtomicReleaseEco = () => {
+    if (!activeEco) return;
     const pending = approvals.filter((a) => a.status !== 'APPROVED');
     if (pending.length > 0) {
       setReleaseStatusAlert({
@@ -791,7 +602,7 @@ export default function App() {
     if (activeBaselineSim === 'COLLISION') {
       setReleaseStatusAlert({
         type: 'collision',
-        msg: `Baseline Concurrency Collision: Expected baseline 'rev-001-A' has been superseded by 'rev-001-A1' from another concurrent ECO. Please re-baseline affected items before release.`,
+        msg: `Baseline Concurrency Collision: Expected baseline has been superseded by another concurrent ECO. Please re-baseline affected items before release.`,
       });
       return;
     }
@@ -799,17 +610,17 @@ export default function App() {
     setEcos(ecos.map((e) => (e.id === activeEco.id ? { ...e, stage: 'effective' } : e)));
     setReleaseStatusAlert({
       type: 'success',
-      msg: `✓ Atomic Release Succeeded: ECO ${activeEco.ecoNumber} released. Revision B baseline locked. Emitted tamper-evident audit record SHA256-${activeEco.ecoNumber}-MV.`,
+      msg: `✓ Atomic Release Succeeded: ECO ${activeEco.ecoNumber} released. Revision baseline locked. Emitted tamper-evident audit record SHA256-${activeEco.ecoNumber}.`,
     });
     setChatterMessages([
       ...chatterMessages,
       {
         id: Date.now(),
-        author: 'Marcus Vance',
-        initials: 'MV',
+        author: activeEco.responsible || 'Engineering Lead',
+        initials: activeEco.responsibleInitials || 'EL',
         time: 'Just now',
         type: 'status',
-        content: `Atomic Release Executed: Baseline locked for Revision B. State transitioned to Effective.`,
+        content: `Atomic Release Executed: Baseline locked. State transitioned to Effective.`,
       },
     ]);
   };
@@ -889,14 +700,14 @@ export default function App() {
     // Reset form
     setNewEcoForm({
       name: '',
-      productRef: 'ROB-1000',
-      productName: 'Autonomous Articulated Robotic Arm',
+      productRef: '',
+      productName: '',
       ecoType: 'Design Improvement',
       stage: 'new',
       priority: 2,
-      responsible: 'Marcus Vance',
-      tags: 'Mechanical, Upgrade',
-      effectiveDate: '2026-11-01',
+      responsible: 'Engineering Lead',
+      tags: 'Mechanical',
+      effectiveDate: new Date().toISOString().slice(0, 10),
       description: '',
     });
   };
@@ -924,6 +735,334 @@ export default function App() {
       uom: 'Units',
       customAttributes: {},
     });
+  };
+
+  const BULK_IMPORT_SAMPLE_PRESETS = [
+    {
+      id: 'bicycle',
+      title: 'Bicycle Assembly System (Recommended)',
+      subtitle: '9 items · Master Assembly with Wheel Sub-Assembly, Frame, Rim, Tyre, Tube, Chain, Pedals, Handlebar',
+      category: 'Consumer Discrete',
+      badge: 'Popular',
+      items: [
+        { ref: 'BYC-1000', name: 'Bicycle Master Assembly', type: 'Assembly', rev: 'Rev A', status: 'Released', uom: 'Units', parentRef: '' },
+        { ref: 'WHL-001', name: 'Wheel Assembly', type: 'Assembly', rev: 'Rev A', status: 'Released', uom: 'Units', parentRef: 'BYC-1000' },
+        { ref: 'FRM-101', name: 'Aluminum Aero Frame 56cm', type: 'Manufactured', rev: 'Rev B', status: 'Released', uom: 'Units', parentRef: 'BYC-1000' },
+        { ref: 'RIM-001', name: 'Double-Wall Wheel Rim 700c', type: 'Purchased', rev: 'Rev A', status: 'Released', uom: 'Units', parentRef: 'WHL-001' },
+        { ref: 'TYR-001', name: 'All-Weather Rubber Tyre 28mm', type: 'Purchased', rev: 'Rev A', status: 'Released', uom: 'Units', parentRef: 'WHL-001' },
+        { ref: 'TUB-001', name: 'Butyl Rubber Inner Tube 700c', type: 'Purchased', rev: 'Rev A', status: 'Released', uom: 'Units', parentRef: 'WHL-001' },
+        { ref: 'CHN-501', name: 'Precision 11-Speed Chain', type: 'Purchased', rev: 'Rev A', status: 'Released', uom: 'Units', parentRef: 'BYC-1000' },
+        { ref: 'PDL-201', name: 'CNC Alloy Platform Pedals Pair', type: 'Purchased', rev: 'Rev A', status: 'Released', uom: 'Units', parentRef: 'BYC-1000' },
+        { ref: 'HBL-301', name: 'Aero Carbon Drop Handlebar', type: 'Manufactured', rev: 'Rev A', status: 'Released', uom: 'Units', parentRef: 'BYC-1000' },
+      ],
+    },
+    {
+      id: 'ev_powertrain',
+      title: 'Electric Vehicle (EV) Powertrain',
+      subtitle: '6 items · EV Powertrain Master, 80kWh Battery Pack, 250kW Motor, Inverter, Harness, Cold Plate',
+      category: 'Automotive & Mobility',
+      badge: 'PPAP Ready',
+      items: [
+        { ref: 'EV-PT-500', name: 'EV Powertrain System', type: 'Assembly', rev: 'Rev B', status: 'Released', uom: 'Units', parentRef: '' },
+        { ref: 'BAT-800', name: '80kWh Liquid-Cooled Battery Pack', type: 'Assembly', rev: 'Rev C', status: 'Released', uom: 'Units', parentRef: 'EV-PT-500' },
+        { ref: 'MOT-350', name: '250kW Permanent Magnet Motor', type: 'Manufactured', rev: 'Rev B', status: 'Released', uom: 'Units', parentRef: 'EV-PT-500' },
+        { ref: 'INV-220', name: 'SiC High-Frequency Power Inverter', type: 'Purchased', rev: 'Rev A', status: 'Released', uom: 'Units', parentRef: 'EV-PT-500' },
+        { ref: 'HAR-100', name: 'High Voltage Shielded Harness', type: 'Purchased', rev: 'Rev A', status: 'Released', uom: 'Units', parentRef: 'EV-PT-500' },
+        { ref: 'CLP-050', name: 'Extruded Aluminum Cold Plate', type: 'Manufactured', rev: 'Rev B', status: 'Released', uom: 'Units', parentRef: 'BAT-800' },
+      ],
+    },
+    {
+      id: 'med_device',
+      title: 'Medical Diagnostic Blood Analyzer',
+      subtitle: '5 items · Analyzer Master, Multi-Wavelength Optical Flow Cell, Cartridge, Pump, Touch Panel',
+      category: 'Regulated Medical',
+      badge: 'DHF Compliant',
+      items: [
+        { ref: 'MED-ANA-01', name: 'Automated Blood Chemistry Analyzer', type: 'Assembly', rev: 'Rev A', status: 'Released', uom: 'Units', parentRef: '' },
+        { ref: 'SEN-OPT-02', name: 'Multi-Wavelength Optical Flow Cell', type: 'Assembly', rev: 'Rev A', status: 'Released', uom: 'Units', parentRef: 'MED-ANA-01' },
+        { ref: 'CRT-DISP-01', name: 'Sterile Microfluidic Cartridge', type: 'Purchased', rev: 'Rev C', status: 'Released', uom: 'Units', parentRef: 'MED-ANA-01' },
+        { ref: 'PMP-PERI-04', name: 'Ultra-Low Pulsation Peristaltic Pump', type: 'Purchased', rev: 'Rev B', status: 'Released', uom: 'Units', parentRef: 'MED-ANA-01' },
+        { ref: 'DSP-TOUCH-07', name: '10.1-inch Medical IP65 Touch Panel', type: 'Purchased', rev: 'Rev A', status: 'Released', uom: 'Units', parentRef: 'MED-ANA-01' },
+      ],
+    },
+  ];
+
+  const parseCsvOrTsvText = (text: string) => {
+    const trimmed = text.trim();
+    if (!trimmed) {
+      setBulkImportParsedItems([]);
+      setBulkImportParseError(null);
+      return;
+    }
+
+    try {
+      if (trimmed.startsWith('[')) {
+        const parsed = JSON.parse(trimmed);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const items = parsed.map((item: any, idx: number) => ({
+            ref: String(item.ref || item.partNumber || item.internalReference || item.id || `PRD-${Date.now().toString().slice(-4)}-${idx + 1}`).trim(),
+            name: String(item.name || item.title || item.description || 'Imported Part').trim(),
+            type: String(item.type || item.productType || item.category || 'Assembly').trim(),
+            rev: String(item.rev || item.revision || 'Rev A').trim(),
+            status: String(item.status || item.lifecycle || item.state || 'Released').trim(),
+            uom: String(item.uom || item.unit || 'Units').trim(),
+            parentRef: item.parentRef || item.parent || '',
+            customAttributes: item.customAttributes || {},
+          }));
+          setBulkImportParsedItems(items);
+          setBulkImportParseError(null);
+          return;
+        }
+      }
+    } catch {
+      // Continue to CSV parsing
+    }
+
+    const lines = trimmed.split(/\r?\n/).map((l) => l.trim()).filter((l) => l.length > 0);
+    if (lines.length === 0) {
+      setBulkImportParsedItems([]);
+      setBulkImportParseError('No valid data lines found.');
+      return;
+    }
+
+    const parseLine = (line: string): string[] => {
+      const res: string[] = [];
+      let cur = '';
+      let inQuote = false;
+      const delimiter = line.includes('\t') ? '\t' : ',';
+      for (let i = 0; i < line.length; i++) {
+        const c = line[i];
+        if (c === '"') {
+          inQuote = !inQuote;
+        } else if (c === delimiter && !inQuote) {
+          res.push(cur.trim());
+          cur = '';
+        } else {
+          cur += c;
+        }
+      }
+      res.push(cur.trim());
+      return res.map((s) => s.replace(/^["']|["']$/g, '').trim());
+    };
+
+    const firstCells = parseLine(lines[0]);
+    const lowerHeaders = firstCells.map((h) => h.toLowerCase());
+    const isHeader = lowerHeaders.some(
+      (h) => h.includes('ref') || h.includes('part') || h.includes('name') || h.includes('type') || h.includes('sku') || h.includes('code')
+    );
+
+    let refIdx = -1;
+    let nameIdx = -1;
+    let typeIdx = -1;
+    let revIdx = -1;
+    let statusIdx = -1;
+    let uomIdx = -1;
+    let parentIdx = -1;
+
+    if (isHeader) {
+      lowerHeaders.forEach((h, idx) => {
+        if (h.includes('parent')) {
+          parentIdx = idx;
+        } else if (h.includes('ref') || h.includes('part') || h.includes('sku') || h.includes('code') || h.includes('id')) {
+          if (refIdx === -1) refIdx = idx;
+        } else if (h.includes('name') || h.includes('title') || h.includes('desc')) {
+          nameIdx = idx;
+        } else if (h.includes('type') || h.includes('category') || h.includes('class')) {
+          typeIdx = idx;
+        } else if (h.includes('rev') || h.includes('version')) {
+          revIdx = idx;
+        } else if (h.includes('status') || h.includes('state') || h.includes('lifecycle')) {
+          statusIdx = idx;
+        } else if (h.includes('uom') || h.includes('unit')) {
+          uomIdx = idx;
+        }
+      });
+    }
+
+    if (refIdx === -1) refIdx = 0;
+    if (nameIdx === -1) nameIdx = 1;
+    if (typeIdx === -1) typeIdx = 2;
+    if (revIdx === -1) revIdx = 3;
+    if (statusIdx === -1) statusIdx = 4;
+    if (uomIdx === -1) uomIdx = 5;
+
+    const dataRows = isHeader ? lines.slice(1) : lines;
+    if (dataRows.length === 0) {
+      setBulkImportParsedItems([]);
+      setBulkImportParseError('CSV only contains header row with no data.');
+      return;
+    }
+
+    const items = dataRows.map((line, rIdx) => {
+      const cells = parseLine(line);
+      const ref = cells[refIdx] || `PRD-${Date.now().toString().slice(-4)}-${rIdx + 1}`;
+      const name = cells[nameIdx] || `Component ${ref}`;
+      const type = cells[typeIdx] || 'Assembly';
+      const rev = cells[revIdx] || 'Rev A';
+      const status = cells[statusIdx] || 'Released';
+      const uom = cells[uomIdx] || 'Units';
+      const parentRef = parentIdx !== -1 && cells[parentIdx] ? cells[parentIdx] : '';
+
+      return {
+        ref,
+        name,
+        type,
+        rev,
+        status,
+        uom,
+        parentRef,
+        customAttributes: {},
+      };
+    });
+
+    setBulkImportParsedItems(items);
+    setBulkImportParseError(null);
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const content = event.target?.result as string;
+      setBulkImportRawText(content);
+      parseCsvOrTsvText(content);
+    };
+    reader.readAsText(file);
+  };
+
+  const handleDownloadTemplate = () => {
+    const headers = 'Internal Reference,Name,Product Type,Current Revision,Status,Unit of Measure,Parent Reference';
+    const sampleRows = [
+      'BYC-1000,Bicycle Master Assembly,Assembly,Rev A,Released,Units,',
+      'WHL-001,Wheel Assembly,Assembly,Rev A,Released,Units,BYC-1000',
+      'RIM-001,Double-Wall Wheel Rim 700c,Purchased,Rev A,Released,Units,WHL-001',
+      'TYR-001,All-Weather Rubber Tyre 28mm,Purchased,Rev A,Released,Units,WHL-001',
+      'TUB-001,Butyl Rubber Inner Tube 700c,Purchased,Rev A,Released,Units,WHL-001',
+      'FRM-101,Aluminum Aero Frame 56cm,Manufactured,Rev B,Released,Units,BYC-1000',
+    ];
+    const csvContent = [headers, ...sampleRows].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'product_master_template.csv';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleExportProductsCsv = () => {
+    if (productsList.length === 0) {
+      alert('No products available to export.');
+      return;
+    }
+    const headers = 'Internal Reference,Name,Product Type,Current Revision,Status,Unit of Measure';
+    const rows = productsList.map(
+      (p) => `"${p.ref}","${p.name.replace(/"/g, '""')}","${p.type}","${p.rev}","${p.status}","${p.uom}"`
+    );
+    const csvContent = [headers, ...rows].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `products_export_${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleExecuteBulkImport = () => {
+    if (bulkImportParsedItems.length === 0) return;
+
+    const newProducts = bulkImportParsedItems.map((p) => ({
+      ref: p.ref,
+      name: p.name,
+      type: p.type || 'Assembly',
+      rev: p.rev || 'Rev A',
+      status: p.status || 'Released',
+      uom: p.uom || 'Units',
+      customAttributes: p.customAttributes || {},
+    }));
+
+    if (bulkImportMode === 'replace') {
+      setProductsList(newProducts);
+    } else {
+      setProductsList((prev) => {
+        const existingRefs = new Set(prev.map((x) => x.ref));
+        const filtered = newProducts.filter((x) => !existingRefs.has(x.ref));
+        return [...prev, ...filtered];
+      });
+    }
+
+    // Auto-construct BOM hierarchy if items specify parents
+    if (bulkImportWithBom) {
+      const itemsWithParent = bulkImportParsedItems.filter((x) => x.parentRef);
+      if (itemsWithParent.length > 0) {
+        const rootItem =
+          bulkImportParsedItems.find((x) => !x.parentRef && x.type === 'Assembly') || bulkImportParsedItems[0];
+        const rootRef = rootItem ? rootItem.ref : 'DEFAULT';
+
+        if (rootItem) {
+          setSelectedBomProductRef(rootItem.ref);
+        }
+
+        const generatedBomLines: typeof bomTreeLines = [];
+        const level1Items = bulkImportParsedItems.filter(
+          (x) => x.parentRef === rootRef || (!x.parentRef && x.ref !== rootRef)
+        );
+
+        level1Items.forEach((l1, idx) => {
+          const isSubAssembly =
+            l1.type === 'Assembly' || bulkImportParsedItems.some((child) => child.parentRef === l1.ref);
+          generatedBomLines.push({
+            level: isSubAssembly ? `├── 1.${idx + 1}` : `└── 1.${idx + 1}`,
+            name: l1.name,
+            partNumber: l1.ref,
+            rev: l1.rev || 'Rev A',
+            qty: 1.0,
+            uom: l1.uom || 'EA',
+            refDes: '—',
+            lifecycle: 'RELEASED',
+            productRef: rootRef,
+            parentPartNumber: 'ROOT',
+            itemType: isSubAssembly ? 'Sub-Assembly' : 'Component',
+            customAttributes: l1.customAttributes || {},
+          });
+
+          const level2Children = bulkImportParsedItems.filter((x) => x.parentRef === l1.ref);
+          level2Children.forEach((l2, cIdx) => {
+            generatedBomLines.push({
+              level: `└── 2.${cIdx + 1}`,
+              name: l2.name,
+              partNumber: l2.ref,
+              rev: l2.rev || 'Rev A',
+              qty: 1.0,
+              uom: l2.uom || 'EA',
+              refDes: '—',
+              lifecycle: 'RELEASED',
+              productRef: rootRef,
+              parentPartNumber: l1.ref,
+              itemType: l2.type === 'Assembly' ? 'Sub-Assembly' : 'Component',
+              customAttributes: l2.customAttributes || {},
+            });
+          });
+        });
+
+        if (bulkImportMode === 'replace') {
+          setBomTreeLines(generatedBomLines);
+        } else {
+          setBomTreeLines((prev) => [...prev, ...generatedBomLines]);
+        }
+      }
+    }
+
+    setBulkImportSuccessMsg(`Successfully imported ${bulkImportParsedItems.length} products!`);
+    setTimeout(() => setBulkImportSuccessMsg(null), 4000);
+    setIsBulkImportModalOpen(false);
+    setBulkImportParsedItems([]);
+    setBulkImportRawText('');
   };
 
   const handleCreateDocumentSubmit = (e: React.FormEvent) => {
@@ -954,30 +1093,139 @@ export default function App() {
 
   const handleCreateBomLineSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const activeProduct = productsList.find((p) => p.ref === selectedBomProductRef) || productsList[0];
+    const currentProductRef = activeProduct?.ref || 'DEFAULT';
     const partNum = newBomLineForm.partNumber.trim() || `CMP-${Date.now().toString().slice(-4)}`;
-    const newLine = {
-      level: newBomLineForm.level || '├── 1.3',
-      name: newBomLineForm.name.trim() || 'Mechanical Subsystem Component',
-      partNumber: partNum,
-      rev: newBomLineForm.rev || 'Rev A',
-      qty: Number(newBomLineForm.qty) || 1.0,
-      uom: newBomLineForm.uom || 'EA',
-      refDes: newBomLineForm.refDes.trim() || '—',
-      lifecycle: 'DRAFT',
-      customAttributes: newBomLineForm.customAttributes || {},
-    };
-    setBomTreeLines((prev) => [...prev, newLine]);
+    const isRoot = !newBomLineForm.parentPartNumber || newBomLineForm.parentPartNumber === 'ROOT';
+
+    let levelStr = '├── 1.1';
+    const updatedLines = [...bomTreeLines];
+
+    if (isRoot) {
+      // Direct child of Top-Level Assembly (Level 1)
+      const level1Siblings = bomTreeLines.filter(
+        (l) => (!l.productRef || l.productRef === currentProductRef) && (!l.parentPartNumber || l.parentPartNumber === 'ROOT')
+      );
+      const idx = level1Siblings.length + 1;
+      levelStr = newBomLineForm.itemType === 'Sub-Assembly' ? `├── 1.${idx}` : `└── 1.${idx}`;
+
+      const newLine = {
+        level: levelStr,
+        name: newBomLineForm.name.trim() || 'Mechanical Subsystem Component',
+        partNumber: partNum,
+        rev: newBomLineForm.rev || 'Rev A',
+        qty: Number(newBomLineForm.qty) || 1.0,
+        uom: newBomLineForm.uom || 'EA',
+        refDes: newBomLineForm.refDes.trim() || '—',
+        lifecycle: 'DRAFT',
+        productRef: currentProductRef,
+        parentPartNumber: 'ROOT',
+        itemType: newBomLineForm.itemType || 'Component',
+        customAttributes: newBomLineForm.customAttributes || {},
+      };
+      updatedLines.push(newLine);
+
+      // Check if this newly added sub-assembly has pre-built child parts defined in another sub-assembly BOM
+      const existingSubBom = bomTreeLines.filter((l) => l.productRef === partNum);
+      if (existingSubBom.length > 0) {
+        existingSubBom.forEach((subLine, sIdx) => {
+          updatedLines.push({
+            ...subLine,
+            productRef: currentProductRef,
+            parentPartNumber: partNum,
+            level: `└── 2.${sIdx + 1}`,
+          });
+        });
+      }
+    } else {
+      // Child component nested under selected Sub-Assembly (Level 2)
+      const parentIndex = updatedLines.findIndex(
+        (l) => (!l.productRef || l.productRef === currentProductRef) && l.partNumber === newBomLineForm.parentPartNumber
+      );
+      const childSiblings = updatedLines.filter(
+        (l) => (!l.productRef || l.productRef === currentProductRef) && l.parentPartNumber === newBomLineForm.parentPartNumber
+      );
+      const childIdx = childSiblings.length + 1;
+      levelStr = `└── 2.${childIdx}`;
+
+      const newLine = {
+        level: levelStr,
+        name: newBomLineForm.name.trim() || 'Sub-Component Part',
+        partNumber: partNum,
+        rev: newBomLineForm.rev || 'Rev A',
+        qty: Number(newBomLineForm.qty) || 1.0,
+        uom: newBomLineForm.uom || 'EA',
+        refDes: newBomLineForm.refDes.trim() || '—',
+        lifecycle: 'DRAFT',
+        productRef: currentProductRef,
+        parentPartNumber: newBomLineForm.parentPartNumber,
+        itemType: newBomLineForm.itemType || 'Component',
+        customAttributes: newBomLineForm.customAttributes || {},
+      };
+
+      if (parentIndex !== -1) {
+        // Insert right after the parent and its existing children to maintain tree order
+        let insertPos = parentIndex + 1;
+        while (insertPos < updatedLines.length && updatedLines[insertPos].parentPartNumber === newBomLineForm.parentPartNumber) {
+          insertPos++;
+        }
+        updatedLines.splice(insertPos, 0, newLine);
+      } else {
+        updatedLines.push(newLine);
+      }
+    }
+
+    setBomTreeLines(updatedLines);
     setIsBomModalOpen(false);
     setNewBomLineForm({
+      catalogPartRef: '',
       name: '',
       partNumber: '',
       rev: 'Rev A',
       qty: 1.0,
       uom: 'EA',
       refDes: '',
-      level: '├── 1.3',
+      parentPartNumber: 'ROOT',
+      itemType: 'Component',
       customAttributes: {},
     });
+  };
+
+  const handleDeleteBomLine = (partNumber: string) => {
+    const activeProduct = productsList.find((p) => p.ref === selectedBomProductRef) || productsList[0];
+    const currentProductRef = activeProduct?.ref || 'DEFAULT';
+    
+    // Check if this line is a subassembly with children
+    const hasChildren = bomTreeLines.some(
+      (l) => (!l.productRef || l.productRef === currentProductRef) && l.parentPartNumber === partNumber
+    );
+    if (hasChildren) {
+      if (window.confirm(`"${partNumber}" is a sub-assembly with nested components. Deleting it will also remove all its child components. Proceed?`)) {
+        setBomTreeLines((prev) =>
+          prev.filter(
+            (l) =>
+              (l.productRef && l.productRef !== currentProductRef) ||
+              (l.partNumber !== partNumber && l.parentPartNumber !== partNumber)
+          )
+        );
+      }
+    } else {
+      setBomTreeLines((prev) =>
+        prev.filter((l) => (l.productRef && l.productRef !== currentProductRef) || l.partNumber !== partNumber)
+      );
+    }
+  };
+
+  const handleClearBom = () => {
+    const activeProduct = productsList.find((p) => p.ref === selectedBomProductRef) || productsList[0];
+    const targetName = activeProduct ? activeProduct.name : 'this assembly';
+    if (window.confirm(`Are you sure you want to clear all BOM lines for ${targetName}?`)) {
+      if (activeProduct) {
+        setBomTreeLines((prev) => prev.filter((l) => l.productRef && l.productRef !== activeProduct.ref));
+      } else {
+        setBomTreeLines([]);
+      }
+    }
   };
 
   return (
@@ -999,20 +1247,6 @@ export default function App() {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-          {/* App Switcher Waffle Icon */}
-          <button
-            style={{
-              background: 'transparent',
-              color: '#ffffff',
-              display: 'flex',
-              alignItems: 'center',
-              padding: '6px',
-              borderRadius: '4px',
-            }}
-            title="App Launcher"
-          >
-            <LayoutGrid size={18} />
-          </button>
 
           {/* OfficeHub Tech Brand Logo */}
           <div
@@ -1054,154 +1288,204 @@ export default function App() {
             </span>
           </div>
 
-          {/* Navigation Menu Tabs */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '8px' }}>
-            <button
-              onClick={() => {
-                setCurrentMenu('ecos');
-                setViewMode('kanban');
-              }}
-              style={{
-                background: currentMenu === 'ecos' ? 'var(--brand-orange)' : 'transparent',
-                color: currentMenu === 'ecos' ? '#1E293B' : '#ffffff',
-                padding: '6px 14px',
-                borderRadius: '4px',
-                fontWeight: currentMenu === 'ecos' ? 700 : 500,
-              }}
-            >
-              Changes (ECOs)
-            </button>
+          {/* Grouped Dropdown Navigation (Option 1) */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '12px' }}>
 
-            <button
-              onClick={() => {
-                setCurrentMenu('products');
-                setViewMode('list');
-              }}
-              style={{
-                background: currentMenu === 'products' ? 'var(--brand-orange)' : 'transparent',
-                color: currentMenu === 'products' ? '#1E293B' : '#ffffff',
-                padding: '6px 14px',
-                borderRadius: '4px',
-                fontWeight: currentMenu === 'products' ? 700 : 500,
-              }}
-            >
-              Master Data
-            </button>
+            {/* Engineering Dropdown */}
+            <div style={{ position: 'relative' }}>
+              <button
+                onClick={() => setOpenNavDropdown(openNavDropdown === 'engineering' ? null : 'engineering')}
+                style={{
+                  background: ['ecos','products','bom_tree','documents'].includes(currentMenu) ? 'rgba(245,158,11,0.18)' : 'transparent',
+                  color: ['ecos','products','bom_tree','documents'].includes(currentMenu) ? 'var(--brand-orange)' : 'rgba(255,255,255,0.85)',
+                  padding: '6px 12px', borderRadius: '4px',
+                  fontWeight: ['ecos','products','bom_tree','documents'].includes(currentMenu) ? 700 : 500,
+                  fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                <Layers size={14} /> Engineering <ChevronDown size={12} style={{ opacity: 0.6 }} />
+              </button>
+              {openNavDropdown === 'engineering' && (
+                <div
+                  onMouseLeave={() => setOpenNavDropdown(null)}
+                  style={{
+                    position: 'absolute', top: 'calc(100% + 4px)', left: 0,
+                    background: '#1e2535', border: '1px solid rgba(255,255,255,0.12)',
+                    borderRadius: '8px', padding: '6px', zIndex: 200,
+                    minWidth: '210px', boxShadow: '0 8px 32px rgba(0,0,0,0.45)',
+                    display: 'flex', flexDirection: 'column', gap: '2px',
+                  }}
+                >
+                  {[
+                    { key: 'ecos', icon: <GitCompare size={14}/>, label: 'Changes (ECOs)', mode: 'kanban' as const },
+                    { key: 'products', icon: <Boxes size={14}/>, label: 'Master Data', mode: 'list' as const },
+                    { key: 'bom_tree', icon: <Network size={14}/>, label: 'Bill of Materials', mode: 'form' as const },
+                    { key: 'documents', icon: <FileText size={14}/>, label: 'Document Vault', mode: 'list' as const },
+                  ].map(item => (
+                    <button key={item.key}
+                      onClick={() => { setCurrentMenu(item.key as any); setViewMode(item.mode); setOpenNavDropdown(null); }}
+                      style={{
+                        background: currentMenu === item.key ? 'rgba(245,158,11,0.15)' : 'transparent',
+                        color: currentMenu === item.key ? 'var(--brand-orange)' : 'rgba(255,255,255,0.85)',
+                        padding: '8px 12px', borderRadius: '5px', textAlign: 'left',
+                        fontWeight: currentMenu === item.key ? 700 : 400, fontSize: '0.8125rem',
+                        display: 'flex', alignItems: 'center', gap: '9px',
+                        transition: 'all 0.12s ease', cursor: 'pointer',
+                      }}
+                    >
+                      {item.icon} {item.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
 
-            <button
-              onClick={() => {
-                setCurrentMenu('bom_tree');
-                setViewMode('form');
-              }}
-              style={{
-                background: currentMenu === 'bom_tree' ? 'var(--brand-orange)' : 'transparent',
-                color: currentMenu === 'bom_tree' ? '#1E293B' : '#ffffff',
-                padding: '6px 14px',
-                borderRadius: '4px',
-                fontWeight: currentMenu === 'bom_tree' ? 700 : 500,
-              }}
-            >
-              Bill of Materials
-            </button>
+            {/* Manufacturing Dropdown */}
+            <div style={{ position: 'relative' }}>
+              <button
+                onClick={() => setOpenNavDropdown(openNavDropdown === 'manufacturing' ? null : 'manufacturing')}
+                style={{
+                  background: ['manufacturing','industry_packs'].includes(currentMenu) ? 'rgba(245,158,11,0.18)' : 'transparent',
+                  color: ['manufacturing','industry_packs'].includes(currentMenu) ? 'var(--brand-orange)' : 'rgba(255,255,255,0.85)',
+                  padding: '6px 12px', borderRadius: '4px',
+                  fontWeight: ['manufacturing','industry_packs'].includes(currentMenu) ? 700 : 500,
+                  fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                <Factory size={14} /> Manufacturing <ChevronDown size={12} style={{ opacity: 0.6 }} />
+              </button>
+              {openNavDropdown === 'manufacturing' && (
+                <div
+                  onMouseLeave={() => setOpenNavDropdown(null)}
+                  style={{
+                    position: 'absolute', top: 'calc(100% + 4px)', left: 0,
+                    background: '#1e2535', border: '1px solid rgba(255,255,255,0.12)',
+                    borderRadius: '8px', padding: '6px', zIndex: 200,
+                    minWidth: '220px', boxShadow: '0 8px 32px rgba(0,0,0,0.45)',
+                    display: 'flex', flexDirection: 'column', gap: '2px',
+                  }}
+                >
+                  {[
+                    { key: 'manufacturing', icon: <Factory size={14}/>, label: 'Manufacturing (MBOM)', mode: 'form' as const },
+                    { key: 'industry_packs', icon: <SlidersHorizontal size={14}/>, label: 'Industry Capability Packs', mode: 'form' as const },
+                  ].map(item => (
+                    <button key={item.key}
+                      onClick={() => { setCurrentMenu(item.key as any); setViewMode(item.mode); setOpenNavDropdown(null); }}
+                      style={{
+                        background: currentMenu === item.key ? 'rgba(245,158,11,0.15)' : 'transparent',
+                        color: currentMenu === item.key ? 'var(--brand-orange)' : 'rgba(255,255,255,0.85)',
+                        padding: '8px 12px', borderRadius: '5px', textAlign: 'left',
+                        fontWeight: currentMenu === item.key ? 700 : 400, fontSize: '0.8125rem',
+                        display: 'flex', alignItems: 'center', gap: '9px',
+                        transition: 'all 0.12s ease', cursor: 'pointer',
+                      }}
+                    >
+                      {item.icon} {item.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
 
-            <button
-              onClick={() => {
-                setCurrentMenu('documents');
-                setViewMode('list');
-              }}
-              style={{
-                background: currentMenu === 'documents' ? 'var(--brand-orange)' : 'transparent',
-                color: currentMenu === 'documents' ? '#1E293B' : '#ffffff',
-                padding: '6px 14px',
-                borderRadius: '4px',
-                fontWeight: currentMenu === 'documents' ? 700 : 500,
-              }}
-            >
-              Document Vault
-            </button>
+            {/* AI & Digital Twin Dropdown */}
+            <div style={{ position: 'relative' }}>
+              <button
+                onClick={() => setOpenNavDropdown(openNavDropdown === 'intelligence' ? null : 'intelligence')}
+                style={{
+                  background: currentMenu === 'autonomous' ? 'rgba(245,158,11,0.18)' : 'transparent',
+                  color: currentMenu === 'autonomous' ? 'var(--brand-orange)' : 'rgba(255,255,255,0.85)',
+                  padding: '6px 12px', borderRadius: '4px',
+                  fontWeight: currentMenu === 'autonomous' ? 700 : 500,
+                  fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                <Bot size={14} /> AI &amp; Digital Twin <ChevronDown size={12} style={{ opacity: 0.6 }} />
+              </button>
+              {openNavDropdown === 'intelligence' && (
+                <div
+                  onMouseLeave={() => setOpenNavDropdown(null)}
+                  style={{
+                    position: 'absolute', top: 'calc(100% + 4px)', left: 0,
+                    background: '#1e2535', border: '1px solid rgba(255,255,255,0.12)',
+                    borderRadius: '8px', padding: '6px', zIndex: 200,
+                    minWidth: '240px', boxShadow: '0 8px 32px rgba(0,0,0,0.45)',
+                    display: 'flex', flexDirection: 'column', gap: '2px',
+                  }}
+                >
+                  {[
+                    { tab: 'copilot', icon: <Bot size={14}/>, label: 'AI Copilot & Risk Analysis' },
+                    { tab: 'digital_twin', icon: <Box size={14}/>, label: '3D CAD Digital Twin' },
+                    { tab: 'zoho_connectors', icon: <RefreshCw size={14}/>, label: 'Zoho CRM & Creator Sync' },
+                  ].map(item => (
+                    <button key={item.tab}
+                      onClick={() => { setCurrentMenu('autonomous'); setAutoTab(item.tab as any); setViewMode('form'); setOpenNavDropdown(null); }}
+                      style={{
+                        background: currentMenu === 'autonomous' && autoTab === item.tab ? 'rgba(245,158,11,0.15)' : 'transparent',
+                        color: currentMenu === 'autonomous' && autoTab === item.tab ? 'var(--brand-orange)' : 'rgba(255,255,255,0.85)',
+                        padding: '8px 12px', borderRadius: '5px', textAlign: 'left',
+                        fontWeight: currentMenu === 'autonomous' && autoTab === item.tab ? 700 : 400, fontSize: '0.8125rem',
+                        display: 'flex', alignItems: 'center', gap: '9px',
+                        transition: 'all 0.12s ease', cursor: 'pointer',
+                      }}
+                    >
+                      {item.icon} {item.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
 
-            <button
-              onClick={() => {
-                setCurrentMenu('manufacturing');
-                setViewMode('form');
-              }}
-              style={{
-                background: currentMenu === 'manufacturing' ? 'var(--brand-orange)' : 'transparent',
-                color: currentMenu === 'manufacturing' ? '#1E293B' : '#ffffff',
-                padding: '6px 14px',
-                borderRadius: '4px',
-                fontWeight: currentMenu === 'manufacturing' ? 700 : 500,
-              }}
-            >
-              Manufacturing (MBOM)
-            </button>
+            {/* Administration Dropdown */}
+            <div style={{ position: 'relative' }}>
+              <button
+                onClick={() => setOpenNavDropdown(openNavDropdown === 'admin' ? null : 'admin')}
+                style={{
+                  background: ['capabilities','enterprise'].includes(currentMenu) ? 'rgba(245,158,11,0.18)' : 'transparent',
+                  color: ['capabilities','enterprise'].includes(currentMenu) ? 'var(--brand-orange)' : 'rgba(255,255,255,0.85)',
+                  padding: '6px 12px', borderRadius: '4px',
+                  fontWeight: ['capabilities','enterprise'].includes(currentMenu) ? 700 : 500,
+                  fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                <Settings2 size={14} /> Administration <ChevronDown size={12} style={{ opacity: 0.6 }} />
+              </button>
+              {openNavDropdown === 'admin' && (
+                <div
+                  onMouseLeave={() => setOpenNavDropdown(null)}
+                  style={{
+                    position: 'absolute', top: 'calc(100% + 4px)', left: 0,
+                    background: '#1e2535', border: '1px solid rgba(255,255,255,0.12)',
+                    borderRadius: '8px', padding: '6px', zIndex: 200,
+                    minWidth: '210px', boxShadow: '0 8px 32px rgba(0,0,0,0.45)',
+                    display: 'flex', flexDirection: 'column', gap: '2px',
+                  }}
+                >
+                  {[
+                    { key: 'capabilities', icon: <Settings2 size={14}/>, label: 'Configuration Studio', mode: 'kanban' as const },
+                    { key: 'enterprise', icon: <Server size={14}/>, label: 'Enterprise & Scale', mode: 'form' as const },
+                  ].map(item => (
+                    <button key={item.key}
+                      onClick={() => { setCurrentMenu(item.key as any); setViewMode(item.mode); setOpenNavDropdown(null); }}
+                      style={{
+                        background: currentMenu === item.key ? 'rgba(245,158,11,0.15)' : 'transparent',
+                        color: currentMenu === item.key ? 'var(--brand-orange)' : 'rgba(255,255,255,0.85)',
+                        padding: '8px 12px', borderRadius: '5px', textAlign: 'left',
+                        fontWeight: currentMenu === item.key ? 700 : 400, fontSize: '0.8125rem',
+                        display: 'flex', alignItems: 'center', gap: '9px',
+                        transition: 'all 0.12s ease', cursor: 'pointer',
+                      }}
+                    >
+                      {item.icon} {item.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
 
-            <button
-              onClick={() => {
-                setCurrentMenu('capabilities');
-                setViewMode('kanban');
-              }}
-              style={{
-                background: currentMenu === 'capabilities' ? 'var(--brand-orange)' : 'transparent',
-                color: currentMenu === 'capabilities' ? '#1E293B' : '#ffffff',
-                padding: '6px 14px',
-                borderRadius: '4px',
-                fontWeight: currentMenu === 'capabilities' ? 700 : 500,
-              }}
-            >
-              Configuration
-            </button>
-
-            <button
-              onClick={() => {
-                setCurrentMenu('industry_packs');
-                setViewMode('form');
-              }}
-              style={{
-                background: currentMenu === 'industry_packs' ? 'var(--brand-orange)' : 'transparent',
-                color: currentMenu === 'industry_packs' ? '#1E293B' : '#ffffff',
-                padding: '6px 14px',
-                borderRadius: '4px',
-                fontWeight: currentMenu === 'industry_packs' ? 700 : 500,
-              }}
-            >
-              Industry Packs
-            </button>
-
-            <button
-              onClick={() => {
-                setCurrentMenu('enterprise');
-                setViewMode('form');
-              }}
-              style={{
-                background: currentMenu === 'enterprise' ? 'var(--brand-orange)' : 'transparent',
-                color: currentMenu === 'enterprise' ? '#1E293B' : '#ffffff',
-                padding: '6px 14px',
-                borderRadius: '4px',
-                fontWeight: currentMenu === 'enterprise' ? 700 : 500,
-              }}
-            >
-              Enterprise &amp; Scale
-            </button>
-
-            <button
-              onClick={() => {
-                setCurrentMenu('autonomous');
-                setViewMode('form');
-              }}
-              style={{
-                background: currentMenu === 'autonomous' ? 'var(--brand-orange)' : 'transparent',
-                color: currentMenu === 'autonomous' ? '#1E293B' : '#ffffff',
-                padding: '6px 14px',
-                borderRadius: '4px',
-                fontWeight: currentMenu === 'autonomous' ? 700 : 500,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px'
-              }}
-            >
-              <Bot size={15} /> AI &amp; Digital Twin
-            </button>
           </div>
         </div>
 
@@ -1219,45 +1503,6 @@ export default function App() {
           >
             <Clock size={15} color="var(--brand-orange)" />
             <span>Activities</span>
-          </div>
-
-          {/* Customer Industry Template / BOM Profile Switcher */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              background: 'rgba(245, 158, 11, 0.12)',
-              border: '1px solid rgba(245, 158, 11, 0.35)',
-              padding: '3px 8px',
-              borderRadius: '6px',
-            }}
-          >
-            <span style={{ fontSize: '0.7rem', color: '#fcd34d', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-              Industry Profile:
-            </span>
-            <select
-              value={activeIndustryPack}
-              onChange={(e) => setActiveIndustryPack(e.target.value as any)}
-              style={{
-                background: '#1e293b',
-                color: '#fbbf24',
-                border: '1px solid rgba(245, 158, 11, 0.4)',
-                borderRadius: '4px',
-                padding: '3px 8px',
-                fontSize: '0.75rem',
-                fontWeight: 700,
-                cursor: 'pointer',
-                outline: 'none',
-              }}
-              title="Switch Industry BOM & Compliance Schema Profile"
-            >
-              <option value="DISCRETE_AUTOMOTIVE">Discrete Mfg &amp; Automotive (PPAP / IATF)</option>
-              <option value="ELECTRONICS_PCB">Electronics &amp; PCB Assembly (RoHS / IPC)</option>
-              <option value="PROCESS_CHEMICAL">Process &amp; Chemical (Formulation / GHS)</option>
-              <option value="REGULATED_MEDICAL">Medical Device (FDA 21 CFR / ISO 13485)</option>
-              <option value="CONFIGURED_PRODUCTS">Configured Products (ETO Modular BOM)</option>
-            </select>
           </div>
 
           <div
@@ -1336,7 +1581,7 @@ export default function App() {
                 </span>
               </>
             )}
-            {currentMenu === 'ecos' && viewMode === 'form' && (
+            {currentMenu === 'ecos' && viewMode === 'form' && activeEco && (
               <>
                 <span style={{ color: 'var(--odoo-text-muted)' }}>/</span>
                 <span style={{ color: 'var(--brand-orange-hover)', fontWeight: 700 }}>{activeEco.ecoNumber}</span>
@@ -1528,87 +1773,93 @@ export default function App() {
                   </div>
 
                   {/* Cards inside Stage */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    {stageEcos.map((eco) => (
-                      <div
-                        key={eco.id}
-                        className="odoo-kanban-card"
-                        onClick={() => {
-                          setSelectedEcoId(eco.id);
-                          setViewMode('form');
-                        }}
-                      >
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <span style={{ fontSize: '0.75rem', color: 'var(--brand-charcoal)', fontWeight: 700 }}>
-                            {eco.ecoNumber}
-                          </span>
-                          <div style={{ display: 'flex', gap: '2px', color: 'var(--brand-orange)' }}>
-                            {Array.from({ length: eco.priority }).map((_, i) => (
-                              <Star key={i} size={12} fill="var(--brand-orange)" />
-                            ))}
-                          </div>
-                        </div>
-
-                        <div style={{ fontWeight: 600, fontSize: '0.875rem', marginTop: '6px', color: 'var(--odoo-text-main)' }}>
-                          {eco.name}
-                        </div>
-
-                        <div style={{ fontSize: '0.8125rem', color: 'var(--odoo-text-muted)', marginTop: '4px' }}>
-                          [{eco.productRef}] {eco.productName}
-                        </div>
-
-                        <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '8px' }}>
-                          {eco.tags.map((t, idx) => (
-                            <span
-                              key={idx}
-                              style={{
-                                background: '#fef3c7',
-                                color: '#92400e',
-                                fontSize: '0.7rem',
-                                padding: '2px 6px',
-                                borderRadius: '3px',
-                                fontWeight: 500,
-                              }}
-                            >
-                              {t}
-                            </span>
-                          ))}
-                        </div>
-
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', minHeight: '80px' }}>
+                    {stageEcos.length === 0 ? (
+                      <div style={{ padding: '24px 12px', border: '1px dashed #cbd5e1', borderRadius: '6px', textAlign: 'center', color: '#94a3b8', fontSize: '0.75rem' }}>
+                        No ECOs in {stg.label}
+                      </div>
+                    ) : (
+                      stageEcos.map((eco) => (
                         <div
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            marginTop: '12px',
-                            paddingTop: '8px',
-                            borderTop: '1px solid #f1f5f9',
+                          key={eco.id}
+                          className="odoo-kanban-card"
+                          onClick={() => {
+                            setSelectedEcoId(eco.id);
+                            setViewMode('form');
                           }}
                         >
-                          <span style={{ fontSize: '0.75rem', color: 'var(--brand-orange-hover)', fontWeight: 700 }}>
-                            {eco.bomChangesCount} BOM Changes
-                          </span>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <span style={{ fontSize: '0.75rem', color: 'var(--brand-charcoal)', fontWeight: 700 }}>
+                              {eco.ecoNumber}
+                            </span>
+                            <div style={{ display: 'flex', gap: '2px', color: 'var(--brand-orange)' }}>
+                              {Array.from({ length: eco.priority }).map((_, i) => (
+                                <Star key={i} size={12} fill="var(--brand-orange)" />
+                              ))}
+                            </div>
+                          </div>
+
+                          <div style={{ fontWeight: 600, fontSize: '0.875rem', marginTop: '6px', color: 'var(--odoo-text-main)' }}>
+                            {eco.name}
+                          </div>
+
+                          <div style={{ fontSize: '0.8125rem', color: 'var(--odoo-text-muted)', marginTop: '4px' }}>
+                            [{eco.productRef}] {eco.productName}
+                          </div>
+
+                          <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '8px' }}>
+                            {eco.tags.map((t, idx) => (
+                              <span
+                                key={idx}
+                                style={{
+                                  background: '#fef3c7',
+                                  color: '#92400e',
+                                  fontSize: '0.7rem',
+                                  padding: '2px 6px',
+                                  borderRadius: '3px',
+                                  fontWeight: 500,
+                                }}
+                              >
+                                {t}
+                              </span>
+                            ))}
+                          </div>
 
                           <div
                             style={{
-                              width: '24px',
-                              height: '24px',
-                              borderRadius: '50%',
-                              background: 'var(--brand-charcoal)',
-                              color: 'var(--brand-orange)',
-                              fontSize: '0.7rem',
-                              fontWeight: 700,
                               display: 'flex',
                               alignItems: 'center',
-                              justifyContent: 'center',
+                              justifyContent: 'space-between',
+                              marginTop: '12px',
+                              paddingTop: '8px',
+                              borderTop: '1px solid #f1f5f9',
                             }}
-                            title={eco.responsible}
                           >
-                            {eco.responsibleInitials}
+                            <span style={{ fontSize: '0.75rem', color: 'var(--brand-orange-hover)', fontWeight: 700 }}>
+                              {eco.bomChangesCount} BOM Changes
+                            </span>
+
+                            <div
+                              style={{
+                                width: '24px',
+                                height: '24px',
+                                borderRadius: '50%',
+                                background: 'var(--brand-charcoal)',
+                                color: 'var(--brand-orange)',
+                                fontSize: '0.7rem',
+                                fontWeight: 700,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                              }}
+                              title={eco.responsible}
+                            >
+                              {eco.responsibleInitials}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      ))
+                    )}
                   </div>
                 </div>
               );
@@ -1651,63 +1902,73 @@ export default function App() {
                 </tr>
               </thead>
               <tbody>
-                {ecos.map((eco) => (
-                  <tr
-                    key={eco.id}
-                    onClick={() => {
-                      setSelectedEcoId(eco.id);
-                      setViewMode('form');
-                    }}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--brand-orange-hover)' }}>
-                      {eco.ecoNumber}
-                    </td>
-                    <td style={{ fontWeight: 600 }}>{eco.name}</td>
-                    <td>[{eco.productRef}] {eco.productName}</td>
-                    <td>{eco.ecoType}</td>
-                    <td>
-                      <span
-                        style={{
-                          fontSize: '0.75rem',
-                          padding: '2px 8px',
-                          borderRadius: '3px',
-                          fontWeight: 600,
-                          background:
-                            eco.stage === 'effective'
-                              ? '#d1fae5'
-                              : eco.stage === 'review'
-                              ? '#fef3c7'
-                              : eco.stage === 'validated'
-                              ? '#e0f2fe'
-                              : '#f1f5f9',
-                          color:
-                            eco.stage === 'effective'
-                              ? '#065f46'
-                              : eco.stage === 'review'
-                              ? '#92400e'
-                              : eco.stage === 'validated'
-                              ? '#0369a1'
-                              : '#334155',
-                        }}
-                      >
-                        {stages.find((s) => s.id === eco.stage)?.label || eco.stage}
-                      </span>
-                    </td>
-                    <td>
-                      <div style={{ display: 'flex', gap: '2px' }}>
-                        {Array.from({ length: eco.priority }).map((_, i) => (
-                          <Star key={i} size={12} fill="var(--brand-orange)" color="var(--brand-orange)" />
-                        ))}
-                      </div>
-                    </td>
-                    <td>{eco.responsible}</td>
-                    <td>{eco.effectiveDate}</td>
-                    <td style={{ fontWeight: 600, color: 'var(--brand-orange-hover)' }}>
-                      {eco.bomChangesCount} lines
+                {ecos.length === 0 ? (
+                  <tr>
+                    <td colSpan={9} style={{ textAlign: 'center', padding: '36px 12px', color: '#94a3b8' }}>
+                      <Layers size={32} style={{ margin: '0 auto 8px', opacity: 0.6 }} />
+                      <div style={{ fontWeight: 600, fontSize: '0.875rem', color: '#64748b' }}>No Engineering Change Orders Found</div>
+                      <div style={{ fontSize: '0.75rem', marginTop: '4px' }}>Click "+ New ECO" or the top "+ New" button to create an ECO and begin testing from scratch.</div>
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  ecos.map((eco) => (
+                    <tr
+                      key={eco.id}
+                      onClick={() => {
+                        setSelectedEcoId(eco.id);
+                        setViewMode('form');
+                      }}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--brand-orange-hover)' }}>
+                        {eco.ecoNumber}
+                      </td>
+                      <td style={{ fontWeight: 600 }}>{eco.name}</td>
+                      <td>[{eco.productRef}] {eco.productName}</td>
+                      <td>{eco.ecoType}</td>
+                      <td>
+                        <span
+                          style={{
+                            fontSize: '0.75rem',
+                            padding: '2px 8px',
+                            borderRadius: '3px',
+                            fontWeight: 600,
+                            background:
+                              eco.stage === 'effective'
+                                ? '#d1fae5'
+                                : eco.stage === 'review'
+                                ? '#fef3c7'
+                                : eco.stage === 'validated'
+                                ? '#e0f2fe'
+                                : '#f1f5f9',
+                            color:
+                              eco.stage === 'effective'
+                                ? '#065f46'
+                                : eco.stage === 'review'
+                                ? '#92400e'
+                                : eco.stage === 'validated'
+                                ? '#0369a1'
+                                : '#334155',
+                          }}
+                        >
+                          {stages.find((s) => s.id === eco.stage)?.label || eco.stage}
+                        </span>
+                      </td>
+                      <td>
+                        <div style={{ display: 'flex', gap: '2px' }}>
+                          {Array.from({ length: eco.priority }).map((_, i) => (
+                            <Star key={i} size={12} fill="var(--brand-orange)" color="var(--brand-orange)" />
+                          ))}
+                        </div>
+                      </td>
+                      <td>{eco.responsible}</td>
+                      <td>{eco.effectiveDate}</td>
+                      <td style={{ fontWeight: 600, color: 'var(--brand-orange-hover)' }}>
+                        {eco.bomChangesCount} lines
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -1715,6 +1976,24 @@ export default function App() {
 
         {/* VIEW 2: FORM VIEW ("THE SHEET") */}
         {viewMode === 'form' && currentMenu === 'ecos' && (
+          !activeEco ? (
+            <div className="odoo-sheet" style={{ padding: '48px 24px', textAlign: 'center', maxWidth: '800px', margin: '40px auto' }}>
+              <Layers size={48} style={{ color: '#94a3b8', margin: '0 auto 16px', opacity: 0.7 }} />
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--brand-charcoal)', marginBottom: '8px' }}>
+                No Engineering Change Order Selected
+              </h3>
+              <p style={{ color: 'var(--odoo-text-muted)', fontSize: '0.875rem', marginBottom: '24px' }}>
+                No ECOs have been created yet. Click below or use the top "+ New" button to register your first Engineering Change Order and test from scratch.
+              </p>
+              <button
+                onClick={() => setIsEcoModalOpen(true)}
+                className="btn-odoo-primary"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 20px', margin: '0 auto' }}
+              >
+                <Plus size={16} /> Create First ECO
+              </button>
+            </div>
+          ) : (
           <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
             <div className="odoo-sheet">
               {/* Statusbar */}
@@ -2053,8 +2332,17 @@ export default function App() {
                         </tr>
                       </thead>
                       <tbody>
-                        {vaultDocs.map((doc) => (
-                          <tr key={doc.id}>
+                        {vaultDocs.length === 0 ? (
+                          <tr>
+                            <td colSpan={7} style={{ textAlign: 'center', padding: '36px', color: '#64748b' }}>
+                              <FileText size={32} style={{ margin: '0 auto 8px', display: 'block', opacity: 0.4 }} />
+                              <strong>No Controlled Documents Attached</strong>
+                              <p style={{ margin: '4px 0 0', fontSize: '0.85rem' }}>The document vault is empty. Upload engineering drawings, spec sheets, or CAD models to start version tracking.</p>
+                            </td>
+                          </tr>
+                        ) : (
+                          vaultDocs.map((doc) => (
+                            <tr key={doc.id}>
                             <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--brand-orange-hover)' }}>
                               {doc.docNumber}
                             </td>
@@ -2102,7 +2390,7 @@ export default function App() {
                               </button>
                             </td>
                           </tr>
-                        ))}
+                        )))}
                       </tbody>
                     </table>
                   </div>
@@ -2264,6 +2552,7 @@ export default function App() {
               </div>
             </div>
           </div>
+          )
         )}
 
         {/* VIEW 3: MASTER DATA */}
@@ -2295,54 +2584,64 @@ export default function App() {
                 </tr>
               </thead>
               <tbody>
-                {productsList.map((item, idx) => (
-                  <tr key={idx}>
-                    <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--brand-orange-hover)' }}>{item.ref}</td>
-                    <td style={{ fontWeight: 600 }}>{item.name}</td>
-                    <td>{item.type}</td>
-                    <td>{item.rev}</td>
-                    <td>
-                      <span
-                        style={{
-                          fontSize: '0.75rem',
-                          padding: '2px 8px',
-                          borderRadius: '3px',
-                          fontWeight: 600,
-                          background: item.status === 'Released' ? '#d1fae5' : item.status === 'In Review' ? '#fef3c7' : '#fee2e2',
-                          color: item.status === 'Released' ? '#065f46' : item.status === 'In Review' ? '#92400e' : '#991b1b',
-                        }}
-                      >
-                        {item.status}
-                      </span>
-                    </td>
-                    <td>{item.uom}</td>
-                    <td>
-                      {(item as any).customAttributes && Object.keys((item as any).customAttributes).length > 0 ? (
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                          {Object.entries((item as any).customAttributes).map(([k, v]) => (
-                            <span
-                              key={k}
-                              style={{
-                                fontSize: '0.72rem',
-                                background: '#fef3c7',
-                                color: '#92400e',
-                                border: '1px solid #fde68a',
-                                padding: '1px 6px',
-                                borderRadius: '3px',
-                                fontFamily: 'var(--font-mono)',
-                              }}
-                              title={`${k}: ${String(v)}`}
-                            >
-                              <strong>{k}:</strong> {String(v)}
-                            </span>
-                          ))}
-                        </div>
-                      ) : (
-                        <span style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Universal Standard</span>
-                      )}
+                {productsList.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} style={{ textAlign: 'center', padding: '36px 12px', color: '#94a3b8' }}>
+                      <Boxes size={32} style={{ margin: '0 auto 8px', opacity: 0.6 }} />
+                      <div style={{ fontWeight: 600, fontSize: '0.875rem', color: '#64748b' }}>No Products or Parts Found</div>
+                      <div style={{ fontSize: '0.75rem', marginTop: '4px' }}>Click "Create Product" or use the top "+ New" button to register your first engineering part.</div>
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  productsList.map((item, idx) => (
+                    <tr key={idx}>
+                      <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--brand-orange-hover)' }}>{item.ref}</td>
+                      <td style={{ fontWeight: 600 }}>{item.name}</td>
+                      <td>{item.type}</td>
+                      <td>{item.rev}</td>
+                      <td>
+                        <span
+                          style={{
+                            fontSize: '0.75rem',
+                            padding: '2px 8px',
+                            borderRadius: '3px',
+                            fontWeight: 600,
+                            background: item.status === 'Released' ? '#d1fae5' : item.status === 'In Review' ? '#fef3c7' : '#fee2e2',
+                            color: item.status === 'Released' ? '#065f46' : item.status === 'In Review' ? '#92400e' : '#991b1b',
+                          }}
+                        >
+                          {item.status}
+                        </span>
+                      </td>
+                      <td>{item.uom}</td>
+                      <td>
+                        {(item as any).customAttributes && Object.keys((item as any).customAttributes).length > 0 ? (
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                            {Object.entries((item as any).customAttributes).map(([k, v]) => (
+                              <span
+                                key={k}
+                                style={{
+                                  fontSize: '0.72rem',
+                                  background: '#fef3c7',
+                                  color: '#92400e',
+                                  border: '1px solid #fde68a',
+                                  padding: '1px 6px',
+                                  borderRadius: '3px',
+                                  fontFamily: 'var(--font-mono)',
+                                }}
+                                title={`${k}: ${String(v)}`}
+                              >
+                                <strong>{k}:</strong> {String(v)}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <span style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Universal Standard</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -2351,151 +2650,350 @@ export default function App() {
         {/* VIEW 4: BOM & ENGINEERING WORKBENCH */}
         {currentMenu === 'bom_tree' && (
           <div className="odoo-sheet" style={{ padding: '24px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-              <div>
-                <span style={{ fontSize: '0.8125rem', color: 'var(--brand-orange-hover)', fontWeight: 700 }}>
-                  BOM-ROB-1000 · Autonomous Articulated Robotic Arm
-                </span>
-                <h2 style={{ fontSize: '1.375rem', fontWeight: 700, color: 'var(--brand-charcoal)', marginTop: '2px' }}>
-                  Engineering Bill of Materials & Lineage Workbench
-                </h2>
+            {productsList.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '56px 16px', background: '#f8fafc', borderRadius: '8px', border: '1px dashed #cbd5e1' }}>
+                <Layers size={44} style={{ margin: '0 auto 12px', color: '#94a3b8' }} />
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#334155', marginBottom: '8px' }}>
+                  No Parent Assemblies or Products Created Yet
+                </h3>
+                <p style={{ color: '#64748b', fontSize: '0.875rem', maxWidth: '520px', margin: '0 auto 20px', lineHeight: 1.5 }}>
+                  To construct an engineering Bill of Materials (e.g. <strong>Bicycle</strong>), first create your parent product or master assembly. Afterward, you can add sub-assemblies (e.g. <strong>Wheel Assembly</strong>) and attach leaf parts (<strong>Rim, Tyre, Tube</strong>).
+                </p>
+                <button
+                  onClick={() => setIsProductModalOpen(true)}
+                  className="btn-odoo-primary"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', margin: '0 auto' }}
+                >
+                  <Plus size={16} /> Create Master Product / Assembly
+                </button>
               </div>
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                <span style={{ background: '#ecfdf5', color: '#065f46', border: '1px solid #a7f3d0', padding: '4px 10px', borderRadius: '4px', fontSize: '0.8125rem', fontWeight: 700 }}>
-                  ✓ Cycle-Safe Verified
-                </span>
-              </div>
-            </div>
-
-            {/* Subtab Navigation */}
-            <div style={{ display: 'flex', gap: '4px', borderBottom: '2px solid #e2e8f0', marginBottom: '20px' }}>
-              {[
-                { id: 'tree', label: 'Multi-Level Tree', icon: Layers },
-                { id: 'compare', label: 'BOM Redline Diff', icon: GitCompare },
-                { id: 'where_used', label: 'Deep Where-Used', icon: Network },
-                { id: 'variants', label: 'Product Variants', icon: Sliders },
-                { id: 'effectivity', label: 'Effectivity Rules', icon: Calendar },
-              ].map((tab) => {
-                const Icon = tab.icon;
-                const isActive = bomSubTab === tab.id;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setBomSubTab(tab.id as any)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      padding: '8px 16px',
-                      background: isActive ? 'var(--brand-charcoal)' : 'transparent',
-                      color: isActive ? 'var(--brand-orange)' : '#64748b',
-                      fontWeight: isActive ? 700 : 500,
-                      borderRadius: '4px 4px 0 0',
-                      border: 'none',
-                      cursor: 'pointer',
-                      fontSize: '0.875rem',
-                      transition: 'all 0.15s ease',
-                    }}
-                  >
-                    <Icon size={16} />
-                    {tab.label}
-                  </button>
+            ) : (
+              (() => {
+                const activeProduct = productsList.find((p) => p.ref === selectedBomProductRef) || productsList[0];
+                const currentProductRef = activeProduct?.ref || 'DEFAULT';
+                const activeBomLines = bomTreeLines.filter(
+                  (l) => !l.productRef || l.productRef === currentProductRef || l.productRef === 'DEFAULT'
                 );
-              })}
-            </div>
 
-            {/* SUBTAB 1: MULTI-LEVEL BOM TREE */}
-            {bomSubTab === 'tree' && (
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '12px' }}>
-                  <button
-                    onClick={() => setIsBomModalOpen(true)}
-                    className="btn-odoo-primary"
-                    id="btn-add-bom-line"
-                  >
-                    <Plus size={14} /> Add BOM Component
-                  </button>
-                </div>
-                <table className="odoo-table">
-                  <thead>
-                    <tr>
-                      <th style={{ width: '80px' }}>Level</th>
-                      <th>Component Name</th>
-                      <th>Part Number</th>
-                      <th>Revision</th>
-                      <th>Quantity</th>
-                      <th>UOM</th>
-                      <th>Reference Designators</th>
-                      <th>Industry Attributes ({industryAttributesConfig[activeIndustryPack].badge})</th>
-                      <th>Lifecycle</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {bomTreeLines.map((line, idx) => (
-                      <tr key={idx}>
-                        <td style={{ paddingLeft: line.level.includes('2.') ? '48px' : line.level.includes('1.') ? '24px' : '0' }}>
-                          {line.level}
-                        </td>
-                        <td style={{ fontWeight: line.level === '0' ? 700 : 600, color: line.level === '0' ? 'var(--brand-charcoal)' : 'inherit' }}>
-                          {line.name}
-                        </td>
-                        <td style={{ fontFamily: 'var(--font-mono)', fontWeight: line.level === '0' ? 600 : 400 }}>
-                          {line.partNumber}
-                        </td>
-                        <td>{line.rev}</td>
-                        <td style={{ fontWeight: 600 }}>{line.qty.toFixed(1)}</td>
-                        <td>{line.uom}</td>
-                        <td>
-                          {line.refDes !== '—' ? (
-                            <span style={{ color: 'var(--brand-orange-hover)', fontWeight: 700 }}>{line.refDes}</span>
-                          ) : (
-                            '—'
-                          )}
-                        </td>
-                        <td>
-                          {line.customAttributes && Object.keys(line.customAttributes).length > 0 ? (
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                              {Object.entries(line.customAttributes).map(([k, v]) => (
-                                <span
-                                  key={k}
-                                  style={{
-                                    fontSize: '0.72rem',
-                                    background: '#f1f5f9',
-                                    color: '#334155',
-                                    border: '1px solid #cbd5e1',
-                                    padding: '1px 6px',
-                                    borderRadius: '3px',
-                                    fontFamily: 'var(--font-mono)',
-                                  }}
-                                  title={`${k}: ${String(v)}`}
-                                >
-                                  <strong>{k}:</strong> {String(v)}
-                                </span>
-                              ))}
-                            </div>
-                          ) : (
-                            <span style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Standard Line</span>
-                          )}
-                        </td>
-                        <td>
-                          <span
+                return (
+                  <>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                          <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--brand-orange-hover)', fontWeight: 800 }}>
+                            Active Assembly BOM:
+                          </span>
+                          <select
+                            value={selectedBomProductRef || productsList[0]?.ref || ''}
+                            onChange={(e) => setSelectedBomProductRef(e.target.value)}
                             style={{
-                              background: line.lifecycle === 'RELEASED' ? '#d1fae5' : '#fef3c7',
-                              color: line.lifecycle === 'RELEASED' ? '#065f46' : '#92400e',
-                              padding: '2px 6px',
-                              borderRadius: '3px',
-                              fontSize: '0.75rem',
-                              fontWeight: 600,
+                              padding: '4px 10px',
+                              borderRadius: '4px',
+                              border: '1px solid #cbd5e1',
+                              fontSize: '0.875rem',
+                              fontWeight: 700,
+                              color: 'var(--brand-charcoal)',
+                              background: '#fff',
+                              cursor: 'pointer',
                             }}
                           >
-                            {line.lifecycle}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                            {productsList.map((p) => (
+                              <option key={p.ref} value={p.ref}>
+                                [{p.ref}] {p.name} ({p.category || 'Product'})
+                              </option>
+                            ))}
+                          </select>
+                          <button
+                            onClick={() => setIsProductModalOpen(true)}
+                            className="btn-odoo-secondary"
+                            style={{ padding: '3px 8px', fontSize: '0.75rem' }}
+                            title="Create another product or sub-assembly"
+                          >
+                            <Plus size={12} /> New Assembly
+                          </button>
+                        </div>
+                        <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--brand-charcoal)', margin: 0 }}>
+                          Engineering Bill of Materials & Lineage Workbench
+                        </h2>
+                      </div>
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <span style={{ background: '#ecfdf5', color: '#065f46', border: '1px solid #a7f3d0', padding: '4px 10px', borderRadius: '4px', fontSize: '0.8125rem', fontWeight: 700 }}>
+                          ✓ Cycle-Safe Verified
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Subtab Navigation */}
+                    <div style={{ display: 'flex', gap: '4px', borderBottom: '2px solid #e2e8f0', marginBottom: '20px' }}>
+                      {[
+                        { id: 'tree', label: 'Multi-Level Tree', icon: Layers },
+                        { id: 'compare', label: 'BOM Redline Diff', icon: GitCompare },
+                        { id: 'where_used', label: 'Deep Where-Used', icon: Network },
+                        { id: 'variants', label: 'Product Variants', icon: Sliders },
+                        { id: 'effectivity', label: 'Effectivity Rules', icon: Calendar },
+                      ].map((tab) => {
+                        const Icon = tab.icon;
+                        const isActive = bomSubTab === tab.id;
+                        return (
+                          <button
+                            key={tab.id}
+                            onClick={() => setBomSubTab(tab.id as any)}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '8px',
+                              padding: '8px 16px',
+                              background: isActive ? 'var(--brand-charcoal)' : 'transparent',
+                              color: isActive ? 'var(--brand-orange)' : '#64748b',
+                              fontWeight: isActive ? 700 : 500,
+                              borderRadius: '4px 4px 0 0',
+                              border: 'none',
+                              cursor: 'pointer',
+                              fontSize: '0.875rem',
+                              transition: 'all 0.15s ease',
+                            }}
+                          >
+                            <Icon size={16} />
+                            {tab.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* SUBTAB 1: MULTI-LEVEL BOM TREE */}
+                    {bomSubTab === 'tree' && (
+                      <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <span style={{ fontSize: '0.8125rem', color: '#64748b' }}>
+                              Showing <strong>{activeBomLines.length}</strong> BOM lines for <strong>[{activeProduct.ref}] {activeProduct.name}</strong>
+                            </span>
+                            {activeBomLines.length > 0 && (
+                              <button
+                                onClick={handleClearBom}
+                                className="btn-odoo-secondary"
+                                style={{ color: '#e11d48', borderColor: '#fecdd3', background: '#fff1f2', padding: '3px 8px', fontSize: '0.75rem', cursor: 'pointer' }}
+                                title="Clear all line items for this assembly"
+                              >
+                                <Trash2 size={12} /> Clear BOM
+                              </button>
+                            )}
+                          </div>
+                          <div style={{ display: 'flex', gap: '8px' }}>
+                            <button
+                              onClick={() => {
+                                setNewBomLineForm({
+                                  catalogPartRef: '',
+                                  name: '',
+                                  partNumber: '',
+                                  rev: 'Rev A',
+                                  qty: 1.0,
+                                  uom: 'EA',
+                                  refDes: '',
+                                  parentPartNumber: 'ROOT',
+                                  itemType: 'Component',
+                                  customAttributes: {},
+                                });
+                                setIsBomModalOpen(true);
+                              }}
+                              className="btn-odoo-primary"
+                              id="btn-add-bom-line"
+                            >
+                              <Plus size={14} /> Add BOM Component
+                            </button>
+                          </div>
+                        </div>
+
+                        <table className="odoo-table">
+                          <thead>
+                            <tr>
+                              <th style={{ width: '130px', whiteSpace: 'nowrap' }}>Level</th>
+                              <th>Component Name</th>
+                              <th>Part Number</th>
+                              <th>Classification</th>
+                              <th>Revision</th>
+                              <th>Quantity</th>
+                              <th>UOM</th>
+                              <th>Reference Designators</th>
+                              <th>Industry Attributes ({industryAttributesConfig[activeIndustryPack].badge})</th>
+                              <th>Lifecycle</th>
+                              <th style={{ width: '120px', textAlign: 'center' }}>Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {activeBomLines.length === 0 ? (
+                              <tr>
+                                <td colSpan={11} style={{ textAlign: 'center', padding: '40px 12px', color: '#94a3b8' }}>
+                                  <Network size={36} style={{ margin: '0 auto 8px', opacity: 0.6 }} />
+                                  <div style={{ fontWeight: 600, fontSize: '0.9rem', color: '#475569' }}>
+                                    No BOM Lines Defined for [{activeProduct.ref}] {activeProduct.name}
+                                  </div>
+                                  <div style={{ fontSize: '0.775rem', marginTop: '4px', color: '#64748b' }}>
+                                    Click "Add BOM Component" to attach sub-assemblies or component parts to this product.
+                                  </div>
+                                </td>
+                              </tr>
+                            ) : (
+                              activeBomLines.map((line, idx) => (
+                                <tr key={idx}>
+                                  <td style={{ whiteSpace: 'nowrap', fontFamily: 'var(--font-mono)', fontSize: '0.8125rem' }}>
+                                    <div style={{
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      paddingLeft: line.level.includes('2.') ? '26px' : '4px',
+                                      whiteSpace: 'nowrap'
+                                    }}>
+                                      <span style={{ color: '#94a3b8', marginRight: '6px', userSelect: 'none' }}>
+                                        {line.level.includes('2.') ? '└──' : '├──'}
+                                      </span>
+                                      <span style={{
+                                        background: line.itemType === 'Sub-Assembly' ? '#eff6ff' : '#f1f5f9',
+                                        color: line.itemType === 'Sub-Assembly' ? '#1e40af' : '#475569',
+                                        border: line.itemType === 'Sub-Assembly' ? '1px solid #bfdbfe' : '1px solid #e2e8f0',
+                                        padding: '1px 6px',
+                                        borderRadius: '4px',
+                                        fontSize: '0.72rem',
+                                        fontWeight: 700
+                                      }}>
+                                        {line.level.replace(/^[├└─●\s]+/, '')}
+                                      </span>
+                                    </div>
+                                  </td>
+                                  <td style={{ fontWeight: line.itemType === 'Sub-Assembly' ? 700 : 500, color: line.itemType === 'Sub-Assembly' ? 'var(--brand-charcoal)' : 'inherit' }}>
+                                    {line.name}
+                                  </td>
+                                  <td style={{ fontFamily: 'var(--font-mono)', fontWeight: line.itemType === 'Sub-Assembly' ? 600 : 400 }}>
+                                    {line.partNumber}
+                                  </td>
+                                  <td>
+                                    <span style={{
+                                      fontSize: '0.72rem',
+                                      padding: '2px 6px',
+                                      borderRadius: '4px',
+                                      fontWeight: 600,
+                                      background: line.itemType === 'Sub-Assembly' ? '#eff6ff' : '#f8fafc',
+                                      color: line.itemType === 'Sub-Assembly' ? '#2563eb' : '#64748b',
+                                      border: `1px solid ${line.itemType === 'Sub-Assembly' ? '#bfdbfe' : '#e2e8f0'}`
+                                    }}>
+                                      {line.itemType || 'Component'}
+                                    </span>
+                                  </td>
+                                  <td>{line.rev}</td>
+                                  <td style={{ fontWeight: 600 }}>{line.qty.toFixed(1)}</td>
+                                  <td>{line.uom}</td>
+                                  <td>
+                                    {line.refDes && line.refDes !== '—' ? (
+                                      <span style={{ color: 'var(--brand-orange-hover)', fontWeight: 700 }}>{line.refDes}</span>
+                                    ) : (
+                                      '—'
+                                    )}
+                                  </td>
+                                  <td>
+                                    {line.customAttributes && Object.keys(line.customAttributes).length > 0 ? (
+                                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                                        {Object.entries(line.customAttributes).map(([k, v]) => (
+                                          <span
+                                            key={k}
+                                            style={{
+                                              fontSize: '0.72rem',
+                                              background: '#f1f5f9',
+                                              color: '#334155',
+                                              border: '1px solid #cbd5e1',
+                                              padding: '1px 6px',
+                                              borderRadius: '3px',
+                                              fontFamily: 'var(--font-mono)',
+                                            }}
+                                            title={`${k}: ${String(v)}`}
+                                          >
+                                            <strong>{k}:</strong> {String(v)}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    ) : (
+                                      <span style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Standard Line</span>
+                                    )}
+                                  </td>
+                                  <td>
+                                    <span
+                                      style={{
+                                        background: line.lifecycle === 'RELEASED' ? '#d1fae5' : '#fef3c7',
+                                        color: line.lifecycle === 'RELEASED' ? '#065f46' : '#92400e',
+                                        padding: '2px 6px',
+                                        borderRadius: '3px',
+                                        fontSize: '0.75rem',
+                                        fontWeight: 600,
+                                      }}
+                                    >
+                                      {line.lifecycle}
+                                    </span>
+                                  </td>
+                                  <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
+                                    <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', alignItems: 'center' }}>
+                                      {line.itemType === 'Sub-Assembly' && (
+                                        <button
+                                          onClick={() => {
+                                            setNewBomLineForm({
+                                              catalogPartRef: '',
+                                              name: '',
+                                              partNumber: '',
+                                              rev: 'Rev A',
+                                              qty: 1.0,
+                                              uom: 'EA',
+                                              refDes: '',
+                                              parentPartNumber: line.partNumber,
+                                              itemType: 'Component',
+                                              customAttributes: {},
+                                            });
+                                            setIsBomModalOpen(true);
+                                          }}
+                                          title={`Add child component under ${line.partNumber}`}
+                                          style={{
+                                            background: '#f0fdf4',
+                                            color: '#15803d',
+                                            border: '1px solid #bbf7d0',
+                                            padding: '3px 7px',
+                                            borderRadius: '4px',
+                                            fontSize: '0.72rem',
+                                            fontWeight: 600,
+                                            cursor: 'pointer',
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            gap: '3px',
+                                          }}
+                                        >
+                                          <Plus size={11} /> Child
+                                        </button>
+                                      )}
+                                      <button
+                                        onClick={() => handleDeleteBomLine(line.partNumber)}
+                                        title={`Delete line item ${line.partNumber}`}
+                                        style={{
+                                          background: '#fff1f2',
+                                          color: '#e11d48',
+                                          border: '1px solid #fecdd3',
+                                          padding: '3px 7px',
+                                          borderRadius: '4px',
+                                          fontSize: '0.72rem',
+                                          cursor: 'pointer',
+                                          display: 'inline-flex',
+                                          alignItems: 'center',
+                                          gap: '3px',
+                                        }}
+                                      >
+                                        <Trash2 size={12} />
+                                      </button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              ))
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </>
+                );
+              })()
             )}
 
             {/* SUBTAB 2: BOM REDLINE DIFF (A13) */}
@@ -2504,23 +3002,23 @@ export default function App() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '16px' }}>
                   <div style={{ background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '6px', padding: '12px' }}>
                     <div style={{ fontSize: '0.75rem', color: '#065f46', fontWeight: 600 }}>ADDED COMPONENTS</div>
-                    <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#065f46' }}>+1</div>
-                    <div style={{ fontSize: '0.75rem', color: '#047857' }}>ROB-1010 Servo Actuator</div>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#065f46' }}>+{bomDiffs.filter(d => d.action === 'ADD').length}</div>
+                    <div style={{ fontSize: '0.75rem', color: '#047857' }}>New parts introduced</div>
                   </div>
                   <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '6px', padding: '12px' }}>
                     <div style={{ fontSize: '0.75rem', color: '#991b1b', fontWeight: 600 }}>REMOVED COMPONENTS</div>
-                    <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#991b1b' }}>-1</div>
-                    <div style={{ fontSize: '0.75rem', color: '#b91c1c' }}>ACT-0021 Stepper Motor</div>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#991b1b' }}>-{bomDiffs.filter(d => d.action === 'REMOVE').length}</div>
+                    <div style={{ fontSize: '0.75rem', color: '#b91c1c' }}>Obsolete parts purged</div>
                   </div>
                   <div style={{ background: '#fefce8', border: '1px solid #fef08a', borderRadius: '6px', padding: '12px' }}>
                     <div style={{ fontSize: '0.75rem', color: '#854d0e', fontWeight: 600 }}>MODIFIED COMPONENTS</div>
-                    <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#854d0e' }}>~1</div>
-                    <div style={{ fontSize: '0.75rem', color: '#a16207' }}>MNT-0902 M6 Bolts (Qty 12➔16)</div>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#854d0e' }}>~{bomDiffs.filter(d => d.action === 'MODIFY').length}</div>
+                    <div style={{ fontSize: '0.75rem', color: '#a16207' }}>Quantity/note updates</div>
                   </div>
                   <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '12px' }}>
-                    <div style={{ fontSize: '0.75rem', color: '#475569', fontWeight: 600 }}>UNCHANGED COMPONENTS</div>
-                    <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#475569' }}>1</div>
-                    <div style={{ fontSize: '0.75rem', color: '#64748b' }}>PCB-4001 Motor Controller</div>
+                    <div style={{ fontSize: '0.75rem', color: '#475569', fontWeight: 600 }}>TOTAL REDLINE ITEMS</div>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#475569' }}>{bomDiffs.length}</div>
+                    <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Diff entries logged</div>
                   </div>
                 </div>
 
@@ -2538,62 +3036,35 @@ export default function App() {
                     </tr>
                   </thead>
                   <tbody>
-                    <tr style={{ background: '#f0fdf4' }}>
-                      <td>
-                        <span style={{ background: '#16a34a', color: '#ffffff', padding: '2px 8px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 700 }}>
-                          ADDED
-                        </span>
-                      </td>
-                      <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 700 }}>ROB-1010</td>
-                      <td>Precision Harmonic Servo Actuator</td>
-                      <td>0.0</td>
-                      <td style={{ fontWeight: 700, color: '#16a34a' }}>6.0</td>
-                      <td style={{ fontWeight: 700, color: '#16a34a' }}>+6.0</td>
-                      <td>10</td>
-                      <td>Upgrades joint torque from 25Nm to 65Nm</td>
-                    </tr>
-                    <tr style={{ background: '#fef2f2' }}>
-                      <td>
-                        <span style={{ background: '#dc2626', color: '#ffffff', padding: '2px 8px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 700 }}>
-                          REMOVED
-                        </span>
-                      </td>
-                      <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 700 }}>ACT-0021</td>
-                      <td>Legacy NEMA-23 Stepper Motor</td>
-                      <td style={{ textDecoration: 'line-through' }}>6.0</td>
-                      <td>0.0</td>
-                      <td style={{ fontWeight: 700, color: '#dc2626' }}>-6.0</td>
-                      <td>10</td>
-                      <td>Obsolescence replacement in ECO-2026-0042</td>
-                    </tr>
-                    <tr style={{ background: '#fefce8' }}>
-                      <td>
-                        <span style={{ background: '#ca8a04', color: '#ffffff', padding: '2px 8px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 700 }}>
-                          MODIFIED
-                        </span>
-                      </td>
-                      <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 700 }}>MNT-0902</td>
-                      <td>Grade 10.9 M6 Hex Flange Bolts</td>
-                      <td>12.0</td>
-                      <td style={{ fontWeight: 700, color: '#ca8a04' }}>16.0</td>
-                      <td style={{ fontWeight: 700, color: '#ca8a04' }}>+4.0</td>
-                      <td>30</td>
-                      <td>4 additional mounting bolts for heavier flange</td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <span style={{ background: '#e2e8f0', color: '#475569', padding: '2px 8px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 600 }}>
-                          UNCHANGED
-                        </span>
-                      </td>
-                      <td style={{ fontFamily: 'var(--font-mono)' }}>PCB-4001</td>
-                      <td>Multi-Axis Motor Controller PCB</td>
-                      <td>1.0</td>
-                      <td>1.0</td>
-                      <td>0.0</td>
-                      <td>20</td>
-                      <td>Pin-compatible harness interface verified</td>
-                    </tr>
+                    {bomDiffs.length === 0 ? (
+                      <tr>
+                        <td colSpan={8} style={{ textAlign: 'center', padding: '36px 12px', color: '#94a3b8' }}>
+                          <GitCompare size={32} style={{ margin: '0 auto 8px', opacity: 0.6 }} />
+                          <div style={{ fontWeight: 600, fontSize: '0.875rem', color: '#64748b' }}>No BOM Comparisons Recorded</div>
+                          <div style={{ fontSize: '0.75rem', marginTop: '4px' }}>Propose BOM additions, removals, or revisions under an ECO to generate redline diffs.</div>
+                        </td>
+                      </tr>
+                    ) : (
+                      bomDiffs.map((diff) => (
+                        <tr key={diff.id} style={{ background: diff.action === 'ADD' ? '#f0fdf4' : diff.action === 'REMOVE' ? '#fef2f2' : '#fefce8' }}>
+                          <td>
+                            <span style={{
+                              background: diff.action === 'ADD' ? '#16a34a' : diff.action === 'REMOVE' ? '#dc2626' : '#ca8a04',
+                              color: '#ffffff', padding: '2px 8px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 700
+                            }}>
+                              {diff.action}
+                            </span>
+                          </td>
+                          <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 700 }}>{diff.partNumber}</td>
+                          <td>{diff.component}</td>
+                          <td style={{ textDecoration: diff.action === 'REMOVE' ? 'line-through' : 'none' }}>{diff.oldQty.toFixed(1)}</td>
+                          <td style={{ fontWeight: 700 }}>{diff.newQty.toFixed(1)}</td>
+                          <td style={{ fontWeight: 700 }}>{(diff.newQty - diff.oldQty) > 0 ? `+${(diff.newQty - diff.oldQty).toFixed(1)}` : (diff.newQty - diff.oldQty).toFixed(1)}</td>
+                          <td>—</td>
+                          <td>{diff.notes}</td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -2602,252 +3073,263 @@ export default function App() {
             {/* SUBTAB 3: DEEP WHERE-USED (A06) */}
             {bomSubTab === 'where_used' && (
               <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-                  <label style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--brand-charcoal)' }}>
-                    Select Child Component to Trace Impact:
-                  </label>
-                  <select
-                    value={selectedWhereUsedPart}
-                    onChange={(e) => setSelectedWhereUsedPart(e.target.value)}
-                    style={{
-                      padding: '6px 12px',
-                      borderRadius: '4px',
-                      border: '1px solid #cbd5e1',
-                      fontSize: '0.875rem',
-                      fontWeight: 600,
-                      background: '#ffffff',
-                    }}
-                  >
-                    <option value="ELC-0052">ELC-0052 — CAN-Bus Transceiver IC</option>
-                    <option value="PCB-4001">PCB-4001 — Multi-Axis Motor Controller PCB</option>
-                    <option value="ROB-1010">ROB-1010 — Precision Harmonic Servo Actuator</option>
-                  </select>
-                </div>
-
-                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '16px', marginBottom: '16px' }}>
-                  <div style={{ fontSize: '0.8125rem', color: '#64748b', fontWeight: 600, marginBottom: '6px' }}>
-                    BOTTOM-UP EXPLOSION HIERARCHY
+                {bomTreeLines.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '48px 20px', background: '#f8fafc', borderRadius: '6px', border: '1px dashed #cbd5e1' }}>
+                    <Network size={36} style={{ margin: '0 auto 12px', display: 'block', color: '#94a3b8' }} />
+                    <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#334155', margin: '0 0 6px' }}>No Bill of Materials Components</h3>
+                    <p style={{ color: '#64748b', fontSize: '0.875rem', maxWidth: '480px', margin: '0 auto' }}>
+                      Add parts to the engineering BOM to trace bottom-up explosion hierarchies and analyze upstream parent assembly impacts.
+                    </p>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9375rem', fontWeight: 600 }}>
-                    <span style={{ background: '#e0f2fe', color: '#0369a1', padding: '4px 10px', borderRadius: '4px', fontFamily: 'var(--font-mono)' }}>
-                      {selectedWhereUsedPart}
-                    </span>
-                    <span style={{ color: '#94a3b8' }}>➔</span>
-                    {selectedWhereUsedPart === 'ELC-0052' && (
-                      <>
-                        <span style={{ background: '#fef3c7', color: '#92400e', padding: '4px 10px', borderRadius: '4px', fontFamily: 'var(--font-mono)' }}>
-                          PCB-4001 (Level 1 Parent)
+                ) : (
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                      <label style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--brand-charcoal)' }}>
+                        Select Child Component to Trace Impact:
+                      </label>
+                      <select
+                        value={selectedWhereUsedPart}
+                        onChange={(e) => setSelectedWhereUsedPart(e.target.value)}
+                        style={{
+                          padding: '6px 12px',
+                          borderRadius: '4px',
+                          border: '1px solid #cbd5e1',
+                          fontSize: '0.875rem',
+                          fontWeight: 600,
+                          background: '#ffffff',
+                        }}
+                      >
+                        {bomTreeLines.map((l) => (
+                          <option key={l.partNumber} value={l.partNumber}>
+                            {l.partNumber} — {l.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '16px', marginBottom: '16px' }}>
+                      <div style={{ fontSize: '0.8125rem', color: '#64748b', fontWeight: 600, marginBottom: '6px' }}>
+                        BOTTOM-UP EXPLOSION HIERARCHY
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9375rem', fontWeight: 600 }}>
+                        <span style={{ background: '#e0f2fe', color: '#0369a1', padding: '4px 10px', borderRadius: '4px', fontFamily: 'var(--font-mono)' }}>
+                          {selectedWhereUsedPart || bomTreeLines[0]?.partNumber}
                         </span>
                         <span style={{ color: '#94a3b8' }}>➔</span>
-                      </>
-                    )}
-                    <span style={{ background: '#ecfdf5', color: '#065f46', padding: '4px 10px', borderRadius: '4px', fontFamily: 'var(--font-mono)' }}>
-                      ROB-1000 (Top-Level Assembly)
-                    </span>
-                  </div>
-                </div>
+                        <span style={{ background: '#ecfdf5', color: '#065f46', padding: '4px 10px', borderRadius: '4px', fontFamily: 'var(--font-mono)' }}>
+                          {productsList[0]?.ref || 'Top-Level Assembly'}
+                        </span>
+                      </div>
+                    </div>
 
-                <table className="odoo-table">
-                  <thead>
-                    <tr>
-                      <th>Impact Level</th>
-                      <th>Parent Assembly</th>
-                      <th>Part Number</th>
-                      <th>Parent Revision</th>
-                      <th>Qty Consumed</th>
-                      <th>BOM Type</th>
-                      <th>Assembly State</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {selectedWhereUsedPart === 'ELC-0052' && (
-                      <tr>
-                        <td><strong>Level 1</strong> (Direct)</td>
-                        <td style={{ fontWeight: 600 }}>Multi-Axis Motor Controller PCB</td>
-                        <td style={{ fontFamily: 'var(--font-mono)' }}>PCB-4001</td>
-                        <td>Rev A</td>
-                        <td>2.0 EA</td>
-                        <td>EBOM</td>
-                        <td><span style={{ background: '#d1fae5', color: '#065f46', padding: '2px 6px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 600 }}>RELEASED</span></td>
-                      </tr>
-                    )}
-                    <tr>
-                      <td><strong>{selectedWhereUsedPart === 'ELC-0052' ? 'Level 2' : 'Level 1'}</strong> (Top)</td>
-                      <td style={{ fontWeight: 600 }}>Autonomous Articulated Robotic Arm</td>
-                      <td style={{ fontFamily: 'var(--font-mono)' }}>ROB-1000</td>
-                      <td>Rev A</td>
-                      <td>{selectedWhereUsedPart === 'ROB-1010' ? '6.0 EA' : '1.0 EA'}</td>
-                      <td>EBOM</td>
-                      <td><span style={{ background: '#d1fae5', color: '#065f46', padding: '2px 6px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 600 }}>RELEASED</span></td>
-                    </tr>
-                  </tbody>
-                </table>
+                    <table className="odoo-table">
+                      <thead>
+                        <tr>
+                          <th>Impact Level</th>
+                          <th>Parent Assembly</th>
+                          <th>Part Number</th>
+                          <th>Parent Revision</th>
+                          <th>Qty Consumed</th>
+                          <th>BOM Type</th>
+                          <th>Assembly State</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td><strong>Level 1</strong> (Direct)</td>
+                          <td style={{ fontWeight: 600 }}>{productsList[0]?.name || 'Top-Level Assembly'}</td>
+                          <td style={{ fontFamily: 'var(--font-mono)' }}>{productsList[0]?.ref || 'N/A'}</td>
+                          <td>Rev {productsList[0]?.rev || 'A'}</td>
+                          <td>1.0 EA</td>
+                          <td>EBOM</td>
+                          <td><span style={{ background: '#d1fae5', color: '#065f46', padding: '2px 6px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 600 }}>{productsList[0]?.status || 'DRAFT'}</span></td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             )}
 
             {/* SUBTAB 4: PRODUCT VARIANTS (A02) */}
             {bomSubTab === 'variants' && (
               <div>
-                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '16px', marginBottom: '20px' }}>
-                  <div style={{ fontSize: '0.8125rem', color: '#64748b', fontWeight: 600, marginBottom: '6px' }}>
-                    FAMILY: ROB-FAMILY · Articulated Industrial Robot Series
+                {productsList.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '48px 20px', background: '#f8fafc', borderRadius: '6px', border: '1px dashed #cbd5e1' }}>
+                    <Layers size={36} style={{ margin: '0 auto 12px', display: 'block', color: '#94a3b8' }} />
+                    <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#334155', margin: '0 0 6px' }}>No Configurable Assemblies Available</h3>
+                    <p style={{ color: '#64748b', fontSize: '0.875rem', maxWidth: '480px', margin: '0 auto' }}>
+                      Create parent assemblies in the Master Product Catalog to configure modular 150% BOM variants and option rules.
+                    </p>
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                    <div>
-                      <label style={{ fontSize: '0.8125rem', fontWeight: 700, color: 'var(--brand-charcoal)', display: 'block', marginBottom: '6px' }}>
-                        Payload Capacity Option:
-                      </label>
-                      <div style={{ display: 'flex', gap: '8px' }}>
-                        {[
-                          { code: '10KG', label: '10 kg High Speed' },
-                          { code: '20KG', label: '20 kg Standard' },
-                          { code: '50KG', label: '50 kg Heavy Duty' },
-                        ].map((opt) => (
-                          <button
-                            key={opt.code}
-                            onClick={() => setSelectedPayload(opt.code)}
-                            style={{
-                              padding: '6px 12px',
-                              borderRadius: '4px',
-                              border: selectedPayload === opt.code ? '2px solid var(--brand-orange)' : '1px solid #cbd5e1',
-                              background: selectedPayload === opt.code ? '#fffbeb' : '#ffffff',
-                              color: selectedPayload === opt.code ? '#92400e' : '#334155',
-                              fontWeight: selectedPayload === opt.code ? 700 : 500,
-                              cursor: 'pointer',
-                              fontSize: '0.8125rem',
-                            }}
-                          >
-                            {opt.label}
-                          </button>
-                        ))}
+                ) : (
+                  <div>
+                    <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '16px', marginBottom: '20px' }}>
+                      <div style={{ fontSize: '0.8125rem', color: '#64748b', fontWeight: 600, marginBottom: '6px' }}>
+                        FAMILY: {productsList[0].ref}-FAMILY · {productsList[0].name} Series
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                        <div>
+                          <label style={{ fontSize: '0.8125rem', fontWeight: 700, color: 'var(--brand-charcoal)', display: 'block', marginBottom: '6px' }}>
+                            Payload Capacity Option:
+                          </label>
+                          <div style={{ display: 'flex', gap: '8px' }}>
+                            {[
+                              { code: '10KG', label: '10 kg High Speed' },
+                              { code: '20KG', label: '20 kg Standard' },
+                              { code: '50KG', label: '50 kg Heavy Duty' },
+                            ].map((opt) => (
+                              <button
+                                key={opt.code}
+                                onClick={() => setSelectedPayload(opt.code)}
+                                style={{
+                                  padding: '6px 12px',
+                                  borderRadius: '4px',
+                                  border: selectedPayload === opt.code ? '2px solid var(--brand-orange)' : '1px solid #cbd5e1',
+                                  background: selectedPayload === opt.code ? '#fffbeb' : '#ffffff',
+                                  color: selectedPayload === opt.code ? '#92400e' : '#334155',
+                                  fontWeight: selectedPayload === opt.code ? 700 : 500,
+                                  cursor: 'pointer',
+                                  fontSize: '0.8125rem',
+                                }}
+                              >
+                                {opt.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div>
+                          <label style={{ fontSize: '0.8125rem', fontWeight: 700, color: 'var(--brand-charcoal)', display: 'block', marginBottom: '6px' }}>
+                            Environmental Protection Option:
+                          </label>
+                          <div style={{ display: 'flex', gap: '8px' }}>
+                            {[
+                              { code: 'IP54', label: 'IP54 Workshop Standard' },
+                              { code: 'IP67', label: 'IP67 Cleanroom / Washdown' },
+                            ].map((opt) => (
+                              <button
+                                key={opt.code}
+                                onClick={() => setSelectedIpRating(opt.code)}
+                                style={{
+                                  padding: '6px 12px',
+                                  borderRadius: '4px',
+                                  border: selectedIpRating === opt.code ? '2px solid var(--brand-orange)' : '1px solid #cbd5e1',
+                                  background: selectedIpRating === opt.code ? '#fffbeb' : '#ffffff',
+                                  color: selectedIpRating === opt.code ? '#92400e' : '#334155',
+                                  fontWeight: selectedIpRating === opt.code ? 700 : 500,
+                                  cursor: 'pointer',
+                                  fontSize: '0.8125rem',
+                                }}
+                              >
+                                {opt.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
                       </div>
                     </div>
 
-                    <div>
-                      <label style={{ fontSize: '0.8125rem', fontWeight: 700, color: 'var(--brand-charcoal)', display: 'block', marginBottom: '6px' }}>
-                        Environmental Protection Option:
-                      </label>
-                      <div style={{ display: 'flex', gap: '8px' }}>
-                        {[
-                          { code: 'IP54', label: 'IP54 Workshop Standard' },
-                          { code: 'IP67', label: 'IP67 Cleanroom / Washdown' },
-                        ].map((opt) => (
-                          <button
-                            key={opt.code}
-                            onClick={() => setSelectedIpRating(opt.code)}
-                            style={{
-                              padding: '6px 12px',
-                              borderRadius: '4px',
-                              border: selectedIpRating === opt.code ? '2px solid var(--brand-orange)' : '1px solid #cbd5e1',
-                              background: selectedIpRating === opt.code ? '#fffbeb' : '#ffffff',
-                              color: selectedIpRating === opt.code ? '#92400e' : '#334155',
-                              fontWeight: selectedIpRating === opt.code ? 700 : 500,
-                              cursor: 'pointer',
-                              fontSize: '0.8125rem',
-                            }}
-                          >
-                            {opt.label}
-                          </button>
-                        ))}
+                    <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '6px', padding: '16px' }}>
+                      <div style={{ fontSize: '0.8125rem', color: '#166534', fontWeight: 600 }}>RESOLVED CONFIGURED VARIANT SKU</div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '4px' }}>
+                        <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#166534', fontFamily: 'var(--font-mono)' }}>
+                          {productsList[0].ref}-{selectedPayload}-{selectedIpRating}
+                        </div>
+                        <span style={{ background: '#dcfce7', color: '#15803d', padding: '4px 10px', borderRadius: '4px', fontWeight: 700, fontSize: '0.8125rem' }}>
+                          Configured BOM Active
+                        </span>
                       </div>
                     </div>
                   </div>
-                </div>
-
-                <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '6px', padding: '16px' }}>
-                  <div style={{ fontSize: '0.8125rem', color: '#166534', fontWeight: 600 }}>RESOLVED CONFIGURED VARIANT SKU</div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '4px' }}>
-                    <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#166534', fontFamily: 'var(--font-mono)' }}>
-                      ROB-1000-{selectedPayload}-{selectedIpRating}
-                    </div>
-                    <span style={{ background: '#dcfce7', color: '#15803d', padding: '4px 10px', borderRadius: '4px', fontWeight: 700, fontSize: '0.8125rem' }}>
-                      Configured BOM Active
-                    </span>
-                  </div>
-                </div>
+                )}
               </div>
             )}
 
             {/* SUBTAB 5: EFFECTIVITY RULES (A12) */}
             {bomSubTab === 'effectivity' && (
               <div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
-                  <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '16px' }}>
-                    <label style={{ fontSize: '0.8125rem', fontWeight: 700, color: 'var(--brand-charcoal)', display: 'block', marginBottom: '8px' }}>
-                      Simulate Production Build Date:
-                    </label>
-                    <input
-                      type="date"
-                      value={effectivityDate}
-                      onChange={(e) => setEffectivityDate(e.target.value)}
-                      style={{
-                        padding: '6px 12px',
-                        border: '1px solid #cbd5e1',
-                        borderRadius: '4px',
-                        fontSize: '0.875rem',
-                        width: '100%',
-                      }}
-                    />
-                    <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '6px' }}>
-                      Date effectivity filters out lines not valid during this assembly run.
-                    </div>
+                {bomTreeLines.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '48px 20px', background: '#f8fafc', borderRadius: '6px', border: '1px dashed #cbd5e1' }}>
+                    <Timer size={36} style={{ margin: '0 auto 12px', display: 'block', color: '#94a3b8' }} />
+                    <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#334155', margin: '0 0 6px' }}>No Effectivity Rules Active</h3>
+                    <p style={{ color: '#64748b', fontSize: '0.875rem', maxWidth: '480px', margin: '0 auto' }}>
+                      Add components to the engineering BOM to simulate date cut-in windows and serial-number based build effectivity.
+                    </p>
                   </div>
+                ) : (
+                  <div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
+                      <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '16px' }}>
+                        <label style={{ fontSize: '0.8125rem', fontWeight: 700, color: 'var(--brand-charcoal)', display: 'block', marginBottom: '8px' }}>
+                          Simulate Production Build Date:
+                        </label>
+                        <input
+                          type="date"
+                          value={effectivityDate}
+                          onChange={(e) => setEffectivityDate(e.target.value)}
+                          style={{
+                            padding: '6px 12px',
+                            border: '1px solid #cbd5e1',
+                            borderRadius: '4px',
+                            fontSize: '0.875rem',
+                            width: '100%',
+                          }}
+                        />
+                        <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '6px' }}>
+                          Date effectivity filters out lines not valid during this assembly run.
+                        </div>
+                      </div>
 
-                  <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '16px' }}>
-                    <label style={{ fontSize: '0.8125rem', fontWeight: 700, color: 'var(--brand-charcoal)', display: 'block', marginBottom: '8px' }}>
-                      Simulate Production Unit Serial Number:
-                    </label>
-                    <input
-                      type="text"
-                      value={effectivitySerial}
-                      onChange={(e) => setEffectivitySerial(e.target.value)}
-                      placeholder="e.g. SN-1500"
-                      style={{
-                        padding: '6px 12px',
-                        border: '1px solid #cbd5e1',
-                        borderRadius: '4px',
-                        fontSize: '0.875rem',
-                        width: '100%',
-                      }}
-                    />
-                    <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '6px' }}>
-                      Serial effectivity applies cut-in changes from SN-1000 through SN-2000.
+                      <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '16px' }}>
+                        <label style={{ fontSize: '0.8125rem', fontWeight: 700, color: 'var(--brand-charcoal)', display: 'block', marginBottom: '8px' }}>
+                          Simulate Production Unit Serial Number:
+                        </label>
+                        <input
+                          type="text"
+                          value={effectivitySerial}
+                          onChange={(e) => setEffectivitySerial(e.target.value)}
+                          placeholder="e.g. SN-1500"
+                          style={{
+                            padding: '6px 12px',
+                            border: '1px solid #cbd5e1',
+                            borderRadius: '4px',
+                            fontSize: '0.875rem',
+                            width: '100%',
+                          }}
+                        />
+                        <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '6px' }}>
+                          Serial effectivity applies cut-in changes from SN-1000 through SN-2000.
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
 
-                <table className="odoo-table">
-                  <thead>
-                    <tr>
-                      <th>Component</th>
-                      <th>Effectivity Type</th>
-                      <th>Rule Window</th>
-                      <th>Status at Production Run</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td style={{ fontWeight: 600 }}>Precision Harmonic Servo (ROB-1010)</td>
-                      <td>DATE EFFECTIVITY</td>
-                      <td>Valid From 2026-01-01 to 2026-12-31</td>
-                      <td>
-                        <span style={{ background: '#d1fae5', color: '#065f46', padding: '2px 8px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 700 }}>
-                          ✓ ACTIVE (Included in Build)
-                        </span>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td style={{ fontWeight: 600 }}>CAN-Bus AEC-Q100 IC (ELC-0052)</td>
-                      <td>SERIAL EFFECTIVITY</td>
-                      <td>Valid Units SN-1000 to SN-2000</td>
-                      <td>
-                        <span style={{ background: effectivitySerial >= 'SN-1000' && effectivitySerial <= 'SN-2000' ? '#d1fae5' : '#fee2e2', color: effectivitySerial >= 'SN-1000' && effectivitySerial <= 'SN-2000' ? '#065f46' : '#991b1b', padding: '2px 8px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 700 }}>
-                          {effectivitySerial >= 'SN-1000' && effectivitySerial <= 'SN-2000' ? '✓ ACTIVE (Included in Build)' : '✕ INACTIVE (Cut-in Not Reached)'}
-                        </span>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+                    <table className="odoo-table">
+                      <thead>
+                        <tr>
+                          <th>Component</th>
+                          <th>Effectivity Type</th>
+                          <th>Rule Window</th>
+                          <th>Status at Production Run</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {bomTreeLines.map((line, idx) => (
+                          <tr key={line.partNumber}>
+                            <td style={{ fontWeight: 600 }}>{line.name} ({line.partNumber})</td>
+                            <td>{idx % 2 === 0 ? 'DATE EFFECTIVITY' : 'SERIAL EFFECTIVITY'}</td>
+                            <td>{idx % 2 === 0 ? 'Valid From 2026-01-01 to 2026-12-31' : 'Valid Units SN-1000 to SN-2000'}</td>
+                            <td>
+                              <span style={{ background: '#d1fae5', color: '#065f46', padding: '2px 8px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 700 }}>
+                                ✓ ACTIVE (Included in Build)
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -2892,63 +3374,73 @@ export default function App() {
                 </tr>
               </thead>
               <tbody>
-                {vaultDocs.map((doc) => (
-                  <tr key={doc.id}>
-                    <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--brand-orange-hover)' }}>
-                      {doc.docNumber}
-                    </td>
-                    <td>
-                      <div style={{ fontWeight: 600 }}>{doc.title}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--odoo-text-muted)', marginTop: '2px' }}>
-                        Linked to ROB-1000 Assembly & Subsystems
-                      </div>
-                    </td>
-                    <td>
-                      <span style={{ background: '#f1f5f9', color: '#475569', padding: '2px 8px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 600 }}>
-                        {doc.category}
-                      </span>
-                    </td>
-                    <td>
-                      <span style={{ background: '#e0f2fe', color: '#0369a1', padding: '2px 8px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 700 }}>
-                        Rev {doc.revision}
-                      </span>
-                    </td>
-                    <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8125rem' }}>{doc.file}</td>
-                    <td>{doc.size}</td>
-                    <td>
-                      {doc.lockedBy ? (
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: '#fee2e2', color: '#991b1b', padding: '2px 8px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 700 }}>
-                          <Lock size={12} /> Locked by {doc.lockedBy}
-                        </span>
-                      ) : (
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: '#dcfce7', color: '#15803d', padding: '2px 8px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 600 }}>
-                          <Unlock size={12} /> Available (Unlocked)
-                        </span>
-                      )}
-                    </td>
-                    <td>
-                      <button
-                        onClick={() => handleToggleDocLock(doc.id)}
-                        style={{
-                          background: doc.lockedBy ? '#f1f5f9' : 'var(--brand-charcoal)',
-                          color: doc.lockedBy ? '#334155' : 'var(--brand-orange)',
-                          border: '1px solid #cbd5e1',
-                          padding: '4px 10px',
-                          borderRadius: '4px',
-                          fontSize: '0.75rem',
-                          fontWeight: 600,
-                          cursor: 'pointer',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '4px',
-                        }}
-                      >
-                        {doc.lockedBy ? <Unlock size={12} /> : <Lock size={12} />}
-                        {doc.lockedBy ? 'Check In (Unlock)' : 'Check Out (Lock)'}
-                      </button>
+                {vaultDocs.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} style={{ textAlign: 'center', padding: '36px', color: '#64748b' }}>
+                      <FileText size={32} style={{ margin: '0 auto 8px', display: 'block', opacity: 0.4 }} />
+                      <strong>No Controlled Documents Found</strong>
+                      <p style={{ margin: '4px 0 0', fontSize: '0.85rem' }}>The document vault is empty. Click "+ New Document" above to register drawings, specifications, or CAD files.</p>
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  vaultDocs.map((doc) => (
+                    <tr key={doc.id}>
+                      <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--brand-orange-hover)' }}>
+                        {doc.docNumber}
+                      </td>
+                      <td>
+                        <div style={{ fontWeight: 600 }}>{doc.title}</div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--odoo-text-muted)', marginTop: '2px' }}>
+                          Linked to {doc.category || 'Product'} Item
+                        </div>
+                      </td>
+                      <td>
+                        <span style={{ background: '#f1f5f9', color: '#475569', padding: '2px 8px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 600 }}>
+                          {doc.category}
+                        </span>
+                      </td>
+                      <td>
+                        <span style={{ background: '#e0f2fe', color: '#0369a1', padding: '2px 8px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 700 }}>
+                          Rev {doc.revision}
+                        </span>
+                      </td>
+                      <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8125rem' }}>{doc.file}</td>
+                      <td>{doc.size}</td>
+                      <td>
+                        {doc.lockedBy ? (
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: '#fee2e2', color: '#991b1b', padding: '2px 8px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 700 }}>
+                            <Lock size={12} /> Locked by {doc.lockedBy}
+                          </span>
+                        ) : (
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: '#dcfce7', color: '#15803d', padding: '2px 8px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 600 }}>
+                            <Unlock size={12} /> Available (Unlocked)
+                          </span>
+                        )}
+                      </td>
+                      <td>
+                        <button
+                          onClick={() => handleToggleDocLock(doc.id)}
+                          style={{
+                            background: doc.lockedBy ? '#f1f5f9' : 'var(--brand-charcoal)',
+                            color: doc.lockedBy ? '#334155' : 'var(--brand-orange)',
+                            border: '1px solid #cbd5e1',
+                            padding: '4px 10px',
+                            borderRadius: '4px',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                          }}
+                        >
+                          {doc.lockedBy ? <Unlock size={12} /> : <Lock size={12} />}
+                          {doc.lockedBy ? 'Check In (Unlock)' : 'Check Out (Lock)'}
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -3041,8 +3533,17 @@ export default function App() {
                     </tr>
                   </thead>
                   <tbody>
-                    {customFields.map((f) => (
-                      <tr key={f.id}>
+                    {customFields.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} style={{ textAlign: 'center', padding: '36px', color: '#64748b' }}>
+                          <Layers size={28} style={{ margin: '0 auto 8px', display: 'block', opacity: 0.4 }} />
+                          <strong>No Custom Fields Defined</strong>
+                          <p style={{ margin: '4px 0 0', fontSize: '0.8125rem' }}>Use the quick form below to define custom properties and formula attributes for your parts or ECOs.</p>
+                        </td>
+                      </tr>
+                    ) : (
+                      customFields.map((f) => (
+                        <tr key={f.id}>
                         <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--brand-orange-hover)' }}>
                           {f.name}
                         </td>
@@ -3079,7 +3580,7 @@ export default function App() {
                         </td>
                         <td style={{ fontSize: '0.75rem', color: '#64748b' }}>{f.description}</td>
                       </tr>
-                    ))}
+                    )))}
                   </tbody>
                 </table>
 
@@ -3184,29 +3685,37 @@ export default function App() {
                   </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '24px' }}>
-                  {numberingSchemes.map((sch) => (
-                    <div key={sch.id} style={{ border: '1px solid #cbd5e1', borderRadius: '6px', padding: '16px', background: '#ffffff' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <span style={{ fontSize: '0.75rem', fontWeight: 700, background: '#f1f5f9', color: '#334155', padding: '2px 8px', borderRadius: '3px' }}>
-                          {sch.entityType} SCHEME
-                        </span>
-                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8125rem', fontWeight: 700, color: 'var(--brand-orange-hover)' }}>
-                          Counter: {sch.currentSeq}
-                        </span>
-                      </div>
-                      <div style={{ marginTop: '12px', fontSize: '0.8125rem' }}>
-                        <div style={{ color: '#64748b' }}>Pattern:</div>
-                        <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, background: '#f8fafc', padding: '4px 8px', borderRadius: '3px', marginTop: '4px' }}>
-                          {sch.pattern}
+                {numberingSchemes.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '36px', background: '#f8fafc', borderRadius: '6px', border: '1px dashed #cbd5e1', marginBottom: '24px' }}>
+                    <Hash size={28} style={{ margin: '0 auto 8px', display: 'block', opacity: 0.4 }} />
+                    <strong>No Numbering Schemes Configured</strong>
+                    <p style={{ margin: '4px 0 0', fontSize: '0.8125rem', color: '#64748b' }}>Numbering schemes can be configured for automatic, deterministic part and ECO numbers.</p>
+                  </div>
+                ) : (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '24px' }}>
+                    {numberingSchemes.map((sch) => (
+                      <div key={sch.id} style={{ border: '1px solid #cbd5e1', borderRadius: '6px', padding: '16px', background: '#ffffff' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <span style={{ fontSize: '0.75rem', fontWeight: 700, background: '#f1f5f9', color: '#334155', padding: '2px 8px', borderRadius: '3px' }}>
+                            {sch.entityType} SCHEME
+                          </span>
+                          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8125rem', fontWeight: 700, color: 'var(--brand-orange-hover)' }}>
+                            Counter: {sch.currentSeq}
+                          </span>
+                        </div>
+                        <div style={{ marginTop: '12px', fontSize: '0.8125rem' }}>
+                          <div style={{ color: '#64748b' }}>Pattern:</div>
+                          <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, background: '#f8fafc', padding: '4px 8px', borderRadius: '3px', marginTop: '4px' }}>
+                            {sch.pattern}
+                          </div>
+                        </div>
+                        <div style={{ marginTop: '12px', fontSize: '0.75rem', color: '#475569' }}>
+                          Prefix: <strong>{sch.prefix}</strong> · Digits: <strong>{sch.digits}</strong>
                         </div>
                       </div>
-                      <div style={{ marginTop: '12px', fontSize: '0.75rem', color: '#475569' }}>
-                        Prefix: <strong>{sch.prefix}</strong> · Digits: <strong>{sch.digits}</strong>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
 
                 {/* Live Sequence Generation Testbed */}
                 <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '6px', padding: '16px' }}>
@@ -3220,8 +3729,10 @@ export default function App() {
                       </div>
                     </div>
                     <button
+                      disabled={!numberingSchemes.some((s) => s.entityType === 'PART')}
                       onClick={() => {
-                        const sch = numberingSchemes.find((s) => s.entityType === 'PART')!;
+                        const sch = numberingSchemes.find((s) => s.entityType === 'PART');
+                        if (!sch) return;
                         const nextVal = sch.currentSeq + 1;
                         const year = new Date().getFullYear();
                         const padded = String(nextVal).padStart(sch.digits, '0');
@@ -3232,9 +3743,9 @@ export default function App() {
                         setLastGeneratedNumber(genNum);
                       }}
                       className="btn-odoo-primary"
-                      style={{ padding: '6px 16px' }}
+                      style={{ padding: '6px 14px', fontSize: '0.8125rem', opacity: numberingSchemes.some((s) => s.entityType === 'PART') ? 1 : 0.5 }}
                     >
-                      <Hash size={14} /> Generate Next Part Number
+                      <Hash size={14} /> Allocate Next Part #
                     </button>
                   </div>
 
@@ -3623,18 +4134,19 @@ export default function App() {
                     onClick={() => {
                       const hashPart = Math.random().toString(16).substring(2, 10);
                       const fullHash = `${hashPart}4738da72efd092e449911e38b4c0274eef711a3028c1149d94fa21`;
+                      const entityId = productsList.length > 0 ? `REV-${productsList[0].ref}-${productsList[0].rev || 'A'}` : 'REV-INITIAL-BASELINE';
                       const newSnap = {
                         snapshotId: `SNAP-${Date.now()}-${hashPart}`,
-                        entityId: 'REV-ROB-1000-B',
+                        entityId,
                         entityType: 'PART_REVISION',
-                        releasedBy: 'marcus.vance@officehubtech.com',
+                        releasedBy: 'admin@officehubtech.com',
                         releasedAt: 'Just now',
                         hash: fullHash,
                         fieldsCount: customFields.length,
-                        rulesCount: 2,
+                        rulesCount: 0,
                       };
                       setSnapshots([newSnap, ...snapshots]);
-                      setSnapshotAlert(`Captured snapshot ${newSnap.snapshotId} for REV-ROB-1000-B with cryptographic integrity verification.`);
+                      setSnapshotAlert(`Captured snapshot ${newSnap.snapshotId} for ${entityId} with cryptographic integrity verification.`);
                     }}
                     className="btn-odoo-primary"
                   >
@@ -3660,24 +4172,34 @@ export default function App() {
                     </tr>
                   </thead>
                   <tbody>
-                    {snapshots.map((s) => (
-                      <tr key={s.snapshotId}>
-                        <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--brand-orange-hover)' }}>
-                          {s.snapshotId}
-                        </td>
-                        <td style={{ fontWeight: 600 }}>{s.entityId}</td>
-                        <td>{s.releasedBy}</td>
-                        <td>{s.releasedAt}</td>
-                        <td>
-                          <span style={{ background: '#f1f5f9', color: '#334155', padding: '2px 8px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 600 }}>
-                            {s.fieldsCount} Custom Fields · {s.rulesCount} Rules
-                          </span>
-                        </td>
-                        <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: '#475569' }}>
-                          {s.hash}
+                    {snapshots.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} style={{ textAlign: 'center', padding: '36px', color: '#64748b' }}>
+                          <KeyRound size={28} style={{ margin: '0 auto 8px', display: 'block', opacity: 0.4 }} />
+                          <strong>No Release Rule Snapshots Captured</strong>
+                          <p style={{ margin: '4px 0 0', fontSize: '0.8125rem' }}>Immutable cryptographic snapshots are generated when part revisions or ECOs are released.</p>
                         </td>
                       </tr>
-                    ))}
+                    ) : (
+                      snapshots.map((s) => (
+                        <tr key={s.snapshotId}>
+                          <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--brand-orange-hover)' }}>
+                            {s.snapshotId}
+                          </td>
+                          <td style={{ fontWeight: 600 }}>{s.entityId}</td>
+                          <td>{s.releasedBy}</td>
+                          <td>{s.releasedAt}</td>
+                          <td>
+                            <span style={{ background: '#f1f5f9', color: '#334155', padding: '2px 8px', borderRadius: '3px', fontSize: '0.75rem', fontWeight: 600 }}>
+                              {s.fieldsCount} Custom Fields · {s.rulesCount} Rules
+                            </span>
+                          </td>
+                          <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: '#475569' }}>
+                            {s.hash}
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -3723,8 +4245,30 @@ export default function App() {
               </div>
             </div>
 
-            {/* Manufacturing Navigation Tabs */}
-            <div
+            {productsList.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '60px 24px', background: '#f8fafc', borderRadius: '8px', border: '1px dashed #cbd5e1', marginTop: '20px' }}>
+                <Factory size={48} style={{ margin: '0 auto 16px', display: 'block', color: '#94a3b8' }} />
+                <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: '#1e293b', marginBottom: '8px' }}>
+                  No Engineering Products or Assemblies Available
+                </h3>
+                <p style={{ color: '#64748b', fontSize: '0.9rem', maxWidth: '520px', margin: '0 auto 20px', lineHeight: 1.5 }}>
+                  Manufacturing Operations (MBOMs, routings, AML/AVL sourcing, and ERP push) require at least one engineering product in the catalog. Create your first part or assembly to configure plant operations.
+                </p>
+                <button
+                  onClick={() => {
+                    setCurrentMenu('products');
+                    setIsProductModalOpen(true);
+                  }}
+                  className="btn-odoo-primary"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}
+                >
+                  <Plus size={16} /> Create First Product / Assembly
+                </button>
+              </div>
+            ) : (
+              <>
+                {/* Manufacturing Navigation Tabs */}
+                <div
               style={{
                 display: 'flex',
                 gap: '8px',
@@ -4401,6 +4945,8 @@ export default function App() {
                   </tbody>
                 </table>
               </div>
+            )}
+              </>
             )}
           </div>
         )}
@@ -5791,46 +6337,46 @@ export default function App() {
                         onChange={(e) => setCopilotEcoSelect(e.target.value as any)}
                         style={{ padding: '6px 10px', borderRadius: '4px', border: '1px solid var(--odoo-border)', fontSize: '0.8125rem' }}
                       >
-                        <option value="ECO-001">ECO-001 (Chassis &amp; Heatsink Rev C Update)</option>
-                        <option value="ECO-002">ECO-002 (Power Electronics PCB Component Replacement)</option>
+                        {ecos.length === 0 ? (
+                          <option value="">No Active ECOs in System</option>
+                        ) : (
+                          ecos.map((e) => (
+                            <option key={e.id} value={e.ecoNumber}>
+                              {e.ecoNumber} ({e.title})
+                            </option>
+                          ))
+                        )}
                       </select>
 
                       <button
+                        disabled={ecos.length === 0}
                         onClick={() => {
-                          const isEco1 = copilotEcoSelect === 'ECO-001';
+                          if (ecos.length === 0) return;
+                          const activeSelected = ecos.find((e) => e.ecoNumber === copilotEcoSelect) || ecos[0];
                           const eco = {
-                            id: isEco1 ? 'ECO-2026-001' : 'ECO-2026-002',
-                            ecoNumber: isEco1 ? 'ECO-001' : 'ECO-002',
-                            title: isEco1 ? 'Structural Revision to Main Inverter Chassis and Stator' : 'Power Stage Diode & Capacitor Upgrade',
-                            category: isEco1 ? 'Mechanical Redesign' : 'Electronics Component Obsolescence'
+                            id: activeSelected.id,
+                            ecoNumber: activeSelected.ecoNumber,
+                            title: activeSelected.title,
+                            category: activeSelected.category || 'Mechanical Redesign'
                           };
-                          const affectedItems = isEco1
+                          const affectedItems = productsList.length > 0
                             ? [
-                                { partId: 'PART-CHASSIS-01', partNumber: 'CHASSIS-01', name: 'Cast Aluminum Chassis Baseplate', currentRevision: 'B', newRevision: 'C', action: 'replace' as const, costPerUnit: 145.0, leadTimeDays: 45 },
-                                { partId: 'PART-HEATSINK-01', partNumber: 'HEATSINK-01', name: 'Extruded Copper Heatsink', currentRevision: 'A', newRevision: 'B', action: 'modify' as const, costPerUnit: 62.0, leadTimeDays: 15 }
+                                { partId: productsList[0].id, partNumber: productsList[0].ref, name: productsList[0].name, currentRevision: productsList[0].rev || 'A', newRevision: 'B', action: 'modify' as const, costPerUnit: 145.0, leadTimeDays: 30 }
                               ]
                             : [
-                                { partId: 'PART-DIODE-01', partNumber: 'DIODE-FAST-SCHOTTKY', name: '600V 30A Fast Recovery Diode', currentRevision: 'A', newRevision: 'B', action: 'replace' as const, costPerUnit: 4.5, leadTimeDays: 20 },
-                                { partId: 'PART-CAP-01', partNumber: 'CAP-FILM-100UF', name: 'Polypropylene Film Capacitor 100uF', currentRevision: 'A', newRevision: 'A1', action: 'modify' as const, costPerUnit: 18.0, leadTimeDays: 40 }
+                                { partId: 'PART-NEW-01', partNumber: 'PART-01', name: 'Standard Component', currentRevision: 'A', newRevision: 'B', action: 'modify' as const, costPerUnit: 25.0, leadTimeDays: 14 }
                               ];
-                          const inventory = isEco1
-                            ? [
-                                { partId: 'PART-CHASSIS-01', onHandQty: 100, wipQty: 50, openPoQty: 200 },
-                                { partId: 'PART-HEATSINK-01', onHandQty: 300, wipQty: 80, openPoQty: 0 }
-                              ]
-                            : [
-                                { partId: 'PART-DIODE-01', onHandQty: 1200, wipQty: 400, openPoQty: 2000 },
-                                { partId: 'PART-CAP-01', onHandQty: 150, wipQty: 60, openPoQty: 300 }
-                              ];
+                          const inventory = [
+                            { partId: affectedItems[0].partId, onHandQty: 100, wipQty: 50, openPoQty: 200 }
+                          ];
                           const bomLines = [
-                            { parentPartId: 'ASM-1000', parentPartNumber: 'ASM-1000-TURBINE', childPartId: isEco1 ? 'PART-CHASSIS-01' : 'PART-DIODE-01', childPartNumber: isEco1 ? 'CHASSIS-01' : 'DIODE-FAST-SCHOTTKY', quantity: 1 },
-                            { parentPartId: 'ASM-2000', parentPartNumber: 'ASM-2000-GENERATOR', childPartId: isEco1 ? 'PART-CHASSIS-01' : 'PART-CAP-01', childPartNumber: isEco1 ? 'CHASSIS-01' : 'CAP-FILM-100UF', quantity: 1 }
+                            { parentPartId: 'ASM-1000', parentPartNumber: 'TOP-ASSEMBLY', childPartId: affectedItems[0].partId, childPartNumber: affectedItems[0].partNumber, quantity: 1 }
                           ];
                           const result = analyzeChangeImpact(eco, affectedItems, inventory, bomLines);
                           setAnalyzedImpact(result);
                         }}
                         className="btn-odoo-primary"
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', opacity: ecos.length === 0 ? 0.5 : 1 }}
                       >
                         <Zap size={14} /> Run AI Impact Analysis
                       </button>
@@ -6343,13 +6889,15 @@ export default function App() {
                       </h4>
 
                       <button
+                        disabled={ecos.length === 0}
                         onClick={() => {
-                          const eco = { ecoNumber: 'ECO-840', title: 'Rev C Production Release for High-Torque Motor Assembly', releaseDate: '2026-10-15' };
-                          const notice = formatPlmEcoNotificationForCrm(eco, 'CRM-DEAL-849201', 'Lockheed Martin Space Systems');
+                          if (ecos.length === 0) return;
+                          const eco = { ecoNumber: ecos[0].ecoNumber, title: ecos[0].title, releaseDate: new Date().toISOString().split('T')[0] };
+                          const notice = formatPlmEcoNotificationForCrm(eco, 'CRM-DEAL-849201', 'Enterprise Space Systems');
                           setCrmNotificationSent(`Dispatched PLM ECO milestone notice to Zoho CRM Deal #${notice.dealId} for ${notice.account}`);
                         }}
                         className="btn-odoo-secondary"
-                        style={{ fontSize: '0.75rem', padding: '4px 10px' }}
+                        style={{ fontSize: '0.75rem', padding: '4px 10px', opacity: ecos.length === 0 ? 0.5 : 1 }}
                       >
                         Notify CRM on ECO Release
                       </button>
@@ -6360,44 +6908,52 @@ export default function App() {
                     </p>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                      {crmDeals.map((deal) => (
-                        <div key={deal.dealId} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '12px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-                            <span style={{ fontWeight: 700, fontSize: '0.8125rem', color: 'var(--brand-charcoal)' }}>{deal.dealName}</span>
-                            <span style={{
-                              fontSize: '0.7rem',
-                              fontWeight: 700,
-                              padding: '2px 8px',
-                              borderRadius: '4px',
-                              background: deal.synced ? '#dcfce7' : '#fef3c7',
-                              color: deal.synced ? '#15803d' : '#92400e'
-                            }}>
-                              {deal.synced ? '● PLM SYNCED' : '○ PENDING SYNC'}
-                            </span>
-                          </div>
-
-                          <div style={{ fontSize: '0.75rem', color: '#475569', marginBottom: '6px' }}>
-                            Account: <strong>{deal.accountName}</strong> · Contract Value: <strong>${deal.amountUsd.toLocaleString()}</strong> · Stage: <em>{deal.stage}</em>
-                          </div>
-
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '6px', borderTop: '1px solid #e2e8f0' }}>
-                            <span style={{ fontSize: '0.7rem', color: '#64748b' }}>Target Release: {deal.closingDate}</span>
-                            {!deal.synced && (
-                              <button
-                                onClick={() => {
-                                  const project = syncCrmDealToPlmProject(deal, 'tenant_default');
-                                  setCrmDeals(crmDeals.map((d) => (d.dealId === deal.dealId ? { ...d, synced: true } : d)));
-                                  setCrmNotificationSent(`Synced Deal ${deal.dealId} to PLM Project #${project.projectId} (${project.projectName})`);
-                                }}
-                                className="btn-odoo-primary"
-                                style={{ fontSize: '0.7rem', padding: '3px 8px' }}
-                              >
-                                Sync to PLM Project
-                              </button>
-                            )}
-                          </div>
+                      {crmDeals.length === 0 ? (
+                        <div style={{ textAlign: 'center', padding: '24px 12px', background: '#f8fafc', borderRadius: '6px', border: '1px dashed #cbd5e1', color: '#64748b', fontSize: '0.8125rem' }}>
+                          <DollarSign size={24} style={{ margin: '0 auto 6px', display: 'block', opacity: 0.4 }} />
+                          <strong>No Incoming CRM Deals</strong>
+                          <p style={{ margin: '2px 0 0', fontSize: '0.75rem' }}>Closed-Won deals from Zoho CRM will appear here for automated PLM Project creation.</p>
                         </div>
-                      ))}
+                      ) : (
+                        crmDeals.map((deal) => (
+                          <div key={deal.dealId} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '12px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                              <span style={{ fontWeight: 700, fontSize: '0.8125rem', color: 'var(--brand-charcoal)' }}>{deal.dealName}</span>
+                              <span style={{
+                                fontSize: '0.7rem',
+                                fontWeight: 700,
+                                padding: '2px 8px',
+                                borderRadius: '4px',
+                                background: deal.synced ? '#dcfce7' : '#fef3c7',
+                                color: deal.synced ? '#15803d' : '#92400e'
+                              }}>
+                                {deal.synced ? '● PLM SYNCED' : '○ PENDING SYNC'}
+                              </span>
+                            </div>
+
+                            <div style={{ fontSize: '0.75rem', color: '#475569', marginBottom: '6px' }}>
+                              Account: <strong>{deal.accountName}</strong> · Contract Value: <strong>${deal.amountUsd.toLocaleString()}</strong> · Stage: <em>{deal.stage}</em>
+                            </div>
+
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '6px', borderTop: '1px solid #e2e8f0' }}>
+                              <span style={{ fontSize: '0.7rem', color: '#64748b' }}>Target Release: {deal.closingDate}</span>
+                              {!deal.synced && (
+                                <button
+                                  onClick={() => {
+                                    const project = syncCrmDealToPlmProject(deal, 'tenant_default');
+                                    setCrmDeals(crmDeals.map((d) => (d.dealId === deal.dealId ? { ...d, synced: true } : d)));
+                                    setCrmNotificationSent(`Synced Deal ${deal.dealId} to PLM Project #${project.projectId} (${project.projectName})`);
+                                  }}
+                                  className="btn-odoo-primary"
+                                  style={{ fontSize: '0.7rem', padding: '3px 8px' }}
+                                >
+                                  Sync to PLM Project
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        ))
+                      )}
                     </div>
                   </div>
 
@@ -6414,52 +6970,60 @@ export default function App() {
                     </p>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                      {creatorNcrs.map((ncr) => (
-                        <div key={ncr.recordId} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '12px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-                            <span style={{ fontWeight: 700, fontSize: '0.8125rem', color: 'var(--brand-charcoal)' }}>
-                              {ncr.recordId} — {ncr.partNumber}
-                            </span>
-                            <span style={{
-                              fontSize: '0.7rem',
-                              fontWeight: 700,
-                              padding: '2px 8px',
-                              borderRadius: '4px',
-                              background: ncr.severity === 'critical' ? '#fee2e2' : '#fef3c7',
-                              color: ncr.severity === 'critical' ? '#991b1b' : '#92400e'
-                            }}>
-                              {ncr.severity.toUpperCase()}
-                            </span>
-                          </div>
-
-                          <div style={{ fontSize: '0.75rem', color: '#475569', marginBottom: '6px' }}>
-                            Station: <strong>{ncr.inspectionStationId}</strong> · Inspector: <strong>{ncr.inspectorName}</strong> · Lot: <code>{ncr.lotNumber}</code>
-                          </div>
-
-                          <div style={{ fontSize: '0.75rem', color: '#64748b', fontStyle: 'italic', marginBottom: '8px' }}>
-                            "{ncr.defectDescription}" ({ncr.detectedQuantity} units non-conforming)
-                          </div>
-
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '6px', borderTop: '1px solid #e2e8f0' }}>
-                            <span style={{ fontSize: '0.7rem', color: ncr.escalated ? '#15803d' : '#64748b', fontWeight: ncr.escalated ? 700 : 400 }}>
-                              {ncr.escalated ? '✓ Escalated to PLM ECR' : 'Pending Engineering Review'}
-                            </span>
-                            {!ncr.escalated && (
-                              <button
-                                onClick={() => {
-                                  const ecr = ingestCreatorQualityNcrToPlmEcr(ncr, 'tenant_default');
-                                  setCreatorNcrs(creatorNcrs.map((item) => (item.recordId === ncr.recordId ? { ...item, escalated: true } : item)));
-                                  setCrmNotificationSent(`Escalated Creator Quality NCR ${ncr.recordId} to formal PLM ${ecr.ecrNumber} (${ecr.priority.toUpperCase()} priority)`);
-                                }}
-                                className="btn-odoo-primary"
-                                style={{ fontSize: '0.7rem', padding: '3px 8px' }}
-                              >
-                                Escalate to PLM ECR
-                              </button>
-                            )}
-                          </div>
+                      {creatorNcrs.length === 0 ? (
+                        <div style={{ textAlign: 'center', padding: '24px 12px', background: '#f8fafc', borderRadius: '6px', border: '1px dashed #cbd5e1', color: '#64748b', fontSize: '0.8125rem' }}>
+                          <Wrench size={24} style={{ margin: '0 auto 6px', display: 'block', opacity: 0.4 }} />
+                          <strong>No Active Quality NCRs</strong>
+                          <p style={{ margin: '2px 0 0', fontSize: '0.75rem' }}>Shop floor inspection defects logged in Zoho Creator will appear here for engineering escalation.</p>
                         </div>
-                      ))}
+                      ) : (
+                        creatorNcrs.map((ncr) => (
+                          <div key={ncr.recordId} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '12px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                              <span style={{ fontWeight: 700, fontSize: '0.8125rem', color: 'var(--brand-charcoal)' }}>
+                                {ncr.recordId} — {ncr.partNumber}
+                              </span>
+                              <span style={{
+                                fontSize: '0.7rem',
+                                fontWeight: 700,
+                                padding: '2px 8px',
+                                borderRadius: '4px',
+                                background: ncr.severity === 'critical' ? '#fee2e2' : '#fef3c7',
+                                color: ncr.severity === 'critical' ? '#991b1b' : '#92400e'
+                              }}>
+                                {ncr.severity.toUpperCase()}
+                              </span>
+                            </div>
+
+                            <div style={{ fontSize: '0.75rem', color: '#475569', marginBottom: '6px' }}>
+                              Station: <strong>{ncr.inspectionStationId}</strong> · Inspector: <strong>{ncr.inspectorName}</strong> · Lot: <code>{ncr.lotNumber}</code>
+                            </div>
+
+                            <div style={{ fontSize: '0.75rem', color: '#64748b', fontStyle: 'italic', marginBottom: '8px' }}>
+                              "{ncr.defectDescription}" ({ncr.detectedQuantity} units non-conforming)
+                            </div>
+
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '6px', borderTop: '1px solid #e2e8f0' }}>
+                              <span style={{ fontSize: '0.7rem', color: ncr.escalated ? '#15803d' : '#64748b', fontWeight: ncr.escalated ? 700 : 400 }}>
+                                {ncr.escalated ? '✓ Escalated to PLM ECR' : 'Pending Engineering Review'}
+                              </span>
+                              {!ncr.escalated && (
+                                <button
+                                  onClick={() => {
+                                    const ecr = ingestCreatorQualityNcrToPlmEcr(ncr, 'tenant_default');
+                                    setCreatorNcrs(creatorNcrs.map((item) => (item.recordId === ncr.recordId ? { ...item, escalated: true } : item)));
+                                    setCrmNotificationSent(`Escalated Creator Quality NCR ${ncr.recordId} to formal PLM ${ecr.ecrNumber} (${ecr.priority.toUpperCase()} priority)`);
+                                  }}
+                                  className="btn-odoo-primary"
+                                  style={{ fontSize: '0.7rem', padding: '3px 8px' }}
+                                >
+                                  Escalate to PLM ECR
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        ))
+                      )}
                     </div>
                   </div>
                 </div>
@@ -6548,11 +7112,15 @@ export default function App() {
                         });
                       }}
                     >
-                      {productsList.map((p) => (
-                        <option key={p.ref} value={p.ref}>
-                          [{p.ref}] {p.name}
-                        </option>
-                      ))}
+                      {productsList.length === 0 ? (
+                        <option value="">-- No products created yet --</option>
+                      ) : (
+                        productsList.map((p) => (
+                          <option key={p.ref} value={p.ref}>
+                            [{p.ref}] {p.name}
+                          </option>
+                        ))
+                      )}
                     </select>
                   </div>
 
@@ -7063,21 +7631,93 @@ export default function App() {
 
             <form onSubmit={handleCreateBomLineSubmit}>
               <div className="odoo-modal-body">
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                  <div className="odoo-form-group">
-                    <label className="odoo-form-label">Hierarchy Level</label>
+                {/* QUICK-PICK EXISTING PART FROM CATALOG */}
+                <div style={{ marginBottom: '16px', background: '#f8fafc', padding: '10px 14px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                  <label className="odoo-form-label" style={{ fontWeight: 600, color: '#334155', display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                    <span>Select Existing Part / Sub-Assembly from Catalog (Bottom-Up Assembly)</span>
+                    <span style={{ fontWeight: 400, color: '#64748b', fontSize: '0.75rem' }}>Optional</span>
+                  </label>
+                  <select
+                    className="odoo-form-select"
+                    value={newBomLineForm.catalogPartRef || ''}
+                    onChange={(e) => {
+                      const selected = productsList.find((p) => p.ref === e.target.value);
+                      if (selected) {
+                        setNewBomLineForm({
+                          ...newBomLineForm,
+                          catalogPartRef: selected.ref,
+                          partNumber: selected.ref,
+                          name: selected.name,
+                          rev: selected.rev || 'Rev A',
+                          uom: selected.uom || 'EA',
+                          itemType: selected.category === 'Assembly' ? 'Sub-Assembly' : newBomLineForm.itemType,
+                        });
+                      } else {
+                        setNewBomLineForm({ ...newBomLineForm, catalogPartRef: '' });
+                      }
+                    }}
+                  >
+                    <option value="">-- Choose from catalog or enter custom part below --</option>
+                    {productsList
+                      .filter((p) => p.ref !== (selectedBomProductRef || productsList[0]?.ref))
+                      .map((p) => (
+                        <option key={p.ref} value={p.ref}>
+                          [{p.ref}] {p.name} ({p.category || 'Part'})
+                        </option>
+                      ))}
+                  </select>
+                  <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '4px' }}>
+                    Choosing an existing sub-assembly (e.g. Wheel) will auto-populate its details and bring in any pre-built sub-BOM components (Rim, Tyre, Tube).
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '14px' }}>
+                  <div className="odoo-form-group" style={{ marginBottom: 0 }}>
+                    <label className="odoo-form-label">
+                      Parent Assembly / Component <span style={{ color: '#ef4444' }}>*</span>
+                    </label>
                     <select
                       className="odoo-form-select"
-                      value={newBomLineForm.level}
-                      onChange={(e) => setNewBomLineForm({ ...newBomLineForm, level: e.target.value })}
+                      value={newBomLineForm.parentPartNumber}
+                      onChange={(e) => setNewBomLineForm({ ...newBomLineForm, parentPartNumber: e.target.value })}
                     >
-                      <option value="├── 1.3">├── Level 1.3 (Sub-Assembly)</option>
-                      <option value="├── 1.4">├── Level 1.4 (Sub-Assembly)</option>
-                      <option value="└── 2.2">└── Level 2.2 (Component)</option>
-                      <option value="└── 2.3">└── Level 2.3 (Component)</option>
+                      <option value="ROOT">
+                        [Root] {(productsList.find((p) => p.ref === selectedBomProductRef) || productsList[0]) ? `${(productsList.find((p) => p.ref === selectedBomProductRef) || productsList[0]).ref} — ${(productsList.find((p) => p.ref === selectedBomProductRef) || productsList[0]).name}` : 'Top-Level Assembly'} (Level 1)
+                      </option>
+                      {bomTreeLines
+                        .filter((l) => (!l.productRef || l.productRef === (selectedBomProductRef || productsList[0]?.ref)) && (l.itemType === 'Sub-Assembly' || l.level.includes('1.')))
+                        .map((l) => (
+                          <option key={l.partNumber} value={l.partNumber}>
+                            ↳ Sub-Assembly: [{l.partNumber}] {l.name}
+                          </option>
+                        ))}
                     </select>
+                    <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '4px' }}>
+                      {(!newBomLineForm.parentPartNumber || newBomLineForm.parentPartNumber === 'ROOT')
+                        ? '↳ Level 1 item (Direct child of Root Assembly)'
+                        : `↳ Level 2 child nested under [${newBomLineForm.parentPartNumber}]`}
+                    </div>
                   </div>
 
+                  <div className="odoo-form-group" style={{ marginBottom: 0 }}>
+                    <label className="odoo-form-label">Component Classification</label>
+                    <select
+                      className="odoo-form-select"
+                      value={newBomLineForm.itemType}
+                      onChange={(e) => setNewBomLineForm({ ...newBomLineForm, itemType: e.target.value as any })}
+                    >
+                      <option value="Component">Standard Component (Leaf Part)</option>
+                      <option value="Sub-Assembly">Sub-Assembly (Can Contain Children)</option>
+                    </select>
+                    <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '4px' }}>
+                      {newBomLineForm.itemType === 'Sub-Assembly'
+                        ? 'Can act as a parent for nested sub-components'
+                        : 'Single piece component or purchased part'}
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '180px 1fr', gap: '16px' }}>
                   <div className="odoo-form-group">
                     <label className="odoo-form-label">
                       Component Part Number <span style={{ color: '#ef4444' }}>*</span>
@@ -7092,20 +7732,20 @@ export default function App() {
                       autoFocus
                     />
                   </div>
-                </div>
 
-                <div className="odoo-form-group">
-                  <label className="odoo-form-label">
-                    Component Name <span style={{ color: '#ef4444' }}>*</span>
-                  </label>
-                  <input
-                    type="text"
-                    className="odoo-form-input"
-                    placeholder="e.g. Titanium Reinforced Joint Flange"
-                    value={newBomLineForm.name}
-                    onChange={(e) => setNewBomLineForm({ ...newBomLineForm, name: e.target.value })}
-                    required
-                  />
+                  <div className="odoo-form-group">
+                    <label className="odoo-form-label">
+                      Component Name <span style={{ color: '#ef4444' }}>*</span>
+                    </label>
+                    <input
+                      type="text"
+                      className="odoo-form-input"
+                      placeholder="e.g. Titanium Reinforced Joint Flange"
+                      value={newBomLineForm.name}
+                      onChange={(e) => setNewBomLineForm({ ...newBomLineForm, name: e.target.value })}
+                      required
+                    />
+                  </div>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>

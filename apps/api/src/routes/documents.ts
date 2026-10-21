@@ -9,55 +9,9 @@ import {
 } from '@universal-plm/document-control';
 import { assertPermission, Permissions } from '@universal-plm/authorization';
 
-const documentsStore: ControlledDocument[] = [
-  {
-    id: 'doc-001',
-    tenantId: 'default-tenant',
-    documentNumber: 'DOC-SPEC-1000',
-    title: 'Autonomous Articulated Robotic Arm — System Specification',
-    description: 'Master engineering specification covering torque, kinematics, and IP rating.',
-    category: 'SPECIFICATION',
-    currentRevision: '1.0',
-    lifecycleState: 'RELEASED',
-    ownerId: 'user-001',
-    tags: ['Robotics', 'Kinematics', 'Harmonic'],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: 'doc-002',
-    tenantId: 'default-tenant',
-    documentNumber: 'DOC-CAD-1010',
-    title: 'Precision Harmonic Servo Actuator — 3D CAD Assembly',
-    description: 'Native SolidWorks assembly with STEP neutral export and drawing link.',
-    category: 'CAD_3D_MODEL',
-    currentRevision: '2.0',
-    lifecycleState: 'RELEASED',
-    ownerId: 'user-001',
-    tags: ['CAD', 'SolidWorks', 'STEP'],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-];
-
-const revisionsStore: Record<string, DocumentRevision[]> = {
-  'doc-001': [
-    {
-      id: 'drev-001',
-      tenantId: 'default-tenant',
-      documentId: 'doc-001',
-      revision: '1.0',
-      fileName: 'ROB-1000-SPEC-v1.0.pdf',
-      fileSizeBytes: 3145728,
-      mimeType: 'application/pdf',
-      storageBlobKey: 'stratus/docs/ROB-1000-SPEC-v1.0.pdf',
-      checksumSha256: '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08',
-      isBaselineLocked: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-  ],
-};
+// Document vault stores initialized empty for clean-slate testing
+const documentsStore: ControlledDocument[] = [];
+const revisionsStore: Record<string, DocumentRevision[]> = {};
 
 export const documentRoutes: FastifyPluginAsync = async (fastify) => {
   // 1. List Documents

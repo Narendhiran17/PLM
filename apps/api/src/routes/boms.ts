@@ -11,54 +11,8 @@ import {
 } from '@universal-plm/domain-core';
 import { assertPermission, Permissions } from '@universal-plm/authorization';
 
-// In-memory BOM lines for initial baseline verification
-const bomLinesStore: BomLine[] = [
-  // Robotic Arm (rev-001-A) contains:
-  // - 6x Servo Actuators (part-002)
-  // - 1x Motor Controller PCB (part-003)
-  {
-    id: 'bom-001',
-    tenantId: 'default-tenant',
-    parentRevisionId: 'rev-001-A',
-    childPartId: 'part-002',
-    childRevisionId: 'rev-002-B',
-    findNumber: 10,
-    quantity: 6,
-    uom: 'EA',
-    bomType: 'EBOM',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: 'bom-002',
-    tenantId: 'default-tenant',
-    parentRevisionId: 'rev-001-A',
-    childPartId: 'part-003',
-    childRevisionId: 'rev-003-A',
-    findNumber: 20,
-    quantity: 1,
-    uom: 'EA',
-    bomType: 'EBOM',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  // Controller PCB (rev-003-A) contains:
-  // - 2x CAN Transceivers (part-004)
-  {
-    id: 'bom-003',
-    tenantId: 'default-tenant',
-    parentRevisionId: 'rev-003-A',
-    childPartId: 'part-004',
-    childRevisionId: 'rev-004-A',
-    findNumber: 10,
-    quantity: 2,
-    uom: 'EA',
-    bomType: 'EBOM',
-    referenceDesignators: ['U1', 'U2'],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-];
+// BOM lines store initialized empty for clean-slate testing
+const bomLinesStore: BomLine[] = [];
 
 export const bomRoutes: FastifyPluginAsync = async (fastify) => {
   // Get direct BOM lines for a revision

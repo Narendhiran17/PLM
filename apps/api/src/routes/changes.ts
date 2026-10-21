@@ -11,91 +11,11 @@ import {
 } from '@universal-plm/change-management';
 import { assertPermission, Permissions } from '@universal-plm/authorization';
 
-// In-memory persistent stores for AppSail execution
-const ecrStore: EngineeringChangeRequest[] = [
-  {
-    id: 'ecr-001',
-    tenantId: 'default-tenant',
-    ecrNumber: 'ECR-2026-001',
-    title: 'Replace CAN transceiver with AEC-Q100 automotive grade equivalent',
-    description: 'Current component has thermal drift under high ambient operating temps.',
-    reason: 'OBSOLESCENCE',
-    priority: 'HIGH',
-    status: 'APPROVED_FOR_ECO',
-    requestorId: 'elec-eng@plm.io',
-    affectedPartIds: ['part-004'],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-];
-
-const ecoStore: EngineeringChangeOrder[] = [
-  {
-    id: 'eco-001',
-    tenantId: 'default-tenant',
-    ecoNumber: 'ECO-2026-0042',
-    title: 'Harmonic Actuator Joint 1 & 2 Upgrade',
-    description: 'Upgrades joint torque from 25Nm to 65Nm with precision harmonic servos.',
-    changeType: 'DESIGN_IMPROVEMENT',
-    stage: 'REVIEW',
-    priority: 3,
-    responsibleId: 'user-001',
-    responsibleName: 'Marcus Vance',
-    effectiveDate: '2026-10-31',
-    affectedItems: [
-      {
-        id: 'aff-001',
-        ecoId: 'eco-001',
-        partId: 'part-001',
-        partNumber: 'ROB-1000',
-        baselineRevisionId: 'rev-001-A',
-        proposedRevisionId: 'rev-001-B',
-        disposition: 'USE_AS_IS',
-      },
-    ],
-    isReleased: false,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-];
-
-const approvalStagesStore: Record<string, ApprovalStage[]> = {
-  'eco-001': [
-    {
-      id: 'stg-01',
-      ecoId: 'eco-001',
-      sequenceOrder: 1,
-      name: 'Engineering & Quality Sign-Off',
-      routingMode: 'PARALLEL',
-      quorumRule: 'ALL_MUST_APPROVE',
-      stageStatus: 'IN_REVIEW',
-      reviewers: [
-        {
-          id: 'vtr-001',
-          reviewerId: 'user-001',
-          reviewerName: 'Marcus Vance',
-          reviewerRole: 'Lead Mechanical Engineer',
-          vote: 'APPROVE',
-          voteTimestamp: new Date().toISOString(),
-          signatureHash: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
-          comments: 'Joint torque verified under FEA stress test.',
-        },
-        {
-          id: 'vtr-002',
-          reviewerId: 'user-002',
-          reviewerName: 'Elena Rostova',
-          reviewerRole: 'Quality & Regulatory Director',
-          vote: 'PENDING',
-        },
-      ],
-    },
-  ],
-};
-
-// Current active baseline revision store (simulating database for INV-06 concurrency checks)
-const activeBaselines: Record<string, string> = {
-  'part-001': 'rev-001-A',
-};
+// Stores initialized empty for clean-slate testing
+const ecrStore: EngineeringChangeRequest[] = [];
+const ecoStore: EngineeringChangeOrder[] = [];
+const approvalStagesStore: Record<string, ApprovalStage[]> = {};
+const activeBaselines: Record<string, string> = {};
 
 export const changeRoutes: FastifyPluginAsync = async (fastify) => {
   // 1. List ECRs
